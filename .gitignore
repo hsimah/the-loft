@@ -1,5 +1,6 @@
 **/.env
 .deployed-version
+__pycache__/
 
 # Homepage writes these into its bind-mounted config directory on first run:
 # scaffolding for features the fleet does not use, plus a growing log dir.

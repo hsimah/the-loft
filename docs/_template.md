@@ -1,40 +1,12 @@
-# `<thing>`
+# <host, service or script>
 
-> One-sentence description of what this is.
+One paragraph: purpose, where it runs, and links to authoritative configuration.
 
-## Overview
+Include only the sections this component needs:
 
-2–3 sentences explaining what this thing is and why it exists.
+- Required environment and persistent state; link to `.env.example` and Compose instead of copying tag/port inventories.
+- Routine operations and their side effects. Link to shared provisioning/upgrade guidance.
+- Component-specific constraints and observed incidents: date, evidence, mitigation, verification.
+- Unverified live state or proposed work, clearly labeled.
 
-## Architecture
-
-How it works — containers/processes, network topology, how the pieces fit together. Diagrams (ASCII or Mermaid) welcome.
-
-## Configuration
-
-- Env vars (with where to find them)
-- `host.conf` variables (for hosts) or compose env (for services)
-- Mounted directories / important config files
-- Secrets and where they come from
-
-## Operations
-
-Day-to-day admin tasks: deploy, restart, update, common changes. Prefer `loft-ctl` snippets where possible.
-
-## Related
-
-- Blog posts: `[…](../../../hsimah/posts/…)` / `[…](../../../hblake/posts/…)`
-- Other pages in `docs/`
-
-## Debug & Troubleshooting
-
-Recurring issues and recovery recipes. Each entry follows:
-
-### <symptom>
-
-**Cause:** <root cause>
-
-**Fix:**
-```bash
-# steps
-```
+Keep recovery instructions here rather than duplicating them in host pages and DEBUG.md. Link within this repo; do not rely on sibling checkouts or private agent memory. Distinguish a possible cause from a confirmed diagnosis.

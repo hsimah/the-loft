@@ -1,46 +1,12 @@
-# Sputnik assistant persona.
-#
-# Build it into a named model that Open WebUI and n8n both select by name, so
-# the guardrails below cannot be edited away in a chat UI or forgotten in a
-# workflow's prompt field:
-#
-#   sudo docker exec -i ollama ollama create sputnik-assistant \
-#     -f /dev/stdin < services/sputnik/Modelfile.assistant
-#
-# Re-run after any edit here — `ollama create` overwrites in place. The base
-# model is the line below; swap it to match what `bench.sh` recommends for the
-# RAM actually in the box:
-#
-#   qwen3:30b-a3b   ~20 GB resident, MoE, ~3B active params  ← default
-#   qwen3:8b         ~6 GB resident, weakest tool caller
-#   qwen3:14b       ~10 GB resident, slowest of the three in an agent loop
-
+# Shared Sputnik persona; rebuild after editing:
+# sudo docker exec -i ollama ollama create sputnik-assistant -f /dev/stdin < services/sputnik/Modelfile.assistant
+# Access limits come from workflow wiring and OAuth, not prompt immutability.
+# Dated benchmark results and model-sizing context: docs/services/sputnik.md.
 FROM qwen3:30b-a3b
-
-# Deterministic-ish: this reads mail and reports facts, it does not brainstorm.
 PARAMETER temperature 0.3
 PARAMETER top_p 0.9
-# Must not exceed OLLAMA_CONTEXT_LENGTH in .env or the excess is silently
-# ignored and long threads get truncated without warning.
 PARAMETER num_ctx 16384
-
-# space-needle's i9-12900H is a hybrid part: 6 P-cores + 8 E-cores, which is
-# why nproc reports 20 threads. Inference splits work evenly across threads, so
-# using all 20 means every P-core finishes its slice and then waits on the much
-# slower E-cores — they become stragglers and the token waits on the slowest.
-# Pinning to the P-cores is usually faster despite using fewer cores.
-#
-# Measured on this box 2026-08-01 (bench.sh, qwen3:30b-a3b, ~2070-token prompt):
-#
-#   threads          prefill t/s    gen t/s
-#   20 (default)            45.3       10.9
-#    6 (P-cores)            46.6       11.8
-#   12 (P-core threads)     45.1       14.5   ← winner, +33% gen over default
-#
-# 12 rather than 6: hyperthreading on the P-cores is worth having, and the
-# E-cores are what drag. Prefill is unmoved by any of this — it is bandwidth-
-# bound, not core-bound, which is also why first-token latency stays ~45s.
-# Re-measure if the model or the RAM configuration changes.
+# Selected by the recorded benchmark; thread count is not CPU affinity.
 PARAMETER num_thread 12
 
 SYSTEM """

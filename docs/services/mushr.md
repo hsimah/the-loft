@@ -1,259 +1,56 @@
-# `mushr`
+# Mushr — proxy, tunnel and DNS
 
-> Reverse proxy + Cloudflare Tunnel + LAN DNS — the front door for everything web-facing on space-needle.
+[Compose](../../services/mushr/docker-compose.yml) groups Caddy (`mushr`), cloudflared (`mushr-tunnel`) and dnsmasq (`mushr-dns`) on space-needle. Caddy joins `loft-proxy`; dnsmasq uses host networking and binds `192.168.86.28`.
 
-## Overview
+## Configuration and boundaries
 
-`mushr` (musher — sled-dog driver) routes every web request in The Loft. Caddy fronts all bridge-networked services on `*.loft.hsimah.com` (HTTPS, real Let's Encrypt certs via Cloudflare DNS-01) and `*.space-needle` (HTTP LAN fallback). `cloudflared` punches an outbound tunnel for external access to the blogs. `dnsmasq` is the LAN's authoritative resolver for those names plus the bare hostnames `fjord`/`viking`/`calavera`.
+- [Caddyfile](../../services/mushr/Caddyfile) is the route table. Bridge services use container names; host listeners and VPN-published ports use `host.docker.internal`.
+- [dnsmasq.conf](../../services/mushr/dnsmasq.conf) resolves `*.space-needle`, `*.loft.hsimah.com`, the blogs and fleet hostnames. Router DHCP should advertise this resolver. The `hbla.ke` wildcard covers `dev.hbla.ke`; `space-needle` covers `hblake.space-needle`, although Caddy also needs a matching route.
+- [.env.example](../../services/mushr/.env.example) lists LOFT_DOMAIN, Cloudflare DNS API token, tunnel token and briefing basic-auth settings. Scope the DNS token to the zones whose certificates Caddy issues.
+- Public hostnames are managed separately in Cloudflare's tunnel dashboard. A Caddy route is not proof of public exposure. Keep Sputnik, n8n and briefing off that list.
+- Admin listens at `127.0.0.1:8880` **inside Caddy's container**. The host publishes 80/443 only. Its Docker healthcheck probes the admin endpoint and gates tunnel startup.
+- Caddy's named `caddy-data` and `caddy-config` volumes persist certificates/configuration. Do not remove them as a routine response to TLS errors.
 
-## Architecture
-
-### Three containers in one compose
-
-| Container | Image | Network | Purpose |
-|-----------|-------|---------|---------|
-| `mushr` | Custom build of `caddy:2-alpine` with the Cloudflare DNS module | bridge (`loft-proxy`) | Reverse proxy — terminates TLS, routes by Host header |
-| `mushr-tunnel` | `cloudflare/cloudflared:latest` | bridge (`loft-proxy`) | Outbound Cloudflare Tunnel → `mushr:443` for external access to hbla.ke + hsimah.com |
-| `mushr-dns` | `drpsychick/dnsmasq:latest` | host (binds to space-needle's LAN IP) | LAN DNS — wildcard A records, per-host A records, upstream to Cloudflare |
-
-Caddy is custom-built — [`Dockerfile.caddy`](../../services/mushr/Dockerfile.caddy) runs `xcaddy build --with github.com/caddy-dns/cloudflare` so the binary includes the Cloudflare DNS-01 provider. The image is built locally (`mushr-caddy:latest`).
-
-`mushr-tunnel` has `depends_on: mushr: condition: service_healthy` — the tunnel only starts once Caddy passes its `http://127.0.0.1:8880/config/` healthcheck.
-
-### Two domain systems
-
-Both resolve to space-needle's LAN IP via `mushr-dns`:
-
-- **`*.loft.hsimah.com`** — HTTPS with real Let's Encrypt certs (Cloudflare DNS-01 challenge, no open ports). Recommended day-to-day.
-- **`*.space-needle`** — HTTP-only LAN fallback. Useful when Caddy is restarting / cert issuance is mid-flight.
-
-The full route table lives in [`Caddyfile`](../../services/mushr/Caddyfile). Bridge-networked services (radarr/sonarr/lidarr/bazarr/jackett, pupyrus, pawst, beszel, uptime, homepage) are reached by container name on `loft-proxy` (e.g. `reverse_proxy radarr:7878`). Host-network services (pawpcorn, howlr, transmission, slskd, snapweb) are reached via `host.docker.internal:<port>` thanks to the `extra_hosts: host.docker.internal:host-gateway` entry on `mushr`.
-
-### The one route that isn't a proxy
-
-`briefing.{$LOFT_DOMAIN}` is a `file_server`, not a `reverse_proxy` — it serves [sputnik](sputnik.md)'s briefing page from two read-only mounts: the tracked renderer at `services/sputnik/briefing-web`, and n8n's output at `/opt/sputnik/briefing`.
-
-The two mounts are **siblings inside the container** (`/srv/briefing` and `/srv/briefing-data`), and a `handle_path /data/*` block stitches them into one URL space. Nesting them the obvious way — mounting the data at `/srv/briefing/data` — does not work, and fails the *container*, not just the route:
-
-```
-create mountpoint for /srv/briefing/data mount: mkdirat ...: read-only file system
-```
-
-Docker mounts the parent read-only first, then has to create the child mountpoint inside it. Since mushr is the front door, that failure takes every route in the fleet down with it. The general rule: never mount anything inside a `:ro` bind mount unless the directory already exists in the source.
-
-It is also the only route carrying `basic_auth`. Everywhere else the application behind the proxy has its own login; static files have none, and this route serves summarised mail. There is deliberately **no** `http://briefing.space-needle` counterpart — basic auth over plain HTTP would put the password on the wire in cleartext. Keep it off the tunnel's public hostname list, like n8n.
-
-### The `loft-proxy` bridge
-
-`loft-proxy` is declared `external: true` in this compose — it's pre-created by `setup.sh` so other services (pupyrus, pawst, stellarr's *arr, houstn's hub containers) can attach to it. Joining the bridge is how a service becomes reverse-proxyable.
-
-### Why HTTP/3 is disabled
-
-The Caddyfile `servers` block forces `protocols h1 h2`. HTTP/3 (QUIC over UDP) caused stale SSL handshakes after browser idle on the LAN — the server-side QUIC idle timeout would expire, the browser would try to reuse the dead connection, and recovery took 30–60s of fallback to HTTP/2. HTTP/3 is designed for lossy, high-latency networks; on a LAN, HTTP/2 over TCP is equally fast and handles idle gracefully via TCP keepalive. The UDP 443 port is still mapped in compose but Caddy doesn't advertise `h3` in `Alt-Svc`.
-
-### Admin API lockdown
-
-The Caddy admin API listens on `127.0.0.1:8880` *inside the container* (`admin 127.0.0.1:8880` in the Caddyfile). It's reachable from the host because the container's loopback maps through the port binding — but only from space-needle itself, not the LAN. Health checks use this endpoint (`http://localhost:8880/config/`).
-
-## Configuration
-
-### `.env`
-
-Copy [`services/mushr/.env.example`](../../services/mushr/.env.example) to `services/mushr/.env`.
-
-| Variable | Purpose |
-|----------|---------|
-| `LOFT_DOMAIN` | `loft.hsimah.com` — substituted into the Caddyfile as `{$LOFT_DOMAIN}` |
-| `CLOUDFLARE_API_TOKEN` | Used by the DNS-01 challenge to write `_acme-challenge` TXT records. Permissions: **Zone > Zone > Read** and **Zone > DNS > Edit** scoped to the loft.hsimah.com / hbla.ke / hsimah.com zones |
-| `TUNNEL_TOKEN` | `cloudflared`'s tunnel credential, generated when the tunnel is created in Cloudflare Zero Trust |
-| `BRIEFING_USER` | Username for `basic_auth` on the briefing route. Defaults to `loft` |
-| `BRIEFING_HASH` | bcrypt hash of that user's password — `sudo docker exec -it mushr caddy hash-password` (prompts, so it stays out of shell history). **Double every `$`** — see below. The plaintext also goes in `services/houstn/.env` so the Homepage tile can read the manifest |
-
-> **`$` in a `.env` value must be written `$$`.** Compose interpolates `.env` values, so a bcrypt hash like `$2a$14$xK9p…` is read as three variable references and each is substituted with a blank string. Caddy receives a mangled hash and rejects the correct password. The only warning is a line that is easy to lose in a rebuild's output:
->
-> ```
-> WARN[0000] The "xK9p" variable is not set. Defaulting to a blank string.
-> ```
->
-> Verify with `sudo docker exec mushr printenv BRIEFING_HASH` — it must print **single** dollars, matching what `hash-password` produced. This applies to any secret containing a literal `$`, not just this one.
-
-### `dnsmasq.conf`
-
-[`services/mushr/dnsmasq.conf`](../../services/mushr/dnsmasq.conf) is bind-mounted into the container. The space-needle LAN IP (`192.168.86.28`) appears in:
-
-- `listen-address=192.168.86.28` — dnsmasq binds only here (not `127.0.0.1`)
-- `address=/space-needle/...`, `address=/loft.hsimah.com/...`, `address=/hbla.ke/...`, `address=/hsimah.com/...` — wildcard A records
-- `address=/calavera/...`, `address=/fjord/...`, `address=/viking/...` — per-host A records
-
-Update these IPs if space-needle moves, and `loft-ctl rebuild mushr`.
-
-### Volumes
-
-| Volume | Container path | Persists |
-|--------|----------------|----------|
-| `caddy-data` | `/data` | Let's Encrypt certs + ACME state |
-| `caddy-config` | `/config` | Caddy's autosaved JSON config |
-
-These are named Docker volumes — **never** `docker compose down -v mushr` (triggers cert re-issuance, hits rate limits).
-
-### Cloudflare Tunnel public hostnames
-
-Configured in the Cloudflare dashboard (Zero Trust → Networks → Tunnels), not the compose. Two routes:
-
-- `hbla.ke` → HTTPS → `mushr:443`, Origin Server Name `hbla.ke`
-- `hsimah.com` → HTTPS → `mushr:443`, Origin Server Name `hsimah.com`
-
-The tunnel runs *inside* the `loft-proxy` network, so `mushr:443` is reachable as the container name. The Origin Server Name override is what lets Caddy's Host-based routing pick the correct site.
-
-### LAN router DHCP
-
-For the wildcard names to work on every device, the router's DHCP DNS server is set to space-needle's LAN IP. Devices then resolve `*.space-needle`, `*.loft.hsimah.com`, the blogs (`hbla.ke`, `hsimah.com`), and the per-host names through mushr-dns. Local traffic to the blogs hits Caddy directly — the tunnel is bypassed.
-
-### Container DNS quirk
-
-Bridge-network containers that need to resolve loft names from inside (e.g. uptime kuma polling `https://pupyrus.loft.hsimah.com`) need `dns: [192.168.86.28]` in their service block. mushr-dns binds to `192.168.86.28` only; the host uses `systemd-resolved` (`127.0.0.53`); Docker's embedded resolver filters loopback entries from the host's resolv.conf when forwarding container queries, then falls back to `8.8.8.8` which doesn't know about loft names. Per-service is preferred over `/etc/docker/daemon.json` `dns:` because the daemon-wide version restarts every container.
-
-Container-to-container queries on `loft-proxy` (`mushr:443`, `pupyrus:80`, etc.) don't need this — Docker's embedded resolver handles container names natively.
+[Dockerfile.caddy](../../services/mushr/Dockerfile.caddy) builds Caddy with the Cloudflare DNS plugin. The base version is set, but the module source is not pinned; rebuilding the same local image tag need not produce identical bytes. See [upgrade constraints](../operations/upgrades.md).
 
 ## Operations
 
 ```bash
-loft-ctl start mushr
-loft-ctl stop mushr
-loft-ctl rebuild mushr           # rebuilds the custom Caddy image too
-loft-ctl health mushr            # checks http://localhost:8880/config/
-
-# Validate Caddyfile before rebuilding
 sudo docker exec mushr caddy validate --config /etc/caddy/Caddyfile
-
-# ...but that validates against the RUNNING container's environment, so it
-# cannot see a variable you just added to .env. To check new values before
-# they reach the live proxy, validate in a throwaway container instead:
-sudo docker run --rm --env-file services/mushr/.env \
-  -v ./services/mushr/Caddyfile:/etc/caddy/Caddyfile:ro \
-  mushr-caddy:2.11.4 caddy validate --config /etc/caddy/Caddyfile
-
-# Hot reload Caddyfile (no container restart)
 sudo docker exec mushr caddy reload --config /etc/caddy/Caddyfile
-
-# Inspect what Caddy thinks is configured
-curl -s http://localhost:8880/config/ | python3 -m json.tool
-
-# Check certs
-echo | openssl s_client -connect localhost:443 -servername radarr.loft.hsimah.com 2>/dev/null \
-  | openssl x509 -noout -dates -subject
-
-# Tunnel
-sudo docker logs mushr-tunnel --tail 30 | grep -i 'registered\|error'
+sudo docker exec mushr wget -qO- http://127.0.0.1:8880/config/
+loft-ctl health mushr
 ```
 
-### One-time Cloudflare setup
-
-1. Add `hsimah.com` and `hbla.ke` to Cloudflare; update each registrar's nameservers to Cloudflare's. (No A records needed — dnsmasq handles local resolution.)
-2. Create an API token at [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens) with **Zone:Read** and **DNS:Edit** scoped to all three zones (`loft.hsimah.com`, `hsimah.com`, `hbla.ke`). Drop it into `CLOUDFLARE_API_TOKEN`.
-3. Create a tunnel in Cloudflare Zero Trust (connector: Cloudflared). Add the two public hostnames above. Drop the token into `TUNNEL_TOKEN`.
-4. `loft-ctl rebuild mushr` — Caddy will issue real certs within ~30s.
-
-### Adding a new service to Caddy
-
-Add a route block in [`Caddyfile`](../../services/mushr/Caddyfile) (HTTPS first, then the matching `http://<name>.space-needle` block), join the service to the `loft-proxy` external network in its compose, then `loft-ctl reload mushr` (or `rebuild` if the service also changed network membership).
-
-## Related
-
-- All bridge-networked services — every page links back here because everything flows through Caddy.
-- [space-needle](../hosts/space-needle.md) — the only host running mushr, and the only host that needs the LAN to point DHCP DNS at it.
-- Blog: [Reverse proxy + LAN DNS with mushr](../../../hblake/posts/mushr.md)
-- Blog: [Docker networking — host vs bridge in the loft](../../../hblake/posts/off-host-network.md)
-
-## Debug & Troubleshooting
-
-### dnsmasq won't bind port 53
-
-**Symptom:** `mushr-dns` exits at startup with `address already in use` on port 53.
-
-**Cause:** `systemd-resolved`'s stub listener is on `127.0.0.53:53` and binds the wildcard 53 on some configurations.
-
-**Fix:**
+Reload applies Caddyfile edits using the **running** environment. For changed `.env`, validate using Compose's environment processing, then recreate:
 
 ```bash
-sudo ss -tlnp | grep ':53'
-sudo sed -i 's/#DNSStubListener=yes/DNSStubListener=no/' /etc/systemd/resolved.conf
-sudo systemctl restart systemd-resolved
-sudo docker restart mushr-dns
+cd /srv/the-loft
+sudo docker compose -f services/mushr/docker-compose.yml run --rm --no-deps \
+  mushr caddy validate --config /etc/caddy/Caddyfile
+loft-ctl rebuild mushr
+loft-ctl health mushr
 ```
 
-### Caddy TLS handshake failures across `*.loft.hsimah.com`
+Build first when changing the image, so compilation failure does not follow a proxy shutdown. For pre-pulls, name only `mushr-tunnel mushr-dns`; the Caddy image is local and cannot be pulled from a registry.
 
-**Symptom:** Browsers warn about cert errors, or curl shows "TLS handshake error".
+## Briefing mount and password
 
-**Cause:** Stale or corrupt cert data in the `caddy-data` volume.
+The [Sputnik](sputnik.md) renderer and generated JSON are sibling read-only mounts at `/srv/briefing` and `/srv/briefing-data`. Caddy's `handle_path /data/*` joins their URL space. Preserve this layout: mounting a child beneath a read-only parent fails if the child mountpoint does not already exist.
 
-**Fix:**
+The briefing route requires basic auth; it has no plain-HTTP counterpart. Generate the hash interactively:
 
 ```bash
-loft-ctl stop mushr
-sudo docker volume rm mushr_caddy-data mushr_caddy-config
-loft-ctl start mushr
-# Caddy re-issues via Cloudflare DNS-01 within ~30s
+sudo docker exec -it mushr caddy hash-password
 ```
 
-(Beware Let's Encrypt rate limits — don't do this in a loop.)
+Use a single-quoted value for a literal bcrypt hash in Compose's `.env` syntax, e.g. `BRIEFING_HASH='$2a$...'`. Existing doubled-dollar values should be checked before changing them. Compose `.env` processing differs from `docker run --env-file`; use the Compose validation command above. See [Docker interpolation rules](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/). The Homepage briefing widget needs the matching plaintext credential in Houstn's environment.
 
-### `mushr-tunnel` won't start
+## Troubleshooting and retained incidents
 
-**Cause:** It has `depends_on: mushr: condition: service_healthy`. If Caddy's healthcheck fails, the tunnel never gets to run.
-
-**Fix:**
-
-```bash
-sudo docker inspect mushr --format '{{.State.Health.Status}}'
-sudo docker logs mushr --tail 30
-sudo docker exec mushr caddy validate --config /etc/caddy/Caddyfile
-```
-
-Most common cause: a typo in the Caddyfile after an edit. Validate before rebuilding.
-
-### Containers can't resolve `*.loft.hsimah.com` while the host can
-
-**Symptom:** From inside a container, `nslookup radarr.loft.hsimah.com` returns NXDOMAIN, but the same query on the host works.
-
-**Cause:** Per the [container DNS quirk](#container-dns-quirk) above. Docker's embedded resolver drops loopback entries from the host's resolv.conf and falls back to public DNS.
-
-**Fix:** Add `dns: [192.168.86.28]` to the affected service in its compose:
-
-```yaml
-services:
-  uptime:
-    dns:
-      - 192.168.86.28
-```
-
-Then `loft-ctl rebuild` that service.
-
-### Cloudflare Tunnel keeps disconnecting
-
-**Checks:**
-
-```bash
-sudo docker logs mushr-tunnel --tail 30 | grep -i 'error\|failed\|disconnect'
-# Look for: "Unauthorized: Failed to get tunnel" (token bad) vs
-#           "connection reset" / "TLS handshake" (network instability)
-```
-
-If the token is bad, regenerate it in Cloudflare Zero Trust and update `TUNNEL_TOKEN` in `.env`. If it's network instability, the tunnel auto-reconnects within a few seconds — sustained drops point at an ISP / Cloudflare edge issue.
-
-### Certs not renewing
-
-Caddy renews 30 days before expiry. If certs are expiring:
-
-```bash
-# Check current expiry
-echo | openssl s_client -connect localhost:443 -servername radarr.loft.hsimah.com 2>/dev/null \
-  | openssl x509 -noout -dates
-
-# Force a fresh issuance via admin API
-curl -sX POST 'http://localhost:8880/load' -H 'Content-Type: application/json' \
-  -d "$(curl -s http://localhost:8880/config/)"
-```
-
-If renewal is failing, check `sudo docker logs mushr --tail 100 | grep -i acme` — usually `CLOUDFLARE_API_TOKEN` has lost the required scopes or was rotated.
+- **Tunnel waiting:** inspect `sudo docker inspect mushr --format '{{json .State.Health}}'`, then Caddy validation/logs. The tunnel depends on healthy Caddy.
+- **LAN resolves, container does not:** check the affected container's resolver. The repo's daemon.json explicitly uses public upstream DNS; services needing loft names have `dns: [192.168.86.28]`. Docker container-name lookup on `loft-proxy` is separate. Prefer a per-service change over restarting the entire daemon.
+- **Port 53 conflict:** inspect `sudo ss -lntup` and actual bind addresses. dnsmasq's LAN listener and systemd-resolved's loopback listener can coexist. Do not disable the stub blindly; account for `/etc/resolv.conf` if changing it.
+- **TLS errors:** check DNS, clock, SNI, certificate dates, Caddy logs and Cloudflare token permissions. Test with the intended hostname as shown in [triage](../../DEBUG.md). Back up certificate state before any diagnosed state repair; deleting it forces issuance and can hit rate limits.
+- **Idle-browser errors:** an earlier local incident led to `protocols h1 h2` disabling HTTP/3. Preserve that workaround until deliberately retested; it is an observation about this fleet, not proof that every idle TLS failure has the same cause.
+- **Registry access denied:** Caddy's local image is expected to be unpullable. For registry images, check the pinned tag and the Docker caller's registry credentials; do not dump auth configuration into shared logs.

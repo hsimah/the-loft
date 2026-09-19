@@ -21,42 +21,17 @@ For deep dives, see [`docs/`](docs/README.md).
 | [howlr](docs/services/howlr.md) | Music Assistant + Snapcast — whole-home audio |
 | [mushr](docs/services/mushr.md) | Caddy reverse proxy + Cloudflare Tunnel + LAN DNS |
 | [pawpcorn](docs/services/pawpcorn.md) | Plex Media Server |
-| [pawst](docs/services/pawst.md) | Static blogs `hbla.ke` and `hsimah.com` |
+| [pawst](docs/services/pawst.md) | Static sites `hbla.ke` and `hsimah.com` |
 | [pupyrus](docs/services/pupyrus.md) | WordPress (+ MariaDB + Redis) |
 | [snoot](docs/services/snoot.md) | Beszel agent on every host |
 | [sputnik](docs/services/sputnik.md) | Local LLM — Ollama + Open WebUI + n8n, read-only Gmail/Calendar assistant |
-| [stellarr](docs/services/stellarr.md) | *arr stack + Transmission + slskd, behind NordVPN |
+| [stellarr](docs/services/stellarr.md) | *arr stack; Transmission + slskd use NordVPN |
 
 ## Image pinning
 
-Every container image is pinned to an explicit version. Nothing runs on `latest`.
-Upgrades are therefore reviewable git commits rather than an untracked
-`docker compose pull`, and `git revert` is a real rollback path.
+Compose image references are version-tagged or digest-qualified; exact references live in each service's compose file. Change the selected pin in Git, then deploy that service with `loft-ctl update <name>`.
 
-To bump a service: edit the tag in `services/<name>/docker-compose.yml`, commit,
-then on the host run `loft-ctl update <name>`. Because `loft-ctl rebuild` takes
-the service `down` before it pulls, warm the image first to shorten the outage:
-
-```bash
-sudo docker compose -f services/<name>/docker-compose.yml pull
-loft-ctl update <name>
-```
-
-Rolling back is `git revert` + the same command — the previous image is still on
-disk under its own tag, so no re-download is needed.
-
-Four images are pinned with caveats worth knowing about:
-
-| Image | Pin | Why |
-|-------|-----|-----|
-| `ivdata/snapclient` | digest `sha256:0270a64f…` | Publishes **no** version tags — only `latest` (2023-03-25) and `alpine` (2022-06-06). A digest is the only reproducible pin. Upstream looks abandoned; worth replacing. |
-| `ghcr.io/bubuntux/nordvpn` | digest `sha256:ac521b5a…` | Repo **archived** (read-only since 2025-11-22). Pinned to the `:latest`/`:master` build by digest — the `v3.12.3` semver tag is *older* than master and ships a nordvpn client the service now refuses to authenticate. Do not "upgrade" it to a version tag. Needs a maintained replacement (gluetun). |
-| `lscr.io/linuxserver/lidarr` | `nightly-3.1.2.4939-ls197` | Pinned to a **nightly** build, not the stable line. Its schema (3.1.2) is ahead of stable (`3.1.0.4875-ls36`), and Lidarr won't open a database written by a newer build — so stable is a downgrade that fails to start. Moving to stable means exporting the library and rebuilding the DB. |
-| `louislam/uptime-kuma` | `1.23.17` | Deliberately held on 1.x. Kuma 2.x migrates the monitor DB on first start with no rollback. |
-
-`mariadb` (held on 12.2.x) and `redis` (held on 7.x) are likewise pinned below
-their newest releases — both sit under a live WordPress install, so major
-version moves belong in their own change, not a pinning pass.
+Read [upgrades and backups](docs/operations/upgrades.md) before changing stateful services. A manifest revert does not undo database migrations, cached images may have been pruned, and Caddy's local build has an unversioned plugin dependency. The guide also records the VPN, Snapclient, Lidarr and database pin exceptions.
 
 ## How it's organized
 
@@ -87,7 +62,9 @@ Services are defined once and customized per host via Docker Compose's native me
 ## Quick start
 
 ```bash
-sudo git clone git@github.com:hsimah-services/the-loft.git /srv/the-loft
+# Run as adminhabl with GitHub access configured
+sudo install -d -o adminhabl -g adminhabl /srv/the-loft
+git clone git@github.com:hsimah-services/the-loft.git /srv/the-loft
 cd /srv/the-loft
 
 # Copy .env.example → .env for each service this host runs
@@ -104,21 +81,25 @@ For a fresh host, see the host-specific docs page and [`docs/scripts/setup.md`](
 ## Security model
 
 - **SSH**: Only `adminhabl` can SSH in. Password auth disabled on Pis.
-- **Containers**: All run as `littledog` (UID/GID 1003), a `nologin` service account.
+- **Container identity**: Setup creates new `littledog`/`pack-member` accounts as UID/GID 1003, preserving existing IDs. Containers use image defaults or service-specific user settings; verify each application’s data ownership instead of applying one UID fleet-wide.
 - **Admin escalation**: You log in as `adminhabl` and use `sudo` for privileged actions; `loft-ctl` still auto-elevates to `adminhabl` via `su` if invoked by another user.
-- **External access**: Only Pawst (`hbla.ke` + `hsimah.com`) is exposed externally, via Cloudflare Tunnel — no open ports. Everything else is LAN-only. Sputnik's `n8n` holds a live Google OAuth refresh token, so keep it (and `sputnik`) out of the tunnel's public-hostname list in the Cloudflare dashboard.
+- **External access**: Pawst uses an outbound Cloudflare Tunnel. Public hostnames are managed in the Cloudflare dashboard; repository routes alone do not prove exposure. Keep Sputnik, n8n and briefing off the public hostname list. Plex Remote Access and router state require separate live verification.
 - **Unauthenticated services**: `ollama` has no auth of any kind — anything that reaches port 11434 can run inference and pull or delete models. It is published on `127.0.0.1` only and deliberately has no Caddy route.
 - **Static content with no app behind it**: `briefing.loft.hsimah.com` serves sputnik's inbox digest straight off disk, so there is no application login to rely on — the Caddy route carries `basic_auth` (`BRIEFING_*` in `services/mushr/.env`) and, like `n8n`, stays off the tunnel's public-hostname list.
 - **i3 desktop** (calavera): lightdm autologs the `rodnik` service account into an i3 session that auto-launches `firefox --kiosk` fullscreen as a Music Assistant touch dashboard (config in `hosts/calavera/i3/`, URL + HiDPI scaling from `host.conf`); `rodnik` has no sudo or docker.
 
 ## Debugging
 
-See [DEBUG.md](DEBUG.md) for container/log/network/Caddy diagnostics, plus the **Debug & Troubleshooting** section at the bottom of every page in [`docs/`](docs/README.md).
+See [DEBUG.md](DEBUG.md) for short triage steps, then the relevant service or host page. Proposed work and required live checks are in [maintenance](plans/maintenance.md). Historical plans are in [the archive](docs/archive/README.md).
 
 ## CI
 
 A GitHub Actions workflow (`.github/workflows/validate.yml`) validates every push:
+
 - All compose + override combinations pass `docker compose config --quiet`
 - Howlr validated under both `COMPOSE_PROFILES=server` and `=client`
 - Sputnik validated under `engine`, `chat`, `agent`, and all three combined
-- All shell scripts and `host.conf` files pass `bash -n`
+- Houstn validated under `hub`, `metrics`, and both combined
+- Shell scripts, bootstrap/hooks and `host.conf` files pass `bash -n`
+- Health-helper regression tests and active-document link/anchor checks run without remote access
+- JSON configuration and Python syntax are checked

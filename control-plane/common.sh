@@ -42,12 +42,20 @@ check_containers() {
   local compose_args="$1"
   local service="$2"
   local elapsed=0
+  local expected
+
+  # Respect the active profiles; one-off CLI profiles are normally inactive.
+  # shellcheck disable=SC2086
+  if ! expected=$(docker compose ${compose_args} config --services) || [[ -z "$expected" ]]; then
+    echo "  FAIL: Could not resolve active containers for ${service}."
+    return 1
+  fi
 
   echo "  Checking containers for ${service}..."
   while (( elapsed < HC_TIMEOUT )); do
     local states
     # shellcheck disable=SC2086
-    states=$(docker compose ${compose_args} ps --format '{{.State}}' 2>/dev/null | grep -v '^$' || true)
+    states=$(docker compose ${compose_args} ps --all --format '{{.Service}}|{{.State}}|{{.Health}}' 2>/dev/null) || states=""
 
     if [[ -z "$states" ]]; then
       sleep "$HC_INTERVAL"
@@ -55,16 +63,21 @@ check_containers() {
       continue
     fi
 
-    local all_running=true
-    while IFS= read -r state; do
-      if [[ "$state" != "running" ]]; then
-        all_running=false
-        break
-      fi
-    done <<< "$states"
+    local all_running=true expected_service reported_service state health found
+    while IFS= read -r expected_service; do
+      found=false
+      while IFS='|' read -r reported_service state health; do
+        [[ "$reported_service" == "$expected_service" ]] || continue
+        found=true
+        if [[ "$state" != "running" || ( -n "$health" && "$health" != "healthy" ) ]]; then
+          all_running=false
+        fi
+      done <<< "$states"
+      $found || all_running=false
+    done <<< "$expected"
 
     if $all_running; then
-      echo "  All containers running."
+      echo "  All active containers running; configured Docker healthchecks healthy."
       return 0
     fi
 
@@ -72,9 +85,9 @@ check_containers() {
     (( elapsed += HC_INTERVAL ))
   done
 
-  echo "  WARNING: Not all containers running after ${HC_TIMEOUT}s."
+  echo "  WARNING: Containers missing, stopped, or not healthy after ${HC_TIMEOUT}s."
   # shellcheck disable=SC2086
-  docker compose ${compose_args} ps
+  docker compose ${compose_args} ps --all
   return 1
 }
 
@@ -87,7 +100,10 @@ check_url() {
   local warn_only="${3:-false}"
 
   local http_code
-  http_code=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 "$url" 2>/dev/null || echo "000")
+  # curl already emits 000 on connection failure; do not append another code.
+  if ! http_code=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 5 "$url" 2>/dev/null); then
+    http_code="000"
+  fi
 
   if [[ "$http_code" == "000" ]]; then
     if $warn_only; then

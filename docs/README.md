@@ -1,38 +1,34 @@
-# `the-loft` docs
+# Operations index
 
-Per-thing deep-dive pages. The root [`README.md`](../README.md) is the index — start there for a fleet overview, then jump in here for the details on a specific host, service, or script.
-
-Every page follows [`_template.md`](_template.md): Overview · Architecture · Configuration · Operations · Related · Debug & Troubleshooting.
+Start with the [fleet overview](../README.md). Exact service membership, image tags, mounts and endpoints live in the manifests linked from each page.
 
 ## Hosts
 
-| Host | Hardware | Role |
-|------|----------|------|
-| [space-needle](hosts/space-needle.md) | Minisforum MS-01 (i9, x86_64) | Primary server — runs everything |
-| [viking](hosts/viking.md) | Raspberry Pi 3 B+ (arm64) | Snapcast client + per-host metrics |
-| [fjord](hosts/fjord.md) | Raspberry Pi 3 B+ (arm64) | Per-host metrics (awaiting cyberdeck repurpose) |
-| [calavera](hosts/calavera.md) | Surface Pro 2 (x86_64, touchscreen) | Always-on Snapcast client + i3 desktop |
+- [space-needle](hosts/space-needle.md) — primary server and storage
+- [viking](hosts/viking.md) — Upstairs audio client
+- [fjord](hosts/fjord.md) — metrics only; cyberdeck proposal
+- [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
 
 ## Services
 
-| Service | Purpose |
-|---------|---------|
-| [houstn](services/houstn.md) | Fleet observability — Beszel hub, Uptime Kuma, Homepage, per-host Glances |
-| [howlr](services/howlr.md) | Music Assistant + Snapcast — whole-home audio |
-| [mushr](services/mushr.md) | Caddy reverse proxy + Cloudflare Tunnel + LAN DNS |
-| [pawpcorn](services/pawpcorn.md) | Plex Media Server |
-| [pawst](services/pawst.md) | Static blogs `hbla.ke` and `hsimah.com` |
-| [pupyrus](services/pupyrus.md) | WordPress (+ MariaDB + Redis) |
-| [snoot](services/snoot.md) | Beszel agent on every host |
-| [sputnik](services/sputnik.md) | Local LLM — Ollama + Open WebUI + n8n, read-only Gmail/Calendar assistant |
-| [stellarr](services/stellarr.md) | *arr stack + Transmission + slskd, all behind NordVPN |
+- [Houstn](services/houstn.md) — dashboards and Glances
+- [Snoot](services/snoot.md) — Beszel agents
+- [Howlr](services/howlr.md) — Music Assistant and Snapcast
+- [Mushr](services/mushr.md) — proxy, tunnel and LAN DNS
+- [Pawpcorn](services/pawpcorn.md) — Plex
+- [Stellarr](services/stellarr.md) — media acquisition; Transmission/slskd use the VPN
+- [Pupyrus](services/pupyrus.md) — WordPress, MariaDB and Redis
+- [Pawst](services/pawst.md) — static sites
+- [Sputnik](services/sputnik.md) — local inference, chat and briefing workflow
 
-## Scripts
+## Runbooks and scripts
 
-| Script | Purpose |
-|--------|---------|
-| [setup.sh](scripts/setup.md) | Idempotent host provisioner — reads `hosts/$(hostname)/host.conf` and bootstraps a host |
-| [loft-ctl](scripts/loft-ctl.md) | Day-to-day service control — start, stop, rebuild, health, update |
-| [deploy-pull.sh](scripts/deploy-pull.md) | Hourly GitHub Release puller — syncs tarballs into bind-mounted dirs |
-| [github-app-token.sh](scripts/github-app-token.md) | Mints GitHub App installation tokens — auth backbone for `deploy-pull.sh` |
-| [common.sh](scripts/common-sh.md) | Sourced library — compose-arg resolution and health-check helpers |
+- [Triage](../DEBUG.md)
+- [Pi provisioning](operations/raspberry-pi.md)
+- [Calavera reimage](operations/calavera-reimage.md)
+- [Upgrades and backups](operations/upgrades.md)
+- [Setup](scripts/setup.md), [loft-ctl](scripts/loft-ctl.md), [shared health helpers](scripts/common-sh.md)
+- [Release deployment](scripts/deploy-pull.md), [GitHub App authentication](scripts/github-app-token.md)
+- [Open maintenance work](../plans/maintenance.md)
+
+Historical migration plans live in [archive](archive/README.md). The [September notes audit](audits/2026-09-19-notes.md) records the cleanup baseline; its old line numbers and quoted instructions are historical evidence.

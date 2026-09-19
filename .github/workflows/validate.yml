@@ -37,6 +37,12 @@ jobs:
             COMPOSE_PROFILES="${profile}" docker compose -f services/sputnik/docker-compose.yml config --quiet
           done
 
+      - name: Validate houstn compose profiles
+        run: |
+          for profile in hub metrics hub,metrics; do
+            COMPOSE_PROFILES="${profile}" docker compose -f services/houstn/docker-compose.yml config --quiet
+          done
+
       - name: Validate compose with overrides
         run: |
           for host_dir in hosts/*/; do
@@ -62,11 +68,29 @@ jobs:
 
       - name: Syntax-check shell scripts
         run: |
-          for f in setup.sh loft-ctl control-plane/*.sh services/*/*.sh; do
+          for f in setup.sh loft-ctl bashrc.d control-plane/*.sh control-plane/hooks/* services/*/*.sh services/*/*/*.sh hosts/*/bootstrap; do
             [ -e "$f" ] || continue
             echo "Checking $f..."
             bash -n "$f"
           done
+
+      - name: Health regression tests and documentation links
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 control-plane/check-docs.py
+
+      - name: Validate JSON and Python syntax
+        run: |
+          python3 - <<'PY'
+          import ast
+          import json
+          from pathlib import Path
+          for path in [Path('daemon.json'), *Path('services').rglob('*.json')]:
+              json.loads(path.read_text())
+          for directory in ('control-plane', 'tests'):
+              for path in Path(directory).glob('*.py'):
+                  ast.parse(path.read_text(), filename=str(path))
+          PY
 
       - name: Syntax-check host.conf files
         run: |

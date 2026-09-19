@@ -1,66 +1,17 @@
-# The Loft Project Rules
+# The Loft project rules
 
-## Environment
+- Fleet hosts are remote. Make repository changes locally; provide host commands for the operator unless remote access is explicitly authorized. Remote checkouts live at `/srv/the-loft`.
+- Prefix privileged host commands (Docker, systemctl, writes under `/opt` or `/mammoth`) with `sudo`. `loft-ctl` handles its own switch to `adminhabl`.
+- Host manifests: `hosts/<hostname>/host.conf`. Shared Compose: `services/<name>/docker-compose.yml`. Optional overrides: `hosts/<hostname>/overrides/<service>/docker-compose.override.yml`.
+- `setup.sh` provisions the host and sources optional `hosts/<hostname>/bootstrap`. `loft-ctl` provides start, stop, rebuild, health and update; shared helpers live in `control-plane/common.sh`.
+- Prefer profiles in an existing service group for related fleet infrastructure. Current profiles are documented in the service pages; do not duplicate their inventory here.
+- Update the canonical affected documentation when behavior changes. Review README for changes to fleet membership, service purpose or entry-point instructions. Link to config for exact tags, ports and paths instead of copying tables across pages.
+- Label proposals and historical incidents explicitly. Repository configuration does not prove live deployment. Keep observed hardware quirks and measured benchmarks; avoid turning an incident diagnosis into a universal rule.
 
-- The Loft hosts are **remote machines**. Claude cannot run shell commands directly on them. When diagnostics or commands are needed, provide them as text for the user to run.
-- All commands that modify system state (docker, systemctl, file operations in /opt or /mammoth, etc.) must be prefixed with `sudo`.
+## Names
 
-## Fleet Structure
+Services use single-word dog/spitz or space/aerospace wordplay: howlr (audio), pupyrus (writing), mushr (routing). The owner's pomskies, Laiko and Belki, are named after space dogs. When asked for names, offer a few from each theme with brief explanations.
 
-- Host configs live at `hosts/<hostname>/host.conf` (bash-sourceable)
-- Service definitions live at `services/<name>/docker-compose.yml`
-- Per-host overrides live at `hosts/<hostname>/overrides/<service>/docker-compose.override.yml`
-- Per-host provisioning that doesn't belong in the fleet-wide script lives at `hosts/<hostname>/bootstrap` (sourced by `setup.sh` §11b if present — see `hosts/calavera/bootstrap`)
-- `control-plane/common.sh` has shared helpers (compose_args_for, health checks) sourced by loft-ctl and setup.sh
-- `loft-ctl` is the fleet-aware control script (aliased in bashrc.d) with commands: start, stop, rebuild, health, update
-- `setup.sh` is the unified host provisioner — reads `hosts/$(hostname)/host.conf`
+Host names come from something physically visible to the owner: space-needle from the landmark; viking/fjord from a vodka bottle. Ask what is visible when proposing a host name.
 
-## README Maintenance
-
-After making any changes to the repository (docker-compose files, env files, setup.sh, loft-ctl, host configs, directory structure, services, etc.), review the README.md and update it to reflect the current state. This includes but is not limited to:
-- Services table (images, ports, config paths, purpose)
-- Storage layout (volume mounts, directories)
-- Environment variables table (per-service required variables)
-- Architecture description (fleet, hosts, networking)
-- Quick start instructions and deploy commands
-- Host configuration format
-
-## Compose Profiles
-
-Prefer Docker Compose profiles over standalone services when a new container is functionally part of an existing service group. Before creating `services/<new>/`, ask: does this belong inside an existing service's compose file behind a profile?
-
-Current profile conventions:
-- **houstn** — `hub` (beszel + uptime + homepage, space-needle only) / `metrics` (glances, all hosts)
-- **howlr** — `server` (Music Assistant, space-needle only) / `client` (snapclient, Pi hosts)
-
-When adding infrastructure that runs fleet-wide (agents, exporters, sidecars), default to adding it as a new profile inside the most closely related existing service rather than creating a new top-level service. For example: a new per-host metrics exporter belongs in houstn under a new or existing profile, not as `services/new-exporter/`.
-
-## Naming Conventions
-
-When suggesting names for new services or hosts, follow these conventions.
-
-### Service Names
-Service names are creative, single-word names inspired by two theme pools:
-
-- **Space / aerospace**: Rockets, planets, stars, celestial phenomena (quasars, pulsars, nebulae), space missions, cosmonauts, satellites, orbital mechanics terms
-- **Dogs / spitz breeds**: Husky, Pomeranian, Samoyed, Akita, Malamute, and other spitz-type breeds; sled dog culture (mushing, races, commands); dog behaviors and traits
-
-Names should feel like a natural mashup or wordplay connecting the theme to what the service does, not a literal description. Examples of existing names and their reasoning:
-- **howlr** — audio streaming; huskies howl (dog theme)
-- **pupyrus** — WordPress site; puppy + papyrus, a writing surface (dog theme)
-- **mushr** — reverse proxy; mushers drive sled dog teams, the proxy "drives" requests (dog theme)
-- **laiko** / **belki** — the owner's pomskies, named after Laika and Belka, dogs launched into space (both themes)
-
-When asked for naming suggestions, offer a few options from each theme pool with a brief note on the wordplay.
-
-### Host / Machine Names
-Host names are inspired by **something physically visible** from the owner's location — landmarks, objects on a shelf, artwork, etc. Examples:
-- **space-needle** — the Seattle landmark visible from the desk
-- **viking** / **fjord** — from a bottle of Vikingfjord vodka on the bar
-
-When suggesting host names, ask the user what they can see around them and riff on that.
-
-### Container Names Within Services
-- Single-container services use the service name directly: `pawpcorn`, `snoot`
-- Multi-container services that have one "primary" container use the service name for that one and prefix helpers: `mushr` + `mushr-tunnel`/`mushr-dns`; `howlr` + `howlr-snapclient`; `pupyrus` + `pupyrus-db`/`pupyrus-redis`/`pupyrus-cli`
-- Bundle services (a single compose grouping several independent products under one umbrella name, like stellarr or houstn) name each product container directly with the product's own name (`radarr`, `sonarr`, `transmission`, `slskd`, `beszel`, `uptime`, `homepage`); only glue/infrastructure containers get the service-name prefix (`stellarr-vpn`)
+Single-container services use the service name. A primary application keeps the name and helpers take prefixes (`pupyrus-db`). Bundles of independent products use product names (`radarr`, `beszel`, `ollama`); glue uses the bundle prefix (`stellarr-vpn`).

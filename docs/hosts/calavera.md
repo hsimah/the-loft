@@ -1,253 +1,61 @@
-# `calavera`
+# calavera
 
-> Surface Pro 2 (x86_64, touchscreen) in The Loft fleet — always-on Downstairs Snapcast client with an i3 desktop. Previously the vinyl kiosk; that role (Spinnik) has been retired.
+Surface Pro 2, x86_64, Debian 13, 4 GB RAM, touchscreen and powered dock. LAN `192.168.86.35`. It is the always-on Downstairs Snapcast client, replacing Fjord, and a Music Assistant touch dashboard. The former vinyl/Spinnik role is retired.
 
-## Overview
+[host.conf](../../hosts/calavera/host.conf) declares Howlr client, Snoot and Houstn metrics. [bootstrap](../../hosts/calavera/bootstrap) owns desktop provisioning; [the reimage guide](../operations/calavera-reimage.md) covers installation.
 
-`calavera` is an old Surface Pro 2 (Debian 13, 4GB RAM, Intel 3rd-gen, 10.6" 1080p touchscreen) sitting in a dock. It took over the **Downstairs Snapcast client** role from [fjord](fjord.md), so it's now an always-on audio sink: [Music Assistant on space-needle](space-needle.md) streams to it and it plays out through a USB DAC into the Downstairs speakers.
+## Audio
 
-The display runs an **i3** desktop (lightdm autologs the `rodnik` service account into i3) that auto-launches `firefox --kiosk` fullscreen as a **Music Assistant touch dashboard** (`https://howlr.loft.hsimah.com`) at 130% scale. Unlike the old locked chromium/greetd kiosk, this is a real i3 session — `mod+Return` drops to a kitty terminal for local admin. (Firefox rather than Chromium because trixie's Chromium build SIGTRAPs on startup — see the browser note below.) The vinyl-casting stack (Spinnik — DarkIce + Icecast + touch UI capturing the Audio-Technica LP5X) has been **retired entirely** and removed from the repo.
+The dock's USB DAC reports as `CONEXANT CNXT Audio`, ALSA card `Audio`. Use:
 
-It also runs the [Houstn](../services/houstn.md) `metrics` profile and the [Snoot](../services/snoot.md) Beszel agent like the rest of the fleet.
-
-Naming aside: calavera is **not** a Raspberry Pi. It's an x86_64 Surface Pro 2 — easy to forget because it sits in the same "edge device" mental bucket as viking and fjord.
-
-## Architecture
-
-### Services running here
-
-`hosts/calavera/host.conf` declares `SERVICES=(howlr snoot houstn)` and `I3_ENABLED=true`. With `COMPOSE_PROFILES=client` for howlr and `COMPOSE_PROFILES=metrics` for houstn this resolves to:
-
-| Service | Container | Profile | Purpose |
-|---------|-----------|---------|---------|
-| [howlr](../services/howlr.md) | `howlr-snapclient` | `client` | Snapcast client — plays the Downstairs zone through the USB DAC |
-| [snoot](../services/snoot.md) | `snoot` | — | Beszel agent |
-| [houstn](../services/houstn.md) | `glances` | `metrics` | Per-host metrics for Homepage |
-
-### i3 desktop stack
-
-```
-lightdm (auto-login as rodnik)
-  └── i3 session (config from hosts/calavera/i3/config)
-        ├── loft-dashboard → firefox --kiosk fullscreen → Music Assistant
-        └── kitty (mod+Return, admin shell)
-```
-
-`rodnik` is a locked-down display service account (created by `setup.sh` only when `I3_ENABLED=true`): home dir + login shell, member of `video`/`input`/`audio`, no sudo and no docker. lightdm autologin is configured via `/etc/lightdm/lightdm.conf.d/50-rodnik-autologin.conf`.
-
-The i3 config, kitty config, and the generated `/usr/local/bin/loft-dashboard` launcher (plus a dedicated firefox kiosk profile under `~rodnik/.local/share/loft-dashboard-firefox/`) come from `hosts/calavera/i3/` + `host.conf`; the dashboard URL and HiDPI scale are host-config knobs (`I3_DASHBOARD_URL`, `I3_DPI`) so the i3 config itself stays generic. `I3_DPI="125"` scales the session to ~130% (96 = 100% was tried first and came up too small; 200% was tried before that and was way too big; 130%, dialed in via Firefox's manual zoom, was the sweet spot). The dashboard also runs Music Assistant's **mobile-mode UI** for the touch layout on top of that scale. `I3_DPI` drives both `~/.Xresources` `Xft.dpi` (session fonts) and firefox's `layout.css.devPixelsPerPx` (dashboard scale).
-
-`loft-dashboard` blocks on a `curl` probe of the dashboard URL before ever launching firefox. The MA frontend remembers the server address in `localStorage` and auto-reconnects on load, but only if its one-shot connection probe succeeds — there's no retry, just a fallback to a blank manual-entry screen. Since i3 autologs in and fires `loft-dashboard` immediately at boot, and calavera's USB WiFi is the flaky part of this host (see below), the probe protects against firefox opening before the network is actually up and forcing a manual re-login every reboot.
-
-**Touch swipe-scroll:** Firefox on X11 does nothing with touch drag unless XInput2 touch events are on, so the launcher exports `MOZ_USE_XINPUT2=1` (there's no CLI flag for it) and the kiosk `user.js` sets `dom.w3c_touch_events.enabled=1` + `apz.gtk.kinetic_scroll.enabled=true`. Together these give the Surface panel swipe-to-scroll and kinetic panning in the Music Assistant UI.
-
-> **Browser: Firefox, not Chromium.** trixie's Chromium (150.x) SIGTRAPs immediately on startup — the `chrome_crashpad_handler` helper is invoked with a malformed argv (`chrome_crashpad_handler: --database is required`) and the browser aborts before drawing a window. It reproduces with `--no-sandbox`, `--disable-gpu`, and `--headless`, survives a package reinstall, and isn't AppArmor (no `DENIED` in `dmesg`) — i.e. the packaged build itself is broken. `firefox-esr --kiosk` works out of the box, so the dashboard runs on it. If a future trixie Chromium fixes this, revisit.
-
-Always-on hardening (also in `setup.sh`, because this is now a 24/7 audio sink):
-
-- `sleep.target`, `suspend.target`, `hibernate.target`, `hybrid-sleep.target` are masked
-- `HandleLidSwitch*=ignore` in `/etc/systemd/logind.conf.d/i3.conf` (runs docked, lid closed)
-- `iio-sensor-proxy` removed (no auto-rotation)
-
-The dashboard screen's power is managed by **`loft-dashboard-power`** rather than staying on unconditionally. The i3 config enables DPMS but with all automatic idle timeouts disabled (`xset dpms 0 0 0`) — only `loft-dashboard-power` (or local input) ever changes the power state. `unclutter` hides the idle mouse cursor as before.
-
-### Display power (`loft-dashboard-power`)
-
-A small daemon (`control-plane/loft-dashboard-power.py`, shared with any other i3 dashboard host — installed as `/usr/local/bin/loft-dashboard-power`, run by `loft-dashboard-power.service`) watches **snapserver's own JSON-RPC control API** (`ws://192.168.86.28:1780/jsonrpc` — the same protocol [snapweb](https://snapweb.loft.hsimah.com) itself uses) and drives the screen:
-
-- **On** the instant a `Stream.OnProperties` event reports `playbackStatus: "playing"` for any stream listed in `I3_POWER_GROUPS` (host.conf).
-- **Off** after 10 minutes with none of those streams playing *and* no local input (`xprintidle`) — so it won't blank while someone's actively browsing the dashboard between tracks, but also won't stay lit indefinitely on true silence.
-
-Music Assistant's *own* WebSocket API (`ws://192.168.86.28:8095/ws`) was tried first and abandoned — a plain reconnecting client never received a single `player_updated` broadcast, even for unrelated players, which points at some undocumented subscribe/`start_listening` handshake the browser UI performs that a bare client connection doesn't get for free. snapserver's JSON-RPC has no such handshake: notifications just flow to any connected client.
-
-calavera is never played to directly in Music Assistant — only ever as a member of the `Downstairs` and `All` sync groups. Each MA sync group gets its own snapserver stream, named `Music Assistant - <queue_id with underscores stripped>` (e.g. MA queue_id `syncgroup_bkmvcshl` → stream id `Music Assistant - syncgroupbkmvcshl`); `I3_POWER_GROUPS` holds that stripped form directly (`syncgroupbkmvcshl,syncgroupzewbtz9n`), confirmed against real events from snapweb's WS panel rather than derived, since the transform isn't documented anywhere. Local input (touch/keyboard) always wakes the display regardless of daemon state, per normal DPMS behavior. Host-specific config lives in `/etc/default/loft-dashboard-power` (written by `hosts/calavera/bootstrap` from `I3_POWER_GROUPS`); the script and systemd unit themselves are host-agnostic.
-
-### Audio output — USB DAC on the dock
-
-The Downstairs speakers connect to calavera via a **USB DAC** (reports as `CONEXANT CNXT Audio`, ALSA card name `Audio`) plugged into a dock USB port. howlr's snapclient targets it with:
-
-```
+```bash
+COMPOSE_PROFILES=client
+SNAPSERVER_HOST=192.168.86.28
 SOUND_DEVICE=plughw:Audio,0
+HOST_ID=calavera
 ```
 
-Pinned by card **name** (`Audio`), not number, so it survives reboots / re-enumeration. `littledog` (the container user) is in the `audio` group via `LITTLEDOG_EXTRA_GROUPS=audio`, so `howlr-snapclient` can open `/dev/snd`.
-
-**Why a USB DAC and not the 3.5mm jack** — the Surface's internal codec (Realtek ALC280, ALSA card `PCH`) only exposes two analog output pins: the internal speaker (node 0x14) and the tablet body's own headphone jack (node 0x15). The Surface Pro 2 **dock's** 3.5mm out is *not* wired through the codec — plugging into it produces no jack event and no audio, so it's dead under Linux. The tablet's own headphone jack works, but the USB DAC is tidier (one cable to the dock) and more reliable than the flaky internal codec.
-
-### Surface Pro 2 WiFi quirks
-
-The Surface's Marvell 88W8797 USB WiFi flakes out under aggressive USB autosuspend. `setup.sh` installs `/etc/udev/rules.d/99-surface-wifi.rules`:
-
-```
-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="1286", ATTR{power/autosuspend}="-1"
-```
-
-That disables autosuspend for the Marvell USB WiFi adapter. The fleet-wide `/etc/cron.d/loft-wifi-watchdog` (restarts the DHCP unit if the WiFi interface loses IPv4) also runs here — but calavera's WiFi is a USB adapter with a predictable name (`wlx501ac51167c0`) managed by NetworkManager, **not** the Pis' `wlan0` + `dhcpcd`. So `host.conf` overrides the watchdog defaults via `WIFI_IFACE="wlx501ac51167c0"`, `WIFI_DHCP_UNIT="NetworkManager"`, and `WIFI_WATCHDOG_MINUTES="2"` (checks every 2 min instead of the fleet default 5, since the USB adapter drops more often).
-
-### Networking
-
-- LAN IP: `192.168.86.35` (per the dnsmasq A record in [`services/mushr/dnsmasq.conf`](../../services/mushr/dnsmasq.conf) and Houstn's `extra_hosts`)
-- DNS: pointed at `192.168.86.28` (mushr-dns on space-needle)
-
-## Configuration
-
-### `host.conf`
-
-See [`hosts/calavera/host.conf`](../../hosts/calavera/host.conf). The notable variables:
-
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `SERVICES` | `(howlr snoot houstn)` | Always-on snapclient + fleet metrics |
-| `I3_ENABLED` | `true` | Creates the `rodnik` display account (`setup.sh` §5) and adds it to the verification summary; the i3/lightdm/dashboard/Surface provisioning itself lives in [`hosts/calavera/bootstrap`](../../hosts/calavera/bootstrap), which runs because it exists for this hostname |
-| `I3_DASHBOARD_URL` | `https://howlr.loft.hsimah.com/#/home?player=calavera&showFullscreenPlayer=true` | Fullscreen firefox kiosk target — opens straight to the now-playing view on startup. Direct fallback: `http://192.168.86.28:8095` |
-| `I3_DPI` | `125` | HiDPI scale for the X session + firefox dashboard (96 = 100%; 125 ≈ 130%, dialed in via Firefox's manual zoom after 200% proved too big and 100% too small) |
-| `I3_POWER_GROUPS` | `syncgroupbkmvcshl,syncgroupzewbtz9n` | snapserver stream ids (Downstairs, All) that wake the screen when playing (see [Display power](#display-power-loft-dashboard-power)) |
-| `LITTLEDOG_EXTRA_GROUPS` | `audio` | snapclient needs ALSA access |
-| `SSH_DISABLE_PASSWORD` | `true` | Key-only SSH |
-| `WIFI_IFACE` | `wlx501ac51167c0` | USB adapter's predictable name (not `wlan0`) for the WiFi watchdog |
-| `WIFI_DHCP_UNIT` | `NetworkManager` | Unit the watchdog restarts on IPv4 loss (not `dhcpcd`) |
-| `WIFI_WATCHDOG_MINUTES` | `2` | Watchdog check interval in minutes (fleet default 5; USB adapter drops more often) |
-| `WIFI_FW_RECOVERY` | `true` | Reload the mwifiex driver module if dmesg shows a firmware crash (see [Surface Pro WiFi drops out](#surface-pro-wifi-drops-out) below) |
-| `SERVICE_ENDPOINTS` / `HEALTH_URLS` | empty | No web endpoints health-checked from this host |
-
-### `.env` files
+The recorded MA player `ma_calavera` belongs to Downstairs and All. Confirm group membership in MA after upgrades. The dock's 3.5mm output produced no working codec/jack path in the original Linux investigation; the tablet jack worked, but the dock USB DAC was chosen. These are hardware observations, not a reason to change an already working audio path.
 
 ```bash
-cp services/howlr/.env.example  services/howlr/.env       # client profile
-cp services/snoot/.env.example  services/snoot/.env       # BESZEL_*
-cp services/houstn/.env.example services/houstn/.env      # COMPOSE_PROFILES=metrics
-```
-
-howlr `.env` (the per-host values that matter here):
-
-| Var | Value |
-|-----|-------|
-| `COMPOSE_PROFILES` | `client` |
-| `SNAPSERVER_HOST` | `192.168.86.28` (space-needle) |
-| `SOUND_DEVICE` | `plughw:Audio,0` (USB DAC) |
-| `HOST_ID` | `calavera` |
-
-## Operations
-
-### First-time provisioning
-
-> Reimaging from the old Ubuntu install to **Debian 13 + i3**? Follow the full runbook:
-> [`plans/calavera-debian.md`](../../plans/calavera-debian.md). The notes below cover an
-> in-place re-provision on an already-set-up host.
-
-Same shape as the Pis — clone the repo, copy `.env` files, run `setup.sh`. §5 creates the `rodnik` account (gated on `I3_ENABLED=true`), and §11b sources [`hosts/calavera/bootstrap`](../../hosts/calavera/bootstrap) because that file exists for this hostname — no flag check, the file's presence *is* the gate. The bootstrap installs `xorg`, `i3`, `lightdm`, `kitty`, `firefox-esr`, `unclutter`, `x11-xserver-utils`, `dmenu`, `xprintidle`, `python3-websockets`; configures lightdm autologin; deploys the `hosts/calavera/i3/` config + `~/.Xresources` + firefox kiosk profile + `/usr/local/bin/loft-dashboard`; installs [`loft-dashboard-power`](../../control-plane/loft-dashboard-power.py) + its systemd unit from `control-plane/` and enables it; masks sleep targets; installs the Surface WiFi udev rule; removes `iio-sensor-proxy`.
-
-It also purges the printing/Bluetooth/mDNS/modem/PackageKit/speech-synthesis stack (`cups*`, `bluetooth`/`bluez*`, `avahi-daemon`, `modemmanager`, `packagekit*`, `speech-dispatcher*`, `upower`, `power-profiles-daemon`, `switcheroo-control`, `fwupd`, `colord`, `accountsservice`) that the Debian installer's default-ticked "print server" task and auto-selected "laptop" task pull in — none of it is reachable from a wall-mounted single-purpose kiosk. This runs every time `setup.sh` runs, so it's self-healing if a reimage lets those tasks through again (see the [runbook](../../plans/calavera-debian.md#5-debian-install-choices)).
-
-Any host can pick up equivalent host-specific provisioning the same way: drop a `bootstrap` file at `hosts/<hostname>/bootstrap` (sourced, not executed — like the per-service `setup.sh` scripts in §11a — so `REPO_DIR`/`HOST_NAME`/host.conf vars/`info`/`warn`/`error` are all in scope; see [`hosts/calavera/bootstrap`](../../hosts/calavera/bootstrap) for the pattern) and `setup.sh` §11b picks it up automatically; no code changes needed elsewhere.
-
-```bash
-cd /srv/the-loft
-sudo bash setup.sh
-sudo reboot   # boot into the i3 session
-```
-
-### Day-to-day
-
-```bash
-loft-ctl health
-loft-ctl rebuild howlr
-loft-ctl update --all
-```
-
-### Verify the snapclient is connected
-
-```bash
-sudo docker logs howlr-snapclient --tail 30    # steady connection to 192.168.86.28
-```
-
-In Music Assistant on space-needle, calavera plays as `ma_calavera`, a member of the `Downstairs` (and `All`) sync groups — it inherited that membership from the retired `ma_fjord`.
-
-### Check / set the audio output device
-
-```bash
-cat /proc/asound/cards          # 'Audio' = the USB DAC (CONEXANT)
-sudo aplay -l                   # card 'Audio', device 0
-sudo speaker-test -D plughw:Audio,0 -c 2 -t wav -l 2
-```
-
-## Related
-
-- [fjord](fjord.md) — previously held the Downstairs Snapcast role
-- [howlr](../services/howlr.md) — Music Assistant + Snapcast architecture
-- [viking](viking.md) — the other Snapcast client (Upstairs)
-- [`hsimah/posts/my-home-lab.md`](../../../hsimah/posts/my-home-lab.md) — fleet overview
-
-## Debug & Troubleshooting
-
-### No sound from the speakers
-
-**Symptom:** MA plays to Downstairs but nothing comes out.
-
-**Checks:**
-
-1. **USB DAC present?** `cat /proc/asound/cards` should list card `Audio`. If missing, the DAC isn't enumerating — confirm the **dock is powered** (a common trap: the Surface's own battery keeps it running while the dock, and therefore its USB ports, are dead) and the cable is a data cable, then re-check.
-2. **Right device?** `SOUND_DEVICE=plughw:Audio,0` in `services/howlr/.env`. Test directly with `sudo speaker-test -D plughw:Audio,0 -c 2 -t wav -l 2`.
-3. **Container can't open ALSA?** `sudo docker logs howlr-snapclient` for `cannot open` errors. If the card-name form fails inside the container, fall back to the numeric (`plughw:N,0` from `aplay -l`) and `loft-ctl rebuild howlr`.
-4. **Volume:** final loudness is the DAC's own level × the MA group volume. The USB DAC has its own mixer — `sudo amixer -c Audio` to unmute / raise.
-
-### Snapclient won't connect to the snapserver
-
-```bash
+cat /proc/asound/cards
+sudo aplay -l
+sudo amixer -c Audio
 sudo docker logs howlr-snapclient --tail 50
-ping 192.168.86.28
 ```
 
-Confirm `SNAPSERVER_HOST=192.168.86.28` in `services/howlr/.env` and that MA/Snapserver is up on space-needle.
+If the DAC is absent, check **dock power** first: the tablet battery can keep the computer alive while dock USB devices are off. Verify card identity and effective container device permissions before changing UIDs. Test audio locally with `sudo speaker-test -D plughw:Audio,0 -c 2 -t wav -l 2` when the device is not in use.
 
-### Surface Pro WiFi drops out
+## Desktop and display power
 
-**Causes:**
+lightdm autologs `rodnik` into i3. This display account has video/input/audio groups, no sudo and no Docker access. Super+Return opens kitty; it does not grant an admin shell. i3 config lives under [hosts/calavera/i3](../../hosts/calavera/i3).
 
-- Marvell USB autosuspend re-enabled (re-run `setup.sh` to reinstall `/etc/udev/rules.d/99-surface-wifi.rules`)
-- `wlx501ac51167c0` lost its DHCP lease — the `/etc/cron.d/loft-wifi-watchdog` (here: watches `wlx501ac51167c0`, restarts `NetworkManager`, every 2 min) should recover it within ~2 minutes:
+The generated `loft-dashboard` launcher waits for the dashboard URL and runs Firefox kiosk in a restart loop. `I3_DASHBOARD_URL` selects MA's now-playing view. `I3_DPI=125` gives approximately 130% scale through Xresources and the Firefox profile. `MOZ_USE_XINPUT2=1` and touch/kinetic-scroll preferences enable swipe scrolling. A recorded Chromium 150.x crashpad/SIGTRAP failure led to Firefox ESR; treat that as a version-specific incident.
 
-```bash
-journalctl -t loft-wifi-watchdog --since '1 day ago'
-```
+The bootstrap masks sleep targets, ignores lid switches, removes auto-rotation and purges unused desktop/laptop services. It also installs [loft-dashboard-power](../../control-plane/loft-dashboard-power.py) and its systemd unit. Automatic DPMS timeouts are disabled; the daemon wakes on watched Snapcast streams and blanks when no watched stream is playing and input idle reaches 600 seconds. Local input can wake the display.
 
-- **Firmware crash (distinct from a lost lease):** the mwifiex driver can crash its own firmware — the interface stays present but dead, `ip route` shows no default route, and *restarting NetworkManager does nothing* (confirmed live: manually restarting the unit had no effect). `dmesg -T` repeats `PREP_CMD: FW is in a bad state` and `Ignore scan. Card removed or firmware in bad state.` when this is the cause. Only reloading the kernel module re-uploads firmware:
-
-```bash
-lsmod | grep mwifiex
-sudo rmmod mwifiex_usb && sudo rmmod mwifiex
-sudo modprobe mwifiex && sudo modprobe mwifiex_usb
-```
-
-`WIFI_FW_RECOVERY="true"` in `host.conf` makes the watchdog do this automatically — it greps `dmesg` for that signature and reloads the driver module bound to `wlx501ac51167c0` before restarting `NetworkManager`. If it's still not recovering on its own, check `journalctl -t loft-wifi-watchdog` for the "firmware crash detected" line and fall back to the manual `rmmod`/`modprobe` above (or, as a last resort, physically unplug and replug the USB dongle).
-
-### i3 doesn't start / drops to a login prompt
-
-```bash
-systemctl status lightdm
-journalctl -u lightdm --since '5 min ago' | tail -50
-```
-
-Common causes: lightdm not enabled (`sudo systemctl enable --now lightdm`); the `rodnik` account or its `~/.config/i3/config` missing (re-run `setup.sh`).
-
-### Dashboard is blank / won't load Music Assistant
-
-The `loft-dashboard` launcher loops `firefox --kiosk`, so a crash self-recovers within ~2s. If it stays blank:
-
-- Check the URL resolves from calavera: `curl -sI https://howlr.loft.hsimah.com` (or `ping howlr.loft.hsimah.com`). If DNS/proxy is the problem, set `I3_DASHBOARD_URL="http://192.168.86.28:8095"` in `host.conf` and re-run `setup.sh`.
-- Confirm space-needle's `howlr` (Music Assistant) is up.
-- Everything too small/large? Adjust `I3_DPI` in `host.conf` (96 = 100%; 192 = 200%) and re-run `setup.sh` — it regenerates `~/.Xresources` (session `Xft.dpi`) and the firefox kiosk profile's `user.js` (`layout.css.devPixelsPerPx`).
-- Restart just the dashboard without a reboot: as `rodnik`, `pkill firefox` (the loop relaunches it), or `i3-msg restart`.
-
-### Screen won't turn on / off with playback
+`I3_POWER_GROUPS` contains observed stream IDs for Downstairs/All, matched against `Music Assistant - <id>`. They were obtained from Snapweb events, not assumed from a documented MA contract. MA's own WebSocket did not yield events to the tested plain client, so the daemon uses Snapcast's `ws://192.168.86.28:1780/jsonrpc`. Recheck stream IDs after changing groups.
 
 ```bash
 systemctl status loft-dashboard-power
 journalctl -u loft-dashboard-power --since '10 min ago'
+systemctl status lightdm
 ```
 
-The log lines show each `Stream.OnProperties` event received for the watched streams (`<group> -> <state>`) and every `screen on`/`screen off` transition. Common causes:
+For a screen that never wakes, compare actual stream IDs/events with `/etc/default/loft-dashboard-power`. For one that never blanks, check playing states and whether input keeps **resetting** the idle timer. For a blank dashboard, test the configured URL from this host; rerun setup after changing URL/DPI or installed scripts. The dedicated Firefox profile preserves login state, but migrations may require touchscreen login again.
 
-- **Never turns on:** confirm `I3_POWER_GROUPS` in `host.conf` matches the snapserver stream id's stripped-underscore form exactly — check in [snapweb](https://snapweb.loft.hsimah.com)'s DevTools WS panel for the real `Stream.OnProperties.id` (`"Music Assistant - <id>"`). A stale/renamed MA group silently means no events ever match.
-- **WS connection errors in the log:** confirm `192.168.86.28:1780` (space-needle/snapserver) is reachable from calavera; the daemon reconnects with backoff on its own but will sit dark until the socket comes back.
-- **Never turns off:** something's keeping `xprintidle` non-zero (stray input) or one of the watched streams is stuck reporting `playing` — check the last logged state per stream.
+## Wi-Fi recovery record
+
+The Marvell USB adapter uses `wlx501ac51167c0` under NetworkManager. Host config chooses a two-minute watchdog and explicit `WIFI_FW_MODULE=mwifiex_usb`. The udev rule disables USB autosuspend for vendor 1286.
+
+**Recorded 2026-07-30:** firmware crashes left the interface unusable; restarting NetworkManager alone did not recover it. Module reload did. Dynamic sysfs discovery incorrectly identified usbcore, so the module is now explicit. Cron also needed `/sbin` and `/usr/sbin` on PATH. Preserve both constraints.
+
+The current watchdog does not grep dmesg: when the interface exists but lacks IPv4 and firmware recovery is enabled, it reloads the configured module and restarts NetworkManager. It does not detect every network failure (for example a dead link retaining IPv4).
+
+```bash
+journalctl -t loft-wifi-watchdog --since '1 day ago'
+# Same invocation as cron; use a console if loss of this SSH connection matters:
+sudo sh -c '. /etc/default/loft-wifi-watchdog && /usr/local/bin/loft-wifi-watchdog'
+```
+
+Earlier fixes were present in Git but not copied into `/usr/local/bin`; rerun setup after watchdog changes and compare the installed script. Manual module reload is a last-resort host operation; expect it to interrupt networking.

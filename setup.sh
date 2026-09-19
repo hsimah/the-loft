@@ -53,7 +53,7 @@ info "Activated tracked git hooks (core.hooksPath)"
 
 # ─── 2. System packages ──────────────────────────────────────────────────────
 info "Installing system packages..."
-PACKAGES=(git curl jq rsync skopeo kitty-terminfo)
+PACKAGES=(git curl jq rsync skopeo kitty-terminfo tmux ncurses-term)
 [[ "$STORAGE_FS" == "xfs" ]] && PACKAGES+=(xfsprogs)
 apt-get update -qq
 apt-get install -y -qq "${PACKAGES[@]}" > /dev/null
@@ -189,6 +189,7 @@ info "Configuring shared shell config..."
 
 BASHRC_SOURCE="source ${REPO_DIR}/bashrc.d"
 INPUTRC_INCLUDE="\$include ${REPO_DIR}/inputrc.d"
+TMUX_SOURCE="source-file ${REPO_DIR}/tmux.d"
 
 for user in adminhabl; do
   home_dir="/home/${user}"
@@ -199,7 +200,10 @@ for user in adminhabl; do
   echo "$INPUTRC_INCLUDE" > "${home_dir}/.inputrc"
   chown "${user}:${user}" "${home_dir}/.inputrc"
 
-  info "Installed .bashrc and .inputrc for ${user}"
+  echo "$TMUX_SOURCE" > "${home_dir}/.tmux.conf"
+  chown "${user}:${user}" "${home_dir}/.tmux.conf"
+
+  info "Installed .bashrc, .inputrc and .tmux.conf for ${user}"
 done
 
 # ─── 9. Directory structure ──────────────────────────────────────────────────

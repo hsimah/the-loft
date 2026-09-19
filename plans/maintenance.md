@@ -9,7 +9,6 @@ Repository cleanup completed 2026-09-19; these items require runtime evidence or
 | Host identities/device access | Record actual littledog UID/GID, Plex runtime identity and device groups; the Plex example uses 1004 while fresh provisioning uses 1003. Do not chown existing data by inference |
 | Pi networking | Confirm manager/unit and interface on Viking/Fjord; watchdog defaults to dhcpcd and may need a host override for NetworkManager |
 | Beszel connectivity | Confirm hub-side resolution/reachability and per-system tokens; Homepage host mappings do not apply to Beszel |
-| Dev static site | Local feature work remains uncommitted. Confirm release repo, first artifact and tunnel hostname before enabling deployment |
 | Exposure and OAuth | Check live Cloudflare names, Plex Remote Access/router state and granted Google scopes; these are not fully described in Git |
 | Image maintenance | Evaluate maintained Snapclient/VPN replacements without reusing the older nonworking VPN tag; assess pinned application upgrades separately |
 | Reproducibility | Pin Caddy's module source in a dedicated tested build change; verify Jackett self-updating behavior |

@@ -22,17 +22,35 @@ sudo bash setup.sh
 | Wi-Fi fields | Installs watchdog script, defaults file and cron; see [Calavera](../hosts/calavera.md) for firmware recovery |
 | DEPLOY_TARGETS | Replaces `/etc/cron.d/loft-deploy-*` with the configured hourly release jobs |
 
-The script also installs base packages (including terminal definitions), activates tracked Git hooks, installs Docker if missing, creates `loft-proxy`, and copies daemon.json. Changing daemon.json restarts Docker. Git hooks update `.deployed-version` after checkout/merge; that marker records checkout state, not proof every container was redeployed.
+The script also installs base packages (including tmux and terminal definitions), activates tracked Git hooks, installs Docker if missing, creates `loft-proxy`, and copies daemon.json. Changing daemon.json restarts Docker. Git hooks update `.deployed-version` after checkout/merge; that marker records checkout state, not proof every container was redeployed.
 
 ## Re-running and managed files
 
-Provisioning is repeatable but has side effects. It **overwrites** adminhabl's `.bashrc` and `.inputrc` with includes of the repo's `bashrc.d` and `inputrc.d`. Back up local customizations before adopting those files. It rewrites SSH/sudoers configuration and validates the generated sudoers file.
+Provisioning is repeatable but has side effects. It **overwrites** adminhabl's `.bashrc`, `.inputrc` and `.tmux.conf` with includes of the repo's `bashrc.d`, `inputrc.d` and `tmux.d`. Back up local customizations before adopting those files. It rewrites SSH/sudoers configuration and validates the generated sudoers file.
 
 Directory provisioning does not establish every container's runtime UID. Images have their own users; WordPress ownership differs from the host convention. See [Pupyrus](../services/pupyrus.md) and verify actual mount ownership before changing existing data.
 
 The script starts declared services but does not stop ones removed from the manifest. It does not automatically rewrite an existing fstab entry when a device setting changes. Calavera's bootstrap purges unwanted desktop/laptop packages and masks sleep targets; inspect it before repurposing that host.
 
 Re-run after changes to host directories, groups, cron, installed watchdog/bootstrap scripts, managed dotfiles or daemon settings. Routine application configuration normally needs only [loft-ctl](loft-ctl.md). Fill skipped `.env` files from their examples and rerun the necessary setup/deployment steps.
+
+## Shared tmux
+
+[tmux.d](../../tmux.d) provides mouse support, 50,000 lines of scrollback, windows numbered from 1, splits that inherit the current directory, and a hostname/session status line. The prefix remains `Ctrl-b`; press `Ctrl-b d` to detach.
+
+For existing hosts, adopt just tmux after pulling the repo. Run as `adminhabl`:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y tmux ncurses-term kitty-terminfo
+if [ -e ~/.tmux.conf ]; then
+  cp -a ~/.tmux.conf ~/.tmux.conf.backup-$(date +%Y%m%d-%H%M%S)
+fi
+printf 'source-file /srv/the-loft/tmux.d\n' > ~/.tmux.conf
+tmux new-session -A -s loft
+```
+
+An already-running server needs `tmux source-file ~/.tmux.conf` to load changes. Existing panes keep their current terminal environment and scrollback limit; new panes receive the updated defaults.
 
 ## Verification
 

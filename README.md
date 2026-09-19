@@ -43,6 +43,7 @@ hosts/<hostname>/i3/...             # Optional i3 desktop config (deployed by se
 services/<name>/docker-compose.yml  # Shared service definition
 services/<name>/.env.example        # Secret template
 control-plane/                      # Shared scripts (common.sh, deploy-pull.sh, ...)
+bashrc.d inputrc.d nanorc.d tmux.d  # Shared dotfiles, installed for adminhabl by setup.sh
 setup.sh                            # Idempotent host provisioner
 loft-ctl                            # Day-to-day fleet control
 ```

@@ -37,7 +37,7 @@ id littledog
 loft-ctl health
 ```
 
-Setup manages adminhabl's bash/input configuration. Keep the current SSH session open while checking a second key login and sudo. Review OS-installed sudoers drop-ins if passwordless sudo remains; validate changes with `visudo` rather than removing unfamiliar files blindly.
+Setup manages adminhabl's bash/input/tmux configuration. Keep the current SSH session open while checking a second key login and sudo. Review OS-installed sudoers drop-ins if passwordless sudo remains; validate changes with `visudo` rather than removing unfamiliar files blindly.
 
 Confirm the actual network manager. The watchdog defaults to dhcpcd; if the OS uses NetworkManager, set the correct WIFI_DHCP_UNIT in host.conf and rerun setup. See [Viking's Wi-Fi checks](../hosts/viking.md#wi-fi-observations).
 

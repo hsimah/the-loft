@@ -6,6 +6,7 @@ services:
       - "fjord:192.168.86.30"
       - "viking:100.119.43.53"
       - "calavera:192.168.86.35"
+      - "woodstock:192.168.86.37"
   glances:
     volumes:
       - /mammoth:/mammoth:ro

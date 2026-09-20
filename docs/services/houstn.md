@@ -11,7 +11,10 @@ Copy [.env.example](../../services/houstn/.env.example). Hub widget credentials 
 - Homepage config: [homepage-config](../../services/houstn/homepage-config), bind-mounted from the repo. `services.yaml` defines links/widgets; `settings.yaml` defines layout/tabs; `widgets.yaml` is the top bar; `docker.yaml` selects the Docker socket.
 - Glances: [glances.conf](../../services/houstn/glances.conf), host network and port 61208. The [space-needle override](../../hosts/space-needle/overrides/houstn/docker-compose.override.yml) adds the media-volume mount.
 
-Homepage has explicit remote host mappings; update them if LAN addresses change. Containers resolving loft domain names need the configured LAN DNS server. Beszel connectivity is separate from whether Homepage can resolve a host.
+Homepage's Fleet row includes space-needle, Viking, Calavera and Woodstock,
+with CPU, memory and deployed-commit widgets from Glances. Fjord remains
+hidden while offline. The space-needle host override supplies the remote host
+mappings; update them if LAN addresses change. Containers resolving loft domain names need the configured LAN DNS server. Beszel connectivity is separate from whether Homepage can resolve a host.
 
 ## Operations
 

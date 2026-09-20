@@ -76,6 +76,23 @@
             - field: amps.0.result
               label: commit
               format: text
+    - woodstock:
+        icon: mdi-server
+        description: CPU / mem / commit
+        widget:
+          type: customapi
+          url: http://woodstock:61208/api/4/all
+          refreshInterval: 10000
+          mappings:
+            - field: cpu.total
+              label: CPU
+              format: percent
+            - field: mem.percent
+              label: MEM
+              format: percent
+            - field: amps.0.result
+              label: commit
+              format: text
 
 - Media:
     - Plex:

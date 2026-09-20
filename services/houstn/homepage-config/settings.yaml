@@ -13,7 +13,7 @@ layout:
   Fleet:
     tab: Loft
     style: row
-    columns: 3
+    columns: 4
   Media:
     tab: Loft
     style: row

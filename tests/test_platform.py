@@ -94,6 +94,7 @@ class PlatformTests(unittest.TestCase):
         self.assertEqual(len(entries), len(hosts), 'Duplicate host mappings are ambiguous')
         self.assertEqual(hosts['viking'], '100.119.43.53')
         self.assertEqual(hosts['fjord'], '192.168.86.30')
+        self.assertEqual(hosts['woodstock'], '192.168.86.37')
         self.assertEqual(hosts['host.docker.internal'], 'host-gateway')
 
     def test_tailnet_policy_only_grants_management_and_monitoring(self):

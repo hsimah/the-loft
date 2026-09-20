@@ -8,6 +8,7 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 - [viking](hosts/viking.md) — Upstairs audio client
 - [fjord](hosts/fjord.md) — metrics only; cyberdeck proposal
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
+- [woodstock](hosts/woodstock.md) — original Surface Pro; Debian installed, fleet provisioning pending
 
 ## Services
 

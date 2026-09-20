@@ -12,6 +12,7 @@ For deep dives, see [`docs/`](docs/README.md).
 | [viking](docs/hosts/viking.md) | Raspberry Pi 3 B+ | Snapcast client + per-host metrics |
 | [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | Per-host metrics (awaiting cyberdeck repurpose) |
 | [calavera](docs/hosts/calavera.md) | Surface Pro 2 (touchscreen) | Always-on Snapcast client + i3 desktop |
+| [woodstock](docs/hosts/woodstock.md) | Surface Pro (first generation) | Debian installed; Upstairs audio + i3 provisioning pending (replaces Viking) |
 
 ## Services
 

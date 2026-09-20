@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Reuse Calavera's Surface dashboard provisioning so the two stay identical.
+# HOST_NAME and I3_* remain Woodstock's; the sourced bootstrap selects this
+# host's i3 directory. Both machines have the mwifiex_usb adapter addressed by
+# its vendor-specific USB autosuspend rule.
+source "${REPO_DIR}/hosts/calavera/bootstrap"

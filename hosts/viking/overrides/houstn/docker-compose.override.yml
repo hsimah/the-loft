@@ -1,0 +1,23 @@
+# Only the existing metrics agent runs on the production host.
+# Explicit replacement prevents hub/profile settings from starting LAN services.
+services: !override
+  glances:
+    image: nicolargo/glances:4.5.5-full
+    container_name: glances
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/rootfs:ro
+      - /etc/os-release:/etc/os-release:ro
+      - ./glances.conf:/glances/conf/glances.conf:ro
+    environment:
+      - GLANCES_OPT=-w -C /glances/conf/glances.conf
+
+networks: !override {}

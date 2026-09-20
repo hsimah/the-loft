@@ -39,6 +39,10 @@ if [[ ! -f "$HOST_CONF" ]]; then
 fi
 
 source "$HOST_CONF"
+if [[ "${PRODUCTION_ROLE:-false}" == true && ! -f /etc/loft/dmz-ready ]]; then
+  error "Production provisioning requires /etc/loft/dmz-ready after the application-platform DMZ checklist."
+  exit 1
+fi
 info "Host: ${HOST_NAME}"
 info "Repo dir: ${REPO_DIR}"
 info "Services: ${SERVICES[*]}"
@@ -53,7 +57,7 @@ info "Activated tracked git hooks (core.hooksPath)"
 
 # ─── 2. System packages ──────────────────────────────────────────────────────
 info "Installing system packages..."
-PACKAGES=(git curl jq rsync skopeo kitty-terminfo tmux ncurses-term)
+PACKAGES=(git curl jq rsync skopeo kitty-terminfo tmux ncurses-term python3 util-linux)
 [[ "$STORAGE_FS" == "xfs" ]] && PACKAGES+=(xfsprogs)
 apt-get update -qq
 apt-get install -y -qq "${PACKAGES[@]}" > /dev/null
@@ -101,11 +105,11 @@ else
   info "User littledog already exists"
 fi
 
-LITTLEDOG_GROUPS="docker"
+# Docker membership is handled after Docker installation below. Production
+# service accounts must not receive root-equivalent daemon access.
 if [[ -n "$LITTLEDOG_EXTRA_GROUPS" ]]; then
-  LITTLEDOG_GROUPS+=",${LITTLEDOG_EXTRA_GROUPS}"
+  usermod -aG "$LITTLEDOG_EXTRA_GROUPS" littledog
 fi
-usermod -aG "$LITTLEDOG_GROUPS" littledog 2>/dev/null || true
 
 # adminhabl — admin account
 if ! id adminhabl &>/dev/null; then
@@ -260,9 +264,15 @@ else
   info "Docker already installed"
 fi
 
-# Ensure docker group memberships
-usermod -aG docker littledog 2>/dev/null || true
-usermod -aG docker adminhabl 2>/dev/null || true
+# Ensure docker group memberships; remove legacy access on production hosts.
+if [[ "${PRODUCTION_ROLE:-false}" == true ]]; then
+  if id -nG littledog | tr ' ' '\n' | grep -qx docker; then
+    gpasswd -d littledog docker
+  fi
+else
+  usermod -aG docker littledog
+fi
+usermod -aG docker adminhabl
 
 # ─── 10a. Docker log rotation ────────────────────────────────────────────
 info "Configuring Docker log rotation..."
@@ -298,12 +308,14 @@ for service in "${SERVICES[@]}"; do
     continue
   }
 
-  # Warn if .env is expected but missing
+  # Validate the merged host configuration: an override may intentionally
+  # replace a service's env_file (e.g. the isolated Mushr roles).
   service_dir="${REPO_DIR}/services/${service}"
-  if [[ -f "${service_dir}/.env.example" && ! -f "${service_dir}/.env" ]]; then
-    warn "${service}: .env file missing (see .env.example)"
+  # shellcheck disable=SC2086
+  docker compose ${compose_args} config --quiet || {
+    warn "${service}: invalid configuration or missing environment file; skipping"
     continue
-  fi
+  }
 
   # Build if the service has a Dockerfile
   if [[ -f "${service_dir}/Dockerfile" ]]; then

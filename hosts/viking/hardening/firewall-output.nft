@@ -1,0 +1,29 @@
+table inet loft_host {
+  chain output {
+    type filter hook output priority 10; policy drop;
+
+    oifname "lo" accept
+    ct state invalid drop
+    ct state established,related accept
+    oifname "tailscale0" counter drop
+
+    oifname "wlan0" ip daddr 192.168.87.1 udp dport 53 accept
+    oifname "wlan0" ip daddr 192.168.87.1 tcp dport 53 accept
+    oifname "wlan0" ip daddr { 192.168.87.1, 255.255.255.255 } udp sport 68 udp dport 67 accept
+
+    ct status dnat ct original ip daddr 127.0.0.1 accept
+    oifname "br-*" tcp dport 8080 ct state new counter accept
+
+    oifname "wlan0" ip6 hoplimit 255 icmpv6 type { nd-router-solicit, nd-neighbor-solicit, nd-neighbor-advert } accept
+    meta nfproto ipv6 counter drop
+
+    ip daddr { 0.0.0.0/8, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12,
+    192.168.0.0/16, 198.18.0.0/15, 224.0.0.0/3 } counter drop
+
+    oifname "wlan0" tcp dport 443 accept
+    oifname "wlan0" udp dport 123 accept
+    oifname "wlan0" udp sport 41641 accept
+    oifname "wlan0" udp dport 3478 accept
+    counter drop
+  }
+}

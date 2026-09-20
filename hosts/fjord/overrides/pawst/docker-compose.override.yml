@@ -1,0 +1,60 @@
+services: !override
+  pawst-dev:
+    image: nginx:1.30.4-alpine
+    container_name: pawst-dev
+    user: "1003:1003"
+    entrypoint: [nginx, -g, "daemon off;"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.50
+    pids_limit: 50
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
+    tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
+    volumes:
+      - ./nginx-unprivileged.conf:/etc/nginx/nginx.conf:ro
+      - /opt/pawst/dev/hblake:/srv/hblake:ro
+      - /opt/pawst/dev/hsimah:/srv/hsimah:ro
+    networks: [pawst-dev]
+    healthcheck:
+      test: [CMD-SHELL, "wget -q -O /dev/null --header='Host: hbla.ke' http://127.0.0.1:8080/index.html && wget -q -O /dev/null --header='Host: hsimah.com' http://127.0.0.1:8080/index.html"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  pawst-test:
+    image: nginx:1.30.4-alpine
+    container_name: pawst-test
+    user: "1003:1003"
+    entrypoint: [nginx, -g, "daemon off;"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.50
+    pids_limit: 50
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
+    tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
+    volumes:
+      - ./nginx-unprivileged.conf:/etc/nginx/nginx.conf:ro
+      - /opt/pawst/test/hblake:/srv/hblake:ro
+      - /opt/pawst/test/hsimah:/srv/hsimah:ro
+    networks: [pawst-test]
+    healthcheck:
+      test: [CMD-SHELL, "wget -q -O /dev/null --header='Host: hbla.ke' http://127.0.0.1:8080/index.html && wget -q -O /dev/null --header='Host: hsimah.com' http://127.0.0.1:8080/index.html"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+networks: !override
+  pawst-dev:
+    name: loft-pawst-dev
+    external: true
+  pawst-test:
+    name: loft-pawst-test
+    external: true

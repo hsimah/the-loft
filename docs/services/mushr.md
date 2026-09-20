@@ -1,11 +1,19 @@
 # Mushr — proxy, tunnel and DNS
 
+Mushr also has complete host overrides for
+[Fjord](../../hosts/fjord/overrides/mushr/docker-compose.override.yml) (LAN proxy only)
+and [Viking](../../hosts/viking/overrides/mushr/docker-compose.override.yml)
+(production proxy plus opt-in `public` tunnel profile). They use separate exact
+route tables and application networks; no trusted-LAN proxy routes or DNS secrets
+are inherited. See the [platform runbook](../operations/application-platform.md).
+The configuration described below is space-needle's retained infrastructure stack.
+
 [Compose](../../services/mushr/docker-compose.yml) groups Caddy (`mushr`), cloudflared (`mushr-tunnel`) and dnsmasq (`mushr-dns`) on space-needle. Caddy joins `loft-proxy`; dnsmasq uses host networking and binds `192.168.86.28`.
 
 ## Configuration and boundaries
 
 - [Caddyfile](../../services/mushr/Caddyfile) is the route table. Bridge services use container names; host listeners and VPN-published ports use `host.docker.internal`.
-- [dnsmasq.conf](../../services/mushr/dnsmasq.conf) resolves `*.space-needle`, `*.loft.hsimah.com`, the blogs and fleet hostnames. Router DHCP should advertise this resolver. `space-needle` covers `hblake.space-needle`, although Caddy also needs a matching route.
+- [dnsmasq.conf](../../services/mushr/dnsmasq.conf) resolves `*.space-needle`, `*.loft.hsimah.com` and fleet hostnames locally. Both public Pawst domains now use its public upstream resolvers. Router DHCP should advertise this resolver. `space-needle` covers `hblake.space-needle`, although Caddy also needs a matching route.
 - [.env.example](../../services/mushr/.env.example) lists LOFT_DOMAIN, Cloudflare DNS API token, tunnel token and briefing basic-auth settings. Scope the DNS token to the zones whose certificates Caddy issues.
 - Public hostnames are managed separately in Cloudflare's tunnel dashboard. A Caddy route is not proof of public exposure. Keep Sputnik, n8n and briefing off that list.
 - Admin listens at `127.0.0.1:8880` **inside Caddy's container**. The host publishes 80/443 only. Its Docker healthcheck probes the admin endpoint and gates tunnel startup.

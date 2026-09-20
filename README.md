@@ -8,11 +8,11 @@ For deep dives, see [`docs/`](docs/README.md).
 
 | Host | Hardware | Role |
 |------|----------|------|
-| [space-needle](docs/hosts/space-needle.md) | Minisforum MS-01 (i9, x86_64) | Primary server — runs everything |
-| [viking](docs/hosts/viking.md) | Raspberry Pi 3 B+ | Snapcast client + per-host metrics |
-| [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | Per-host metrics (awaiting cyberdeck repurpose) |
+| [space-needle](docs/hosts/space-needle.md) | Minisforum MS-01 (i9, x86_64) | Trusted infrastructure, media and storage |
+| [viking](docs/hosts/viking.md) | Raspberry Pi 3 B+ | Production Pawst sites + metrics; cutover verified |
+| [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | LAN-only application dev/test + metrics |
 | [calavera](docs/hosts/calavera.md) | Surface Pro 2 (touchscreen) | Always-on Snapcast client + i3 desktop |
-| [woodstock](docs/hosts/woodstock.md) | Surface Pro (first generation) | Debian installed; Upstairs audio + i3 provisioning pending (replaces Viking) |
+| [woodstock](docs/hosts/woodstock.md) | Surface Pro (first generation) | Upstairs audio, replacing Viking; playback verified |
 
 ## Services
 
@@ -27,6 +27,15 @@ For deep dives, see [`docs/`](docs/README.md).
 | [snoot](docs/services/snoot.md) | Beszel agent on every host |
 | [sputnik](docs/services/sputnik.md) | Local LLM — Ollama + Open WebUI + n8n, read-only Gmail/Calendar assistant |
 | [stellarr](docs/services/stellarr.md) | *arr stack; Transmission + slskd use NordVPN |
+
+## Application lifecycle
+
+Fjord hosts isolated LAN-only dev/test environments; Viking is the replaceable
+production/DMZ role, initially hosting Pawst. Promote reviewed GitHub artifacts,
+not a running Fjord filesystem. See the [application platform runbook](docs/operations/application-platform.md)
+for setup, release promotion/rollback, secrets, the required external firewall
+policy and staged Pawst cutover. Repository configuration is not proof of live
+migration; space-needle's old Pawst deployment remains for rollback.
 
 ## Image pinning
 
@@ -103,5 +112,6 @@ A GitHub Actions workflow (`.github/workflows/validate.yml`) validates every pus
 - Sputnik validated under `engine`, `chat`, `agent`, and all three combined
 - Houstn validated under `hub`, `metrics`, and both combined
 - Shell scripts, bootstrap/hooks and `host.conf` files pass `bash -n`
-- Health-helper regression tests and active-document link/anchor checks run without remote access
+- Health, pinned-release deployment and effective platform-network regression tests run without remote access
+- Viking public tunnel profile and active-document link/anchor checks are validated
 - JSON configuration and Python syntax are checked

@@ -59,3 +59,9 @@ An already-running server needs `tmux source-file ~/.tmux.conf` to load changes.
 Keep an existing SSH session open while verifying a fresh host's key login and sudo access. Check `sudo sshd -T`, `id littledog`, mounts, installed cron, and `loft-ctl health`. A setup completion summary is not an application acceptance test.
 
 For a Docker restart failure, inspect `sudo journalctl -u docker --since '5 min ago'` and the installed `/etc/docker/daemon.json`. Editing the repo's copy alone does not update the installed file. Do not launch a second daemon as a generic diagnostic.
+
+## Production gate
+
+Viking provisioning requires `/etc/loft/dmz-ready` after completing the [application platform network and host checklist](../operations/application-platform.md). This is operator attestation, not automatic firewall configuration. Setup validates merged Compose configuration before starting each service; host overrides can intentionally omit the base service environment file. Python 3 and util-linux support verified release extraction and deployment locking.
+
+On `PRODUCTION_ROLE=true` hosts, setup removes littledog from Docker instead of granting daemon access. Adminhabl retains Docker access. Existing live firewall files are not automatically overwritten; follow the [hardening record](../operations/viking-hardening.md).

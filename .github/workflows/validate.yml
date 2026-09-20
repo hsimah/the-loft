@@ -43,6 +43,28 @@ jobs:
             COMPOSE_PROFILES="${profile}" docker compose -f services/houstn/docker-compose.yml config --quiet
           done
 
+      - name: Validate unprivileged application server configurations
+        run: |
+          docker run --rm --network none --read-only --user 1003:1003 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
+            -v "$PWD/services/pawst/nginx-unprivileged.conf:/etc/nginx/nginx.conf:ro" \
+            --entrypoint nginx nginx:1.30.4-alpine -t
+          for host in fjord viking; do
+            docker run --rm --network none --read-only --user 1003:1003 \
+              --cap-drop ALL --cap-add NET_BIND_SERVICE --security-opt no-new-privileges \
+              --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
+              -e XDG_DATA_HOME=/tmp/data -e XDG_CONFIG_HOME=/tmp/config \
+              -v "$PWD/hosts/$host/overrides/mushr/Caddyfile:/etc/caddy/Caddyfile:ro" \
+              caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile
+          done
+
+      - name: Validate Viking public tunnel profile
+        run: |
+          docker compose -f services/mushr/docker-compose.yml \
+            -f hosts/viking/overrides/mushr/docker-compose.override.yml \
+            --profile public config --quiet
+
       - name: Validate compose with overrides
         run: |
           for host_dir in hosts/*/; do
@@ -74,7 +96,20 @@ jobs:
             bash -n "$f"
           done
 
-      - name: Health regression tests and documentation links
+      - name: Install release-test dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq rsync util-linux nftables
+          docker compose version
+
+      - name: Validate Viking firewall in an isolated network namespace
+        run: |
+          sudo install -d -m 0755 /etc/loft
+          sudo install -m 0644 hosts/viking/hardening/firewall*.nft /etc/loft/
+          sudo unshare --net nft --check --file /etc/loft/firewall.nft
+          systemd-analyze verify hosts/viking/hardening/loft-firewall.service
+
+      - name: Health, deployment and platform regression tests and documentation links
         run: |
           python3 -m unittest discover -s tests -v
           python3 control-plane/check-docs.py
@@ -85,7 +120,7 @@ jobs:
           import ast
           import json
           from pathlib import Path
-          for path in [Path('daemon.json'), *Path('services').rglob('*.json')]:
+          for path in [Path('daemon.json'), *Path('services').rglob('*.json'), *Path('hosts').rglob('*.json')]:
               json.loads(path.read_text())
           for directory in ('control-plane', 'tests'):
               for path in Path(directory).glob('*.py'):

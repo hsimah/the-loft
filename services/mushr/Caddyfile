@@ -129,24 +129,6 @@ briefing.{$LOFT_DOMAIN} {
 	}
 }
 
-hbla.ke {
-	import cloudflare_tls
-	reverse_proxy pawst:80
-}
-
-http://hbla.ke {
-	redir https://hbla.ke{uri} permanent
-}
-
-hsimah.com {
-	import cloudflare_tls
-	reverse_proxy pawst:80
-}
-
-http://hsimah.com {
-	redir https://hsimah.com{uri} permanent
-}
-
 {$LOFT_DOMAIN} {
 	import cloudflare_tls
 	reverse_proxy pupyrus:80
@@ -198,14 +180,6 @@ http://snapweb.space-needle:80 {
 
 http://howlr.space-needle:80 {
 	reverse_proxy host.docker.internal:8095
-}
-
-http://pawst.space-needle:80 {
-	reverse_proxy pawst:80
-}
-
-http://hsimah.space-needle:80 {
-	reverse_proxy pawst:80
 }
 
 http://homepage.space-needle:80 {

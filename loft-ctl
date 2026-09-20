@@ -62,6 +62,17 @@ if [[ $# -eq 0 ]]; then
   usage
 fi
 
+# Operator attestation, not a firewall implementation. Never start the
+# production role on an unverified trusted-LAN attachment.
+case "$1" in
+  start|rebuild|update)
+    if [[ "${PRODUCTION_ROLE:-false}" == true && ! -f /etc/loft/dmz-ready ]]; then
+      error "Complete docs/operations/application-platform.md and create /etc/loft/dmz-ready first."
+      exit 1
+    fi
+    ;;
+esac
+
 # ─── Auto-elevate to adminhabl for docker commands ───────────────────────────
 # Must happen before arg parsing consumes $@
 # For 'update', run git pull as the calling user (who has SSH keys) first,

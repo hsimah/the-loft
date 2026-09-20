@@ -34,3 +34,7 @@ The script reads `hosts/$(hostname)/host.conf` and uses [common.sh](common-sh.md
 - Provisioning scripts copied into `/usr/local/bin` are refreshed by setup, not by `loft-ctl update`.
 
 If Git update fails, inspect `git -C /srv/the-loft status` and resolve local changes before retrying. If the script switches users unexpectedly, confirm you logged in as adminhabl. Do not use fleet-wide rebuilds as the first response to a single failed service.
+
+## Production role
+
+Viking start/rebuild/update requires `/etc/loft/dmz-ready`; follow the [platform runbook](../operations/application-platform.md) first. Production promotion uses reviewed artifact pins and merged Compose pull/up for controlled changes. `update` still pulls a branch and rebuild performs down/up; neither is an atomic release deployment. Enable Viking tunnel deliberately with `COMPOSE_PROFILES=public` in Mushr’s ignored `.env`.

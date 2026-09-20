@@ -2,7 +2,7 @@
 
 Primary server: Minisforum MS-01, x86_64, wired LAN `192.168.86.28`. Named for the Seattle landmark. [host.conf](../../hosts/space-needle/host.conf) owns service membership, storage directories, release targets and URL probes.
 
-It runs the fleet's nine service groups, including Howlr's server profile, Houstn's `hub,metrics` and Sputnik's `engine,chat,agent`. Remote hosts consume audio and send metrics; they do not host the main applications.
+It runs eight trusted-infrastructure service groups, including Howlr's server profile, Houstn's `hub,metrics` and Sputnik's `engine,chat,agent`. Viking hosts public web applications; Fjord's repository configuration provides dev/test environments.
 
 ## Storage and networking
 
@@ -23,6 +23,9 @@ loft-ctl health
 loft-ctl update <service>
 ```
 
-Static release targets currently deploy hbla.ke and hsimah.com. See [Pawst](../services/pawst.md).
+Pawst moved to Viking on 2026-09-20. Space-needle has no Pawst release targets
+or Caddy/DNS overrides for the public sites. Its old container is stopped with
+restart disabled; content and paused cron files remain for recovery. See
+[Pawst](../services/pawst.md).
 
 Service incidents are documented with their owners: [Pupyrus/database](../services/pupyrus.md), [Mushr/DNS/TLS](../services/mushr.md), [Plex/GPU](../services/pawpcorn.md), [Howlr/audio](../services/howlr.md), [Sputnik](../services/sputnik.md). Use [upgrades](../operations/upgrades.md) for backup and verification; do not duplicate those recovery procedures here.

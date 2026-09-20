@@ -1,0 +1,12 @@
+{
+  "hosts": {"blanco": "100.92.100.36"},
+  "tagOwners": {
+    "tag:viking": ["autogroup:admin"],
+    "tag:monitoring": ["autogroup:admin"]
+  },
+  "acls": [],
+  "grants": [
+    {"src": ["blanco"], "dst": ["tag:viking"], "ip": ["tcp:22"]},
+    {"src": ["tag:monitoring"], "dst": ["tag:viking"], "ip": ["tcp:45876", "tcp:61208"]}
+  ]
+}

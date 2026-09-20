@@ -1,0 +1,63 @@
+# Complete service replacement deliberately excludes the trusted-LAN proxy,
+# DNS server, DNS API credentials, host gateway and Sputnik mounts.
+# Requires Docker Compose >= 2.24.4 (!override).
+services: !override
+  mushr:
+    image: caddy:2.11.4-alpine
+    container_name: mushr
+    user: "1003:1003"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    # Official Caddy binary carries cap_net_bind_service=ep; retain this
+    # capability so exec succeeds even though the origin listens on 8080.
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.50
+    pids_limit: 100
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ../../hosts/viking/overrides/mushr/Caddyfile:/etc/caddy/Caddyfile:ro
+    environment:
+      XDG_DATA_HOME: /tmp/data
+      XDG_CONFIG_HOME: /tmp/config
+    tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
+    networks: [ingress, pawst-prod]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:8880/config/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  mushr-tunnel:
+    profiles: [public]
+    image: cloudflare/cloudflared:2026.7.3
+    container_name: mushr-tunnel
+    user: "65532:65532"
+    restart: unless-stopped
+    command: [tunnel, --no-autoupdate, --metrics, "0.0.0.0:2000", run, --token-file, /run/secrets/tunnel-token]
+    secrets: [tunnel-token]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.50
+    pids_limit: 100
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
+    networks: [ingress]
+    depends_on:
+      mushr: {condition: service_healthy}
+secrets:
+  tunnel-token:
+    file: /etc/loft/viking-tunnel-token
+networks: !override
+  ingress: {}
+  pawst-prod:
+    name: loft-pawst-prod
+    internal: true

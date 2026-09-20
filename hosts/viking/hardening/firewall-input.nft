@@ -1,0 +1,28 @@
+table inet loft_host {
+    chain input {
+        type filter hook input priority 10; policy drop;
+
+        iifname "lo" accept
+        ct state invalid drop
+        ct state established,related accept
+
+        # Blanco: SSH through Tailscale.
+        iifname "tailscale0" ip saddr 100.92.100.36 tcp dport 22 accept
+
+        # Space-needle: monitoring through Tailscale.
+        iifname "tailscale0" ip saddr 100.69.51.18 tcp dport { 45876, 61208 } accept
+
+        # Tailscale's encrypted transport.
+        iifname "wlan0" udp dport 41641 accept
+
+        # DHCP replies from the guest-network gateway.
+        iifname "wlan0" ip saddr 192.168.87.1 udp sport 67 udp dport 68 accept
+
+        # Network error reporting and IPv6 link operation.
+        ip protocol icmp icmp type { destination-unreachable, time-exceeded, parameter-problem } accept
+        meta l4proto ipv6-icmp icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem } accept
+        iifname "wlan0" ip6 hoplimit 255 icmpv6 type { nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert } accept
+
+        counter drop
+    }
+}

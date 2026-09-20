@@ -1,0 +1,16 @@
+[Unit]
+Description=Loft host firewall
+DefaultDependencies=no
+After=local-fs.target
+Wants=network-pre.target
+Before=network-pre.target docker.service tailscaled.service shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/loft/firewall.nft
+ExecReload=/usr/sbin/nft -f /etc/loft/firewall.nft
+
+[Install]
+WantedBy=multi-user.target

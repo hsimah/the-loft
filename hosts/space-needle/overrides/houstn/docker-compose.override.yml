@@ -1,4 +1,11 @@
 services:
+  homepage:
+    # Replace the list: Compose otherwise retains both old/new Viking entries.
+    extra_hosts: !override
+      - "host.docker.internal:host-gateway"
+      - "fjord:192.168.86.30"
+      - "viking:100.119.43.53"
+      - "calavera:192.168.86.35"
   glances:
     volumes:
       - /mammoth:/mammoth:ro

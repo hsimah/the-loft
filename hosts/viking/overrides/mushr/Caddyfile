@@ -1,0 +1,24 @@
+{
+    admin 127.0.0.1:8880
+    auto_https off
+}
+# HTTP only on the private origin hop; Cloudflare terminates public TLS.
+# Exact Host matching, no generic application or trusted-LAN fallback.
+:8080 {
+    log
+    @hbla_ke host hbla.ke
+    handle @hbla_ke {
+        reverse_proxy pawst:8080 {
+            header_up Host hbla.ke
+        }
+    }
+    @hsimah_com host hsimah.com
+    handle @hsimah_com {
+        reverse_proxy pawst:8080 {
+            header_up Host hsimah.com
+        }
+    }
+    handle {
+        respond "Unknown application" 404
+    }
+}

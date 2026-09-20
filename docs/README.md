@@ -5,10 +5,10 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 ## Hosts
 
 - [space-needle](hosts/space-needle.md) — primary server and storage
-- [viking](hosts/viking.md) — Upstairs audio client
-- [fjord](hosts/fjord.md) — metrics only; cyberdeck proposal
+- [viking](hosts/viking.md) — production Pawst host; cutover and reboot verified
+- [fjord](hosts/fjord.md) — LAN-only application dev/test + metrics
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
-- [woodstock](hosts/woodstock.md) — original Surface Pro; Debian installed, fleet provisioning pending
+- [woodstock](hosts/woodstock.md) — original Surface Pro; Upstairs audio playback verified
 
 ## Services
 
@@ -23,6 +23,9 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 - [Sputnik](services/sputnik.md) — local inference, chat and briefing workflow
 
 ## Runbooks and scripts
+
+- [Application platform, DMZ policy and Pawst cutover](operations/application-platform.md)
+- [Viking live hardening and monitoring record](operations/viking-hardening.md)
 
 - [Triage](../DEBUG.md)
 - [Pi provisioning](operations/raspberry-pi.md)

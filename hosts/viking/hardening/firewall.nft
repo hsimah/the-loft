@@ -1,0 +1,8 @@
+add table inet loft_host
+flush table inet loft_host
+include "/etc/loft/firewall-input.nft"
+include "/etc/loft/firewall-output.nft"
+
+add table inet loft_docker
+flush table inet loft_docker
+include "/etc/loft/firewall-docker.nft"

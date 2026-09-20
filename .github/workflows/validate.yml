@@ -90,7 +90,7 @@ jobs:
 
       - name: Syntax-check shell scripts
         run: |
-          for f in setup.sh loft-ctl bashrc.d control-plane/*.sh control-plane/hooks/* services/*/*.sh services/*/*/*.sh hosts/*/bootstrap; do
+          for f in setup.sh loft-ctl bashrc.d control-plane/*.sh control-plane/hooks/* services/*/*.sh services/*/*/*.sh hosts/*/bootstrap hosts/*/restore; do
             [ -e "$f" ] || continue
             echo "Checking $f..."
             bash -n "$f"

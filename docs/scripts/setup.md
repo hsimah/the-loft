@@ -65,3 +65,9 @@ For a Docker restart failure, inspect `sudo journalctl -u docker --since '5 min 
 Viking provisioning requires `/etc/loft/dmz-ready` after completing the [application platform network and host checklist](../operations/application-platform.md). This is operator attestation, not automatic firewall configuration. Setup validates merged Compose configuration before starting each service; host overrides can intentionally omit the base service environment file. Python 3 and util-linux support verified release extraction and deployment locking.
 
 On `PRODUCTION_ROLE=true` hosts, setup removes littledog from Docker instead of granting daemon access. Adminhabl retains Docker access. Existing live firewall files are not automatically overwritten; follow the [hardening record](../operations/viking-hardening.md).
+
+For Viking rebuilds, follow the [restore runbook](../operations/viking-restore.md)
+first. `setup.sh` alone does not restore the DMZ boundary, Tailscale enrollment,
+secrets or pinned site content. `hosts/viking/restore --plan` previews the
+recorded recovery releases; `--apply` is an explicit offline-content recovery
+step and leaves the public connector stopped.

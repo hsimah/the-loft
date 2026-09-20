@@ -176,11 +176,24 @@ final firewall files/service, SSH drop-in, unattended-upgrade policy and
 cloud-init disabled marker. It excludes the tunnel token and Wi-Fi password.
 Neither is an off-device backup or a tested full application restore.
 
-Commit and reconcile the patched checkouts before future provisioning; live
-changes were applied manually, not by rerunning full setup. Preserve unrelated
-Pupyrus edits on space-needle. Compare installed firewall files before applying
+The migration was committed as `aed0b3e`; Viking and space-needle checkouts
+were reconciled to it. Live changes were applied manually, not by rerunning
+full setup. The prior Pupyrus edit was already included in the updated baseline. Compare installed firewall files before applying
 tracked copies, adapt interface/address rules for replacement hardware, and
 remember that the attestation marker does not configure a router. Remaining
 work includes off-host backup/restore, stale Viking LAN DNS alias cleanup,
 second administrator enrollment, and live Fjord dev/test validation. Cloudflare
 edge HTTP-to-HTTPS redirect policy has not been explicitly verified here.
+
+## DNS incident after cutover
+
+Later on 2026-09-20, both public domains stopped resolving after old tunnel-route
+cleanup. The operator found the apex CNAME records missing. Viking containers
+remained healthy and its local hbla.ke origin returned 200. Recreating hbla.ke's
+record initially used the misspelled suffix `cfcargotunnel.com`, producing
+Cloudflare HTTP 530/error 1016. Correcting the target to
+`77cdbc17-f2cb-4977-88e1-1fc4337e909c.cfargotunnel.com` restored HTTP 200 through
+Cloudflare; a cellular phone retry then worked. The operator also corrected
+hsimah.com. DNS caches obscured the change during troubleshooting. Future route
+retirement must verify both actual DNS records as well as cached HTTP probes.
+See the [restore runbook](viking-restore.md) for DNS and ingress recovery checks.

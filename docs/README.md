@@ -25,6 +25,7 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 ## Runbooks and scripts
 
 - [Application platform, DMZ policy and Pawst cutover](operations/application-platform.md)
+- [Viking restore procedure](operations/viking-restore.md)
 - [Viking live hardening and monitoring record](operations/viking-hardening.md)
 
 - [Triage](../DEBUG.md)

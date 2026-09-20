@@ -88,7 +88,8 @@ TAG="$(printf '%s' "$RELEASE_JSON" | jq -r '.tag_name // empty')"
 [[ -z "$RELEASE_TAG" || "$TAG" == "$RELEASE_TAG" ]] || fail "Release tag mismatch"
 LAST_SHA256=""
 [[ -f "$HASH_FILE" ]] && LAST_SHA256="$(<"$HASH_FILE")"
-if [[ "$TAG" == "$LAST_TAG" && ( -z "$EXPECTED_SHA256" || "$EXPECTED_SHA256" == "$LAST_SHA256" ) ]]; then
+# Recovery can re-fetch a recorded release under the same deployment lock.
+if [[ "${LOFT_FORCE_DEPLOY:-0}" != 1 && "$TAG" == "$LAST_TAG" && ( -z "$EXPECTED_SHA256" || "$EXPECTED_SHA256" == "$LAST_SHA256" ) ]]; then
   log "Already at ${TAG}, nothing to do."
   exit 0
 fi

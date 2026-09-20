@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Recover pinned Pawst content after the operator restores Viking's host boundary.
+set -euo pipefail
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MODE="${1:---plan}"
+RELEASES="${REPO_DIR}/hosts/viking/releases.json"
+fail() { echo "ERROR: $*" >&2; exit 1; }
+if [[ "$MODE" == --help ]]; then
+  echo "Usage: hosts/viking/restore [--plan|--apply]"
+  echo "Default: show pinned content recovery commands without changing anything."
+  echo "Apply requires a prepared Viking, tested firewall, and stopped Pawst/tunnel."
+  exit 0
+fi
+[[ $# -le 1 && ( "$MODE" == --plan || "$MODE" == --apply ) ]] || fail "Use --plan or --apply"
+command -v jq >/dev/null || fail "Install jq first"
+jq -e '
+  type == "object" and keys == ["hblake", "hsimah"] and
+  all(.[];
+    type == "object" and keys == ["sha256", "tag"] and
+    (.tag | type == "string" and test("^[A-Za-z0-9][A-Za-z0-9._/-]*$")) and
+    (.sha256 | type == "string" and test("^[a-f0-9]{64}$")))
+' "$RELEASES" >/dev/null || fail "Invalid pinned release manifest"
+
+if [[ "$MODE" == --apply ]]; then
+  [[ $EUID -eq 0 ]] || fail "Run --apply with sudo"
+  [[ "$(hostname)" == viking ]] || fail "This restore entrypoint requires the viking role hostname"
+  [[ -f /etc/loft/dmz-ready ]] || fail "Complete the Viking restore runbook and DMZ checks first"
+  for cmd in docker nft systemctl curl rsync flock python3; do
+    command -v "$cmd" >/dev/null || fail "Missing dependency: $cmd"
+  done
+  systemctl is-active --quiet loft-firewall.service || fail "Loft firewall is not active"
+  nft list table inet loft_host >/dev/null || fail "Host firewall table missing"
+  nft list table inet loft_docker >/dev/null || fail "Docker firewall table missing"
+  [[ "$(id -u littledog)" == 1003 && "$(id -g littledog)" == 1003 ]] || fail "Expected littledog UID/GID 1003"
+  docker info >/dev/null || fail "Docker is unavailable"
+  # Recovery must not sync content underneath a serving application. This is
+  # deliberately separate from ordinary deploy-pull release promotion.
+  for container in pawst mushr-tunnel; do
+    running="$(docker ps --filter "name=^/${container}$" --format '{{.Names}}')"
+    [[ -z "$running" ]] || fail "Stop ${container} before recovery; see the runbook"
+  done
+  for service in mushr pawst; do
+    COMPOSE_PROFILES= docker compose \
+      -f "${REPO_DIR}/services/${service}/docker-compose.yml" \
+      -f "${REPO_DIR}/hosts/viking/overrides/${service}/docker-compose.override.yml" \
+      config --quiet
+  done
+  install -d -m 0700 /var/backups/loft
+  STATE_BACKUP="$(mktemp -d /var/backups/loft/pawst-restore-state.XXXXXX)"
+fi
+
+for site in hblake hsimah; do
+  tag="$(jq -r --arg site "$site" '.[$site].tag' "$RELEASES")"
+  digest="$(jq -r --arg site "$site" '.[$site].sha256' "$RELEASES")"
+  args=(env LOFT_FORCE_DEPLOY=1 bash "${REPO_DIR}/control-plane/deploy-pull.sh"
+    "pawst-${site}" "hsimah-services/${site}" "/opt/pawst/prod/${site}" "" "$tag" "$digest")
+  if [[ "$MODE" == --plan ]]; then
+    printf '%q ' "${args[@]}"
+    printf '\n'
+  else
+    # Restored version markers must not skip fetching missing/corrupt content.
+    # Keep previous records for recovery; failed fetches leave content untouched.
+    for suffix in version sha256; do
+      state="/var/lib/loft/deploy/pawst-${site}.${suffix}"
+      [[ ! -e "$state" ]] || cp -p -- "$state" "${STATE_BACKUP}/"
+    done
+    "${args[@]}"
+  fi
+done
+
+if [[ "$MODE" == --apply ]]; then
+  for service in mushr pawst; do
+    COMPOSE_PROFILES= docker compose \
+      -f "${REPO_DIR}/services/${service}/docker-compose.yml" \
+      -f "${REPO_DIR}/hosts/viking/overrides/${service}/docker-compose.override.yml" \
+      up -d --wait "$service"
+  done
+  for domain in hbla.ke hsimah.com; do
+    curl --noproxy '*' --fail --silent --show-error --max-time 10 \
+      -H "Host: ${domain}" http://127.0.0.1:8080/index.html >/dev/null
+  done
+  code="$(curl --noproxy '*' --silent --show-error --max-time 10 -o /dev/null -w '%{http_code}' \
+    -H 'Host: unknown.invalid' http://127.0.0.1:8080/)"
+  [[ "$code" == 404 ]] || fail "Unexpected catch-all HTTP status: $code"
+  echo "Pinned content restored and local routes verified. Tunnel remains stopped."
+else
+  echo "Plan only. Read docs/operations/viking-restore.md before using --apply."
+fi

@@ -30,7 +30,10 @@ sudo cat /var/lib/loft/deploy/pawst-hblake.version
 
 To add a target, declare its directory in host.conf, add its DEPLOY_TARGETS entry, publish an artifact, and rerun setup to install cron. Use the [GitHub App guide](github-app-token.md) for private repos.
 
-To retry the same tag, remove only that target's version marker and invoke the puller again. A per-target nonblocking lock rejects concurrent manual/cron deployment. Different names must never point at the same target. To roll back, provide the previous known-good tag and SHA256 as the fifth and sixth CLI arguments. Disable latest-release cron first so it cannot undo the rollback. Viking deliberately has no latest-release cron; see the [platform runbook](../operations/application-platform.md).
+To recover missing/corrupt content at the same tag, run the puller with
+`sudo env LOFT_FORCE_DEPLOY=1 ...` and the approved tag/checksum. This bypasses
+only the state-based skip; the normal lock, checksum and extraction checks
+still apply. Viking's [restore script](../../hosts/viking/restore) uses this path. A per-target nonblocking lock rejects concurrent manual/cron deployment. Different names must never point at the same target. To roll back, provide the previous known-good tag and SHA256 as the fifth and sixth CLI arguments. Disable latest-release cron first so it cannot undo the rollback. Viking deliberately has no latest-release cron; see the [platform runbook](../operations/application-platform.md).
 
 ## Troubleshooting
 

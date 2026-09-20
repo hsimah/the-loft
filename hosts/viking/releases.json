@@ -1,0 +1,10 @@
+{
+  "hblake": {
+    "tag": "deploy-20260717201728-ad0a0ac",
+    "sha256": "f7348df950a41539c867c21fea5d60543f907a5652da5bf32022f69a8619235a"
+  },
+  "hsimah": {
+    "tag": "deploy-20260719183615-503523e",
+    "sha256": "0d02b7170c4eac6b43b92807549fed5b4c0ef688fbec086bc2fc43f0a614e906"
+  }
+}

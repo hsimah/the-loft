@@ -5,6 +5,10 @@ Viking is the production web-host role, currently a Raspberry Pi 3 B+ (arm64,
 selects Mushr, Pawst, Snoot and Houstn metrics. Both public Pawst sites moved
 to Viking on 2026-09-20 and passed external, LAN and reboot checks.
 
+For recovery, use the [Viking restore runbook](../operations/viking-restore.md)
+and preview `hosts/viking/restore --plan`. The pinned release manifest is kept
+separately from secrets and public tunnel enablement.
+
 ## Verified host preparation
 
 On 2026-09-20 the operator completed Woodstock's Upstairs audio handoff, stopped
@@ -16,8 +20,8 @@ for exact addresses, permitted flows, tests and remaining limitations. The
 
 Use the [application platform runbook](../operations/application-platform.md)
 for release deployment, rollback, public cutover and hardware replacement.
-The patched configuration is running on Viking; commit and fleet-checkout
-reconciliation remain pending. Public routing uses the separate `viking-prod`
+The production configuration was committed as `aed0b3e` and both production
+and infrastructure checkouts were reconciled. Public routing uses the separate `viking-prod`
 tunnel. Do not reprovision from the old audio-role manifest.
 
 ## Monitoring and provisioning

@@ -81,6 +81,15 @@ cat "$FIXTURE/release.json"
         self.assertIn('/releases/tags/v1', (self.root / 'calls').read_text())
         self.assertEqual((self.state / 'test-site.version').read_text().strip(), 'v1')
 
+    def test_forced_restore_repairs_content_despite_matching_state(self):
+        digest = self.release()
+        self.assertEqual(self.deploy('v2', digest).returncode, 0)
+        (self.target / 'index.html').unlink()
+        self.env['LOFT_FORCE_DEPLOY'] = '1'
+        result = self.deploy('v2', digest)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.target / 'index.html').read_text(), 'new')
+
     def test_checksum_failure_leaves_content_and_state_unchanged(self):
         self.release()
         result = self.deploy('v2', '0' * 64)

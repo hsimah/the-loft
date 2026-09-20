@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,14 +12,30 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(shutil.which('docker'), 'Docker Compose CLI required')
 class PlatformTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Compose versions differ on whether --no-env-resolution still checks
+        # env_file existence. Use isolated empty files, never live host secrets.
+        fixture = tempfile.TemporaryDirectory(prefix='loft-compose-tests-')
+        cls.addClassCleanup(fixture.cleanup)
+        cls.compose_root = Path(fixture.name)
+        paths = [*ROOT.glob('services/*/docker-compose.yml'),
+                 *ROOT.glob('hosts/*/overrides/*/docker-compose.override.yml')]
+        for source in paths:
+            target = cls.compose_root / source.relative_to(ROOT)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+            (target.parent / '.env').touch()
+
     def config(self, host, service, public=False, profiles=""):
         args = ['docker', 'compose', '-f', f'services/{service}/docker-compose.yml',
                 '-f', f'hosts/{host}/overrides/{service}/docker-compose.override.yml']
         if public:
             args += ['--profile', 'public']
-        result = subprocess.run(args + ['config', '--no-env-resolution', '--format', 'json'], cwd=ROOT,
+        result = subprocess.run(args + ['config', '--no-env-resolution', '--format', 'json'], cwd=self.compose_root,
                                 env=dict(os.environ, COMPOSE_PROFILES=profiles),
-                                text=True, capture_output=True, check=True)
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 
     def test_fjord_cannot_start_a_tunnel_or_inherit_lan_proxy(self):

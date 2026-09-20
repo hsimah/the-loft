@@ -20,6 +20,9 @@ font pango:DejaVu Sans Mono 8
 # Load HiDPI resources before anything paints.
 exec_always --no-startup-id xrdb -merge ~/.Xresources
 
+# Wallpaper supplied locally on each Surface.
+exec_always --no-startup-id feh --no-fehbg --bg-scale /home/rodnik/Pictures/wallpaper.webp
+
 # DPMS stays enabled but with no automatic idle-based timeouts (0 0 0) — the
 # only thing that ever calls force on/off is loft-dashboard-power, driven by
 # Music Assistant playback state (see host.conf's I3_POWER_GROUPS). Any local

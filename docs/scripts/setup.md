@@ -34,6 +34,8 @@ The script starts declared services but does not stop ones removed from the mani
 
 Re-run after changes to host directories, groups, cron, installed watchdog/bootstrap scripts, managed dotfiles or daemon settings. Routine application configuration normally needs only [loft-ctl](loft-ctl.md). Fill skipped `.env` files from their examples and rerun the necessary setup/deployment steps.
 
+Calavera and Woodstock share Surface dashboard provisioning, which installs feh and configures i3 to apply `/home/rodnik/Pictures/wallpaper.webp` on session startup and i3 restart. Supply that image locally on each host, readable by rodnik; setup does not copy the wallpaper. After provisioning an existing session, press `Mod+Shift+r` to apply the updated i3 config.
+
 ## Shared tmux
 
 [tmux.d](../../tmux.d) provides mouse support, 50,000 lines of scrollback, windows numbered from 1, splits that inherit the current directory, and a hostname/session status line. The prefix remains `Ctrl-b`; press `Ctrl-b d` to detach.

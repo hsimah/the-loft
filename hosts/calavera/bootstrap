@@ -20,7 +20,7 @@ echo "lightdm shared/default-x-display-manager select lightdm" | debconf-set-sel
 # dashboard runs on Firefox instead.)
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
   xorg i3 lightdm kitty firefox-esr unclutter x11-xserver-utils dmenu \
-  xprintidle python3-websockets > /dev/null
+  xprintidle python3-websockets feh > /dev/null
 
 # ── Remove desktop/laptop-task cruft ───────────────────────────────────────
 # The Debian installer ticks "print server" by default and auto-selects the

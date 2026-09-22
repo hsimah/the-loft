@@ -1,0 +1,9 @@
+{
+  "logo": {
+    "type": "file-raw",
+    "source": "/etc/fastfetch/laiko.txt",
+    "padding": {
+      "right": 3
+    }
+  }
+}

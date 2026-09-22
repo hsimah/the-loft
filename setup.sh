@@ -57,10 +57,49 @@ info "Activated tracked git hooks (core.hooksPath)"
 
 # ─── 2. System packages ──────────────────────────────────────────────────────
 info "Installing system packages..."
-PACKAGES=(git curl jq rsync skopeo kitty-terminfo tmux ncurses-term python3 util-linux)
+PACKAGES=(git curl ca-certificates jq rsync skopeo kitty-terminfo tmux ncurses-term python3 util-linux)
 [[ "$STORAGE_FS" == "xfs" ]] && PACKAGES+=(xfsprogs)
 apt-get update -qq
 apt-get install -y -qq "${PACKAGES[@]}" > /dev/null
+
+# ─── 2a. Fastfetch ────────────────────────────────────────────────────────────
+info "Configuring Fastfetch..."
+if command -v fastfetch &>/dev/null; then
+  info "Fastfetch already installed"
+elif apt-cache policy fastfetch | grep -qE 'Candidate: [0-9]'; then
+  apt-get install -y -qq fastfetch > /dev/null
+else
+  # Older Debian/Ubuntu releases do not package Fastfetch. Pin the official
+  # release and checksums for both fleet architectures (including the Pis).
+  (
+    FASTFETCH_VERSION=2.68.1
+    case "$(dpkg --print-architecture)" in
+      amd64)
+        arch=amd64
+        sha256=33b046a620b4f15fb6d0f9b3ef2491e6147ae15e40d699a6eef13555634a1b28
+        ;;
+      arm64)
+        arch=aarch64
+        sha256=0290a96bf225e0142a2e21238be9ef36c63c959c489f2f3ba6b4c72b5a767b9a
+        ;;
+      *) error "No Fastfetch apt package or fallback for this architecture"; exit 1 ;;
+    esac
+    download_dir=$(mktemp -d)
+    trap 'rm -rf "$download_dir"' EXIT
+    # Let apt's unprivileged downloader read the package.
+    chmod 755 "$download_dir"
+    deb="${download_dir}/fastfetch.deb"
+    info "Installing Fastfetch ${FASTFETCH_VERSION} (${arch}) from GitHub..."
+    curl -fSL --retry 3 -o "$deb" \
+      "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-${arch}.deb"
+    printf '%s  %s\n' "$sha256" "$deb" | sha256sum --check --status
+    chmod 644 "$deb"
+    apt-get install -y -qq "$deb" > /dev/null
+  )
+fi
+install -d -m 755 /etc/fastfetch
+install -m 644 "${REPO_DIR}/laiko.txt" /etc/fastfetch/laiko.txt
+install -m 644 "${REPO_DIR}/fastfetch.jsonc" /etc/fastfetch/config.jsonc
 
 # ─── 3. Storage mount ────────────────────────────────────────────────────────
 if [[ -n "$STORAGE_DEVICE" ]]; then

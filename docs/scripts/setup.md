@@ -36,6 +36,32 @@ Re-run after changes to host directories, groups, cron, installed watchdog/boots
 
 Calavera and Woodstock share Surface dashboard provisioning, which installs feh and configures i3 to apply `/home/rodnik/Pictures/wallpaper.webp` on session startup and i3 restart. Supply that image locally on each host, readable by rodnik; setup does not copy the wallpaper. After provisioning an existing session, press `Mod+Shift+r` to apply the updated i3 config.
 
+## Fastfetch welcome
+
+Setup installs Fastfetch on every host and copies [laiko.txt](../../laiko.txt)
+and [fastfetch.jsonc](../../fastfetch.jsonc) to `/etc/fastfetch/laiko.txt` and
+`/etc/fastfetch/config.jsonc`. These are managed files, replaced on each setup
+run. Rerun setup after changing the artwork or configuration.
+
+Fastfetch uses the apt package when available, preserves an existing installation,
+and otherwise downloads the checksum-verified official 2.68.1 `.deb` for amd64
+or arm64. See the [upstream installation instructions](https://github.com/fastfetch-cli/fastfetch#installation).
+The logo uses [file-raw mode](https://github.com/fastfetch-cli/fastfetch/wiki/Logo-options#file-raw)
+to display the ASCII artwork without requiring terminal image support.
+
+After `sudo bash setup.sh`, open a new SSH session or terminal as `adminhabl` to
+see Laiko beside the host's system information. The shared bashrc only displays
+the welcome in interactive shells with terminal output; automated SSH commands
+remain quiet. To preview it in an existing session:
+
+```bash
+fastfetch --config /etc/fastfetch/config.jsonc
+```
+
+Plain `fastfetch` also uses the system configuration unless a personal Fastfetch
+configuration takes precedence. The automatic welcome explicitly uses the fleet
+configuration.
+
 ## Shared tmux
 
 [tmux.d](../../tmux.d) provides mouse support, 50,000 lines of scrollback, windows numbered from 1, splits that inherit the current directory, and a hostname/session status line. The prefix remains `Ctrl-b`; press `Ctrl-b d` to detach.

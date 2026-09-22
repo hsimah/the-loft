@@ -86,3 +86,10 @@ __REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ── Aliases ────────────────────────────────────────────────────────────────────
 alias loft-ctl="${__REPO_DIR}/loft-ctl"
 alias nano="nano --rcfile=${__REPO_DIR}/nanorc.d"
+
+# ── Welcome ──────────────────────────────────────────────────────────────────
+# The interactive guard above keeps SSH commands/scp quiet; also skip redirected
+# output and dumb terminals. A missing/broken Fastfetch must not block a shell.
+if [[ -t 1 && "${TERM:-dumb}" != dumb ]] && command -v fastfetch &>/dev/null; then
+  fastfetch --config /etc/fastfetch/config.jsonc 2>/dev/null || true
+fi

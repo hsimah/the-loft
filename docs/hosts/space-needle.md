@@ -14,6 +14,9 @@ Public-upstream DNS is configured in daemon.json. Containers needing loft names 
 
 ## Provisioning and daily use
 
+The [Debian/storage redesign proposal](../../plans/space-needle-rebuild.md) records
+the September capacity checks and a staged rebuild option. It is not deployed.
+
 Follow [setup](../scripts/setup.md). Create each required environment from its example; Pawst has none. Choose the profiles above and provision service credentials through their owning pages. The [Houstn override](../../hosts/space-needle/overrides/houstn/docker-compose.override.yml) adds `/mammoth` to Glances.
 
 ```bash

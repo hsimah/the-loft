@@ -1,0 +1,132 @@
+# Hubbl — Immich photo library.
+#
+# Adapted from the upstream v3.2.4 release compose
+# (https://github.com/immich-app/immich/releases/download/v3.2.4/docker-compose.yml)
+# to fleet conventions: loft names, no published ports (Caddy fronts it),
+# unless-stopped, capped json-file logging, and host paths from host.conf
+# instead of upstream's UPLOAD_LOCATION/DB_DATA_LOCATION indirection.
+#
+# Upstream moves the schema on minor releases and does not support downgrades.
+# Read docs/operations/upgrades.md and dump the database before changing the
+# `hubbl` / `hubbl-ml` tag. The redis and postgres pins are upstream's own
+# digests — they are part of the release contract, not independent choices.
+services:
+  hubbl:
+    image: ghcr.io/immich-app/immich-server:v3.2.4
+    container_name: hubbl
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      TZ: ${TZ}
+      DB_HOSTNAME: db
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE_NAME: ${DB_DATABASE_NAME}
+      REDIS_HOSTNAME: redis
+      IMMICH_MACHINE_LEARNING_URL: http://ml:3003
+    volumes:
+      # Immich owns everything under /data and addresses files by content
+      # hash. Do not reorganise the tree from the host side.
+      - /mammoth/hubbl/library:/data
+      - /etc/localtime:/etc/localtime:ro
+    # Quicksync for video thumbnails and transcodes, same iGPU Plex uses.
+    # Shared access is fine; sustained concurrent transcoding is not — see
+    # docs/services/hubbl.md before enabling bulk video transcoding.
+    devices:
+      - /dev/dri:/dev/dri
+    networks:
+      - default
+      - loft-proxy
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ml:
+        condition: service_started
+
+  ml:
+    # CPU inference. The OpenVINO variant (tag suffix `-openvino`, plus the
+    # device_cgroup_rules/devices from upstream's hwaccel.ml.yml) uses the
+    # same iGPU as Plex and the server's own transcoding — opt in only after
+    # reading the contention note in docs/services/hubbl.md.
+    image: ghcr.io/immich-app/immich-machine-learning:v3.2.4
+    container_name: hubbl-ml
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - model-cache:/cache
+
+  redis:
+    image: docker.io/valkey/valkey:9@sha256:70739f85ad2ee01a726a965584a0f94895f01b0c60b3cc8b0aeef11eaa6888cf
+    container_name: hubbl-redis
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    healthcheck:
+      test: redis-cli ping | grep -q PONG || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db:
+    # Immich's own Postgres build: the vector extensions are required and
+    # version-matched to the server. Never substitute stock postgres.
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    container_name: hubbl-db
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE_NAME}
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+    volumes:
+      - /opt/hubbl/db:/var/lib/postgresql/data
+    shm_size: 128mb
+    stop_grace_period: 60s
+
+  # One-shot importer for the OneDrive migration. Versioned independently of
+  # the server. Uploads over the HTTP API, so the staging mount is read-only:
+  # a failed or repeated run can never damage the source photos. Immich
+  # deduplicates by checksum, so re-running is safe.
+  #   docs/operations/onedrive-migration.md
+  cli:
+    image: ghcr.io/immich-app/immich-cli:v0.41.0
+    container_name: hubbl-cli
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    environment:
+      IMMICH_INSTANCE_URL: http://hubbl:2283/api
+      IMMICH_API_KEY: ${IMMICH_API_KEY:-}
+    volumes:
+      - /mammoth/hubbl/staging:/import:ro
+    profiles:
+      - cli
+
+volumes:
+  model-cache:
+
+networks:
+  loft-proxy:
+    external: true

@@ -26,6 +26,6 @@ class FastfetchTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         output = re.sub(r'\x1b\[[0-9;?]*[A-Za-z]', '', result.stdout)
         for line in (ROOT / 'laiko.txt').read_text().splitlines():
-            self.assertIn(line.rstrip(), output)
+            self.assertIn(re.sub(r'\$[1-9]', '', line).rstrip(), output)
         for label in ('OS:', 'Kernel:', 'CPU:', 'Memory:'):
             self.assertIn(label, output)

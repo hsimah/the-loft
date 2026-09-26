@@ -81,11 +81,12 @@ class PlatformTests(unittest.TestCase):
                 self.assertEqual(proxy['networks'][net]['name'], apps['networks'][net]['name'])
                 self.assertTrue(apps['networks'][net]['external'])
 
-    def test_viking_monitoring_never_starts_hub_services(self):
-        for profiles in ('', 'metrics', 'hub', 'hub,metrics,public'):
-            cfg = self.config('viking', 'houstn', profiles=profiles)
-            self.assertEqual(set(cfg['services']), {'glances'})
-            self.assertEqual(cfg['services']['glances']['network_mode'], 'host')
+    def test_monitoring_hosts_never_start_hub_services(self):
+        for host in ('fjord', 'viking', 'ladygrey'):
+            for profiles in ('', 'metrics', 'hub', 'hub,metrics,public'):
+                cfg = self.config(host, 'houstn', profiles=profiles)
+                self.assertEqual(set(cfg['services']), {'glances'})
+                self.assertEqual(cfg['services']['glances']['network_mode'], 'host')
 
     def test_homepage_uses_viking_tailnet_address(self):
         cfg = self.config('space-needle', 'houstn', profiles='hub')

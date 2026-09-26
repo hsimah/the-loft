@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Sourced by setup.sh as root. No downloads of provider installers or login.
+info "Preparing Ladygrey's display and native development account..."
+echo "lightdm shared/default-x-display-manager select lightdm" | debconf-set-selections
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+  xorg i3-wm lightdm firefox-esr unclutter x11-xserver-utils cron gh \
+  nftables build-essential uidmap dbus-user-session slirp4netns fuse-overlayfs
+ladygrey_src="${REPO_DIR}/hosts/ladygrey"
+if ! id agentdev >/dev/null 2>&1; then
+  useradd -m -s /bin/bash agentdev
+fi
+# Neither the kiosk nor the agent is given sudo or the rootful Docker socket.
+install -d -m 700 -o agentdev -g agentdev /srv/agent-dev /home/agentdev/.local/bin
+install -d -m 755 /etc/loft/dev-runner /etc/loft/pupshow /usr/local/share/loft-photo-frame
+install -d -o rodnik -g rodnik /home/rodnik/.config/i3 /home/rodnik/.local/share/loft-photo-frame
+install -o rodnik -g rodnik -m 644 "$ladygrey_src/i3/config" /home/rodnik/.config/i3/config
+install -o rodnik -g rodnik -m 644 "$ladygrey_src/kiosk/user.js" /home/rodnik/.local/share/loft-photo-frame/user.js
+install -m 644 "$ladygrey_src/kiosk/waiting.html" /usr/local/share/loft-photo-frame/waiting.html
+install -m 755 "$ladygrey_src/kiosk/launch" /usr/local/bin/loft-photo-frame
+install -m 755 "$REPO_DIR/control-plane/dev-runner.py" /usr/local/bin/loft-dev-runner
+install -m 644 "$ladygrey_src/systemd/loft-dev-runner.service" /etc/systemd/system/loft-dev-runner.service
+# Preserve operator configuration and enablement on repeat setup runs.
+for pair in 'config.example.json config.json' 'prompt.example.md prompt.md'; do
+  read -r source_name target_name <<< "$pair"
+  if [[ ! -e "/etc/loft/dev-runner/$target_name" ]]; then
+    install -m 644 "$ladygrey_src/dev-runner/$source_name" "/etc/loft/dev-runner/$target_name"
+  fi
+done
+if [[ ! -e /etc/cron.d/loft-dev-runner ]]; then
+  install -m 644 "$ladygrey_src/dev-runner/cron.example" /etc/cron.d/loft-dev-runner
+fi
+install -d /etc/lightdm/lightdm.conf.d /etc/systemd/system/lightdm.service.d /etc/systemd/logind.conf.d
+cat > /etc/lightdm/lightdm.conf.d/50-rodnik-autologin.conf <<'EOF'
+[Seat:*]
+autologin-user=rodnik
+autologin-user-timeout=0
+autologin-session=i3
+user-session=i3
+EOF
+cat > /etc/systemd/system/lightdm.service.d/restart.conf <<'EOF'
+[Unit]
+StartLimitIntervalSec=0
+[Service]
+Restart=on-failure
+RestartSec=5
+EOF
+cat > /etc/systemd/logind.conf.d/ladygrey.conf <<'EOF'
+[Login]
+IdleAction=ignore
+HandleLidSwitch=suspend
+HandleLidSwitchExternalPower=ignore
+HandleLidSwitchDocked=ignore
+EOF
+ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
+echo /usr/sbin/lightdm > /etc/X11/default-display-manager
+systemctl daemon-reload
+systemctl set-default graphical.target
+systemctl enable --now cron
+info "Ladygrey scaffold installed. Reboot for kiosk; complete onboarding before enabling jobs."

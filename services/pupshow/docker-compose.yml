@@ -1,0 +1,44 @@
+# Immich photo-frame frontend. Host setup can proceed before its .env exists.
+services:
+  pupshow:
+    image: ${PUPSHOW_IMAGE:?Set a tested Immich Kiosk release or digest in .env}
+    container_name: pupshow
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      TZ: America/Los_Angeles
+      LANG: en_US
+      KIOSK_IMMICH_URL: ${KIOSK_IMMICH_URL:?Set the Immich endpoint}
+      KIOSK_IMMICH_API_KEY_FILE: /run/secrets/immich_api_key
+      KIOSK_ALBUMS: ${KIOSK_ALBUMS:?Set the curated album ID}
+      KIOSK_DURATION: "60"
+      KIOSK_TRANSITION: fade
+      KIOSK_IMAGE_FIT: contain
+      KIOSK_DISABLE_UI: "true"
+      KIOSK_HIDE_CURSOR: "true"
+      KIOSK_SHOW_TIME: "false"
+      KIOSK_SHOW_DATE: "false"
+      KIOSK_SHOW_PROGRESS_BAR: "false"
+      KIOSK_SHOW_VIDEOS: "false"
+    secrets:
+      - immich_api_key
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    healthcheck:
+      test: [CMD, /kiosk, --healthcheck]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+secrets:
+  immich_api_key:
+    file: /etc/loft/pupshow/immich-api-key

@@ -1,0 +1,10 @@
+# Single unattended window; no first-run wizard or status bar.
+font pango:monospace 10
+set $mod Mod4
+bindsym $mod+Shift+r restart
+exec --no-startup-id xset s off
+exec --no-startup-id xset s noblank
+exec --no-startup-id xset -dpms
+exec --no-startup-id unclutter -idle 2 -root
+exec --no-startup-id /usr/local/bin/loft-photo-frame
+for_window [class="(?i)firefox"] fullscreen enable

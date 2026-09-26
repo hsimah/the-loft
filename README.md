@@ -10,7 +10,8 @@ For deep dives, see [`docs/`](docs/README.md).
 |------|----------|------|
 | [space-needle](docs/hosts/space-needle.md) | Minisforum MS-01 (i9, x86_64) | Trusted infrastructure, media and storage |
 | [viking](docs/hosts/viking.md) | Raspberry Pi 3 B+ | Production Pawst sites + metrics; cutover verified |
-| [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | LAN-only application dev/test + metrics |
+| [ladygrey](docs/hosts/ladygrey.md) | Surface Pro 3 (i5, 8 GB) | Planned agent development host and Immich photo frame |
+| [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | Snoot/Glances monitoring; next role undecided |
 | [calavera](docs/hosts/calavera.md) | Surface Pro 2 (touchscreen) | Always-on Snapcast client + i3 desktop |
 | [woodstock](docs/hosts/woodstock.md) | Surface Pro (first generation) | Upstairs audio, replacing Viking; playback verified |
 
@@ -30,8 +31,12 @@ For deep dives, see [`docs/`](docs/README.md).
 
 ## Application lifecycle
 
-Fjord hosts isolated LAN-only dev/test environments; Viking is the replaceable
-production/DMZ role, initially hosting Pawst. Promote reviewed GitHub artifacts,
+**Ladygrey**, a dedicated Surface Pro 3 (Core i5, 8 GB RAM), is planned for
+[native agent development on Debian](plans/ladygrey-development-runner.md), with
+Docker application environments and an unattended i3/Immich photo display. It has
+not been provisioned. Fjord retains host monitoring while its
+next role is decided; its old Pawst dev/test workload is no longer selected.
+Viking is the replaceable production/DMZ role, initially hosting Pawst. Promote reviewed GitHub artifacts,
 not a running Fjord filesystem. See the [application platform runbook](docs/operations/application-platform.md)
 for setup, release promotion/rollback, secrets, the required external firewall
 policy and staged Pawst cutover. Repository configuration is not proof of live

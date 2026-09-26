@@ -1,0 +1,28 @@
+[Unit]
+Description=Ladygrey GitHub issue worker (one invocation)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/loft/dev-runner/network-reviewed
+
+[Service]
+Type=oneshot
+User=agentdev
+Group=agentdev
+Environment=HOME=/home/agentdev
+Environment=PATH=/home/agentdev/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=/srv/agent-dev
+ExecStart=/usr/local/bin/loft-dev-runner --config /etc/loft/dev-runner/config.json run
+UMask=0077
+KillMode=control-group
+TimeoutStartSec=70min
+TimeoutStopSec=30s
+Nice=10
+CPUWeight=25
+MemoryHigh=5G
+MemoryMax=6G
+TasksMax=512
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/agentdev /srv/agent-dev
+PrivateTmp=true

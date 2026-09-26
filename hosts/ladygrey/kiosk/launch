@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -u
+exec 9>"${HOME}/.local/share/loft-photo-frame.lock"
+flock -n 9 || exit 0
+profile="${HOME}/.local/share/loft-photo-frame"
+url="http://127.0.0.1:3000"
+while true; do
+  if curl -fsS --max-time 5 "$url" >/dev/null; then
+    firefox-esr --no-remote --kiosk --profile "$profile" "$url" &
+    browser=$!
+    wait "$browser" || true
+  else
+    firefox-esr --no-remote --kiosk --profile "$profile" file:///usr/local/share/loft-photo-frame/waiting.html &
+    browser=$!
+    until curl -fsS --max-time 5 "$url" >/dev/null; do
+      kill -0 "$browser" 2>/dev/null || break
+      sleep 10
+    done
+    kill "$browser" 2>/dev/null || true
+    wait "$browser" || true
+  fi
+  sleep 5
+done

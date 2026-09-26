@@ -1,0 +1,31 @@
+{
+  "enabled": false,
+  "prompt_approved": false,
+  "root": "/srv/fjord-dev",
+  "prompt_file": "/etc/loft/dev-runner/prompt.md",
+  "provider_env_file": "/etc/loft/dev-runner/provider.env",
+  "git_name": "Fjord development runner",
+  "git_email": "SET_YOUR_GIT_COMMIT_EMAIL",
+  "min_host_memory_mb": 3500,
+  "min_free_disk_mb": 4096,
+  "container_memory": "2g",
+  "container_cpus": 2,
+  "timeout_seconds": 3600,
+  "max_turns": 40,
+  "projects": [
+    {
+      "repo": "hsimah/clog",
+      "authors": ["hsimah"],
+      "image": "fjord-dev-worker:2026-09-26",
+      "prepare": [],
+      "checks": []
+    },
+    {
+      "repo": "hsimah-services/toroid",
+      "authors": ["hsimah"],
+      "image": "fjord-dev-worker:2026-09-26",
+      "prepare": [],
+      "checks": []
+    }
+  ]
+}

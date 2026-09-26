@@ -1,5 +1,12 @@
 # Application platforms: Fjord and Viking
 
+**Fjord role update (2026-09-26):** Fjord now selects only Snoot and Houstn for
+monitoring pending a new role. Agent development is planned on a dedicated
+[Ladygrey Surface Pro 3](../../plans/ladygrey-development-runner.md). The Fjord
+Pawst/Caddy examples below are retained reference configurations, not selected
+workloads. Retire their live containers using the [retirement guide](fjord-dev-runner.md#retire-old-fjord-workloads). Viking's production
+configuration and artifact promotion rules remain applicable.
+
 **Deployment status (2026-09-20):** Viking serves both public Pawst sites;
 Fjord dev/test configuration is implemented but not yet verified live.
 Viking is a replaceable production/DMZ role. The existing Pi 3 B+ can serve

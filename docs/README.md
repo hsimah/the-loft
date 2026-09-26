@@ -6,7 +6,8 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 
 - [space-needle](hosts/space-needle.md) — primary server and storage
 - [viking](hosts/viking.md) — production Pawst host; cutover and reboot verified
-- [fjord](hosts/fjord.md) — LAN-only application dev/test + metrics
+- [ladygrey](hosts/ladygrey.md) — planned Debian agent development host and Immich photo frame
+- [fjord](hosts/fjord.md) — host monitoring; next role undecided
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
 - [woodstock](hosts/woodstock.md) — original Surface Pro; Upstairs audio playback verified
 
@@ -35,5 +36,8 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 - [Setup](scripts/setup.md), [loft-ctl](scripts/loft-ctl.md), [shared health helpers](scripts/common-sh.md)
 - [Release deployment](scripts/deploy-pull.md), [GitHub App authentication](scripts/github-app-token.md)
 - [Open maintenance work](../plans/maintenance.md)
+- [Ladygrey provisioning](operations/ladygrey-setup.md) — imaging, kiosk, monitoring and native agent onboarding
+- [Ladygrey agent development plan](../plans/ladygrey-development-runner.md)
+- [Initial runner prototype and Fjord workload retirement](operations/fjord-dev-runner.md)
 
 Historical migration plans live in [archive](archive/README.md). The [September notes audit](audits/2026-09-19-notes.md) records the cleanup baseline; its old line numbers and quoted instructions are historical evidence.

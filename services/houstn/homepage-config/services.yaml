@@ -93,6 +93,23 @@
             - field: amps.0.result
               label: commit
               format: text
+    - ladygrey:
+        icon: mdi-server
+        description: Agent development / photo frame (pending provisioning)
+        widget:
+          type: customapi
+          url: http://ladygrey:61208/api/4/all
+          refreshInterval: 10000
+          mappings:
+            - field: cpu.total
+              label: CPU
+              format: percent
+            - field: mem.percent
+              label: MEM
+              format: percent
+            - field: amps.0.result
+              label: commit
+              format: text
 
 - Media:
     - Plex:

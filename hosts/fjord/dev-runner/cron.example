@@ -1,0 +1,5 @@
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+# Install as /etc/cron.d/loft-dev-runner only after manual acceptance.
+# A single invocation holds the lock until the job finishes. Overlapping ticks exit.
+# */5 * * * * adminhabl /usr/bin/python3 /srv/the-loft/control-plane/dev-runner.py --config /etc/loft/dev-runner/config.json run >> /srv/fjord-dev/cron.log 2>&1

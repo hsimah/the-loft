@@ -87,6 +87,19 @@ uptime.{$LOFT_DOMAIN} {
 	reverse_proxy uptime:3001
 }
 
+# hubbl — Immich. Unlike the rest of the loft names this one IS on the tunnel's
+# public hostname list, so the phone app can sync away from home; Immich's own
+# login is therefore the only boundary in front of the whole photo library.
+#
+# No request_body limit here on purpose — Immich uploads originals, and a cap
+# would surface as a silent mobile backup failure rather than an error. The
+# effective ceiling for tunnelled uploads is Cloudflare's, not Caddy's; see
+# docs/services/hubbl.md.
+hubbl.{$LOFT_DOMAIN} {
+	import cloudflare_tls
+	reverse_proxy hubbl:2283
+}
+
 # sputnik — Open WebUI chat surface. Note there is deliberately NO route for
 # ollama itself: it has no authentication, so it stays on the bridge only.
 sputnik.{$LOFT_DOMAIN} {
@@ -192,6 +205,10 @@ http://beszel.space-needle:80 {
 
 http://uptime.space-needle:80 {
 	reverse_proxy uptime:3001
+}
+
+http://hubbl.space-needle:80 {
+	reverse_proxy hubbl:2283
 }
 
 http://sputnik.space-needle:80 {

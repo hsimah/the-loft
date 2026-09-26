@@ -99,7 +99,7 @@ jobs:
       - name: Install release-test dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y jq rsync util-linux nftables
+          sudo apt-get install -y jq rsync util-linux nftables python3-yaml
           docker compose version
 
       - name: Validate Viking firewall in an isolated network namespace

@@ -18,6 +18,7 @@ For deep dives, see [`docs/`](docs/README.md).
 
 | Service | Purpose |
 |---------|---------|
+| [hubbl](docs/services/hubbl.md) | Immich photo library |
 | [houstn](docs/services/houstn.md) | Fleet observability — Beszel, Uptime Kuma, Homepage, Glances |
 | [howlr](docs/services/howlr.md) | Music Assistant + Snapcast — whole-home audio |
 | [mushr](docs/services/mushr.md) | Caddy reverse proxy + Cloudflare Tunnel + LAN DNS |
@@ -95,6 +96,7 @@ For a fresh host, see the host-specific docs page and [`docs/scripts/setup.md`](
 - **Container identity**: Setup creates new `littledog`/`pack-member` accounts as UID/GID 1003, preserving existing IDs. Containers use image defaults or service-specific user settings; verify each application’s data ownership instead of applying one UID fleet-wide.
 - **Admin escalation**: You log in as `adminhabl` and use `sudo` for privileged actions; `loft-ctl` still auto-elevates to `adminhabl` via `su` if invoked by another user.
 - **External access**: Pawst uses an outbound Cloudflare Tunnel. Public hostnames are managed in the Cloudflare dashboard; repository routes alone do not prove exposure. Keep Sputnik, n8n and briefing off the public hostname list. Plex Remote Access and router state require separate live verification.
+- **Publicly reachable photos**: `hubbl` is the one loft application deliberately on the tunnel's public-hostname list, so the Immich mobile app can back up away from home. Immich's own login is the only boundary in front of the entire photo library — keep signup disabled and two-factor on. Cloudflare's per-request body limit (100 MB on the free plan) caps tunnelled uploads; large videos fail off-LAN and succeed at home. See [Hubbl](docs/services/hubbl.md).
 - **Unauthenticated services**: `ollama` has no auth of any kind — anything that reaches port 11434 can run inference and pull or delete models. It is published on `127.0.0.1` only and deliberately has no Caddy route.
 - **Static content with no app behind it**: `briefing.loft.hsimah.com` serves sputnik's inbox digest straight off disk, so there is no application login to rely on — the Caddy route carries `basic_auth` (`BRIEFING_*` in `services/mushr/.env`) and, like `n8n`, stays off the tunnel's public-hostname list.
 - **i3 desktop** (calavera): lightdm autologs the `rodnik` service account into an i3 session that auto-launches `firefox --kiosk` fullscreen as a Music Assistant touch dashboard (config in `hosts/calavera/i3/`, URL + HiDPI scaling from `host.conf`); `rodnik` has no sudo or docker.

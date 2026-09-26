@@ -19,12 +19,14 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 - [Pawpcorn](services/pawpcorn.md) — Plex
 - [Stellarr](services/stellarr.md) — media acquisition; Transmission/slskd use the VPN
 - [Pupyrus](services/pupyrus.md) — WordPress, MariaDB and Redis
+- [Hubbl](services/hubbl.md) — Immich photo library; the only public-tunnel application
 - [Pawst](services/pawst.md) — static sites
 - [Sputnik](services/sputnik.md) — local inference, chat and briefing workflow
 
 ## Runbooks and scripts
 
 - [Application platform, DMZ policy and Pawst cutover](operations/application-platform.md)
+- [OneDrive → Hubbl migration](operations/onedrive-migration.md) — temporary rclone puller; remove when done
 - [Viking restore procedure](operations/viking-restore.md)
 - [Viking live hardening and monitoring record](operations/viking-hardening.md)
 

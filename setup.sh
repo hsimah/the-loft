@@ -59,6 +59,11 @@ info "Activated tracked git hooks (core.hooksPath)"
 info "Installing system packages..."
 PACKAGES=(git curl ca-certificates jq rsync skopeo kitty-terminfo tmux ncurses-term python3 util-linux)
 [[ "$STORAGE_FS" == "xfs" ]] && PACKAGES+=(xfsprogs)
+# rclone speaks the OneDrive Graph API; rsync cannot reach OneDrive at all.
+# Distribution packages lag upstream and the OneDrive backend does change —
+# verify `rclone version` against an existing working config before a long
+# migration run (docs/operations/onedrive-migration.md).
+[[ "${ONEDRIVE_PULL_ENABLED:-false}" == "true" ]] && PACKAGES+=(rclone)
 apt-get update -qq
 apt-get install -y -qq "${PACKAGES[@]}" > /dev/null
 
@@ -439,6 +444,43 @@ EOF
     chmod 644 "/etc/cron.d/loft-deploy-${safe_name}"
     info "Installed deploy puller cron: ${safe_name} (${dt_repo})"
   done
+fi
+
+# OneDrive migration puller — TEMPORARY, opt-in per host.
+#
+# Unconditionally removed first so that flipping ONEDRIVE_PULL_ENABLED to
+# "false" and re-running setup.sh actually stops the pulls. That is the
+# documented way to end the migration; without the removal, disabling in
+# host.conf would leave a live cron behind.
+rm -f /etc/cron.d/loft-onedrive-pull /etc/default/loft-onedrive-pull
+if [[ "${ONEDRIVE_PULL_ENABLED:-false}" == "true" ]]; then
+  ONEDRIVE_PULL_MINUTES="${ONEDRIVE_PULL_MINUTES:-10}"
+  if [[ -z "${ONEDRIVE_PULL_REMOTE:-}" || -z "${ONEDRIVE_PULL_DEST:-}" ]]; then
+    error "ONEDRIVE_PULL_ENABLED is true but ONEDRIVE_PULL_REMOTE/DEST are unset"
+    exit 1
+  fi
+  install -o root -g root -m 755 \
+    "${REPO_DIR}/control-plane/onedrive-pull.sh" /usr/local/bin/loft-onedrive-pull
+  # Mode 600: the destination and remote path are not secret, but this file
+  # sits next to the rclone config in the operator's mental model and there is
+  # no reason for it to be world-readable.
+  install -o root -g root -m 600 /dev/null /etc/default/loft-onedrive-pull
+  cat > /etc/default/loft-onedrive-pull <<EOF
+export ONEDRIVE_PULL_REMOTE="${ONEDRIVE_PULL_REMOTE}"
+export ONEDRIVE_PULL_DEST="${ONEDRIVE_PULL_DEST}"
+export ONEDRIVE_PULL_BWLIMIT="${ONEDRIVE_PULL_BWLIMIT:-}"
+export ONEDRIVE_PULL_TRANSFERS="${ONEDRIVE_PULL_TRANSFERS:-4}"
+export ONEDRIVE_PULL_TPSLIMIT="${ONEDRIVE_PULL_TPSLIMIT:-10}"
+EOF
+  cat > /etc/cron.d/loft-onedrive-pull <<EOF
+# OneDrive -> ${ONEDRIVE_PULL_DEST} migration pull, every ${ONEDRIVE_PULL_MINUTES} min — installed by setup.sh
+# TEMPORARY: set ONEDRIVE_PULL_ENABLED="false" in host.conf and re-run setup.sh.
+*/${ONEDRIVE_PULL_MINUTES} * * * * root . /etc/default/loft-onedrive-pull && /usr/local/bin/loft-onedrive-pull >> /var/log/loft/onedrive-pull.log 2>&1
+EOF
+  chmod 644 /etc/cron.d/loft-onedrive-pull
+  info "Installed OneDrive migration cron: ${ONEDRIVE_PULL_REMOTE} -> ${ONEDRIVE_PULL_DEST} (every ${ONEDRIVE_PULL_MINUTES} min)"
+else
+  info "OneDrive migration cron not enabled on this host"
 fi
 
 # ─── 13. Verification summary ─────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 Primary server: Minisforum MS-01, x86_64, wired LAN `192.168.86.28`. Named for the Seattle landmark. [host.conf](../../hosts/space-needle/host.conf) owns service membership, storage directories, release targets and URL probes.
 
-It runs eight trusted-infrastructure service groups, including Howlr's server profile, Houstn's `hub,metrics` and Sputnik's `engine,chat,agent`. Viking hosts public web applications; Fjord's repository configuration provides dev/test environments.
+It runs nine trusted-infrastructure service groups, including Howlr's server profile, Houstn's `hub,metrics` and Sputnik's `engine,chat,agent`. Hubbl is the exception to the host's LAN-only posture: its hostname is published on the tunnel so the Immich mobile app works away from home. Viking hosts public web applications; Fjord's repository configuration provides dev/test environments.
 
 ## Storage and networking
 
@@ -27,5 +27,10 @@ Pawst moved to Viking on 2026-09-20. Space-needle has no Pawst release targets
 or Caddy/DNS overrides for the public sites. Its old container is stopped with
 restart disabled; content and paused cron files remain for recovery. See
 [Pawst](../services/pawst.md).
+
+A temporary rclone cron drains OneDrive into `/mammoth/hubbl/staging` while
+Hubbl is being populated. It is migration scaffolding, not a backup path, and
+both the cron and the staging directory are removed at the end of the
+[migration runbook](../operations/onedrive-migration.md).
 
 Service incidents are documented with their owners: [Pupyrus/database](../services/pupyrus.md), [Mushr/DNS/TLS](../services/mushr.md), [Plex/GPU](../services/pawpcorn.md), [Howlr/audio](../services/howlr.md), [Sputnik](../services/sputnik.md). Use [upgrades](../operations/upgrades.md) for backup and verification; do not duplicate those recovery procedures here.

@@ -45,7 +45,7 @@ def main(archive):
         php = [*common, '--network=none', '--memory=256m',
                '-e', 'CLOG_DB=/var/lib/clog/clog.sqlite',
                '-e', 'CLOG_SESSION_PATH=/var/lib/clog/sessions',
-               '-e', 'CLOG_ORIGIN=https://clog.loft.hsimah.com',
+               '-e', 'CLOG_ORIGIN=https://clog.hsimah.com',
                '-v', f'{release}:/opt/clog:ro,z', '-v', f'{root}/data:/var/lib/clog:z',
                '-v', f'{root}/runtime:/run/clog:z',
                '-v', f'{config}/php-fpm.conf:/usr/local/etc/clog-fpm.conf:ro,z',
@@ -67,7 +67,7 @@ def main(archive):
             port = int(run('podman', 'port', names[1], '8080/tcp').rsplit(':', 1)[1])
             cookie = ''
 
-            def request(path, method='GET', body=None, headers=None, host='clog.loft.hsimah.com'):
+            def request(path, method='GET', body=None, headers=None, host='clog.hsimah.com'):
                 nonlocal cookie
                 conn = http.client.HTTPConnection('127.0.0.1', port, timeout=10)
                 conn.request(method, path, body, {'Host': host, 'Cookie': cookie, **(headers or {})})

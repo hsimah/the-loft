@@ -1,8 +1,8 @@
 # Clog — inventory on Viking
 
-Prepared configuration; **not yet deployed or published**. The app now runs on
+Private service running; **public cutover pending**. The app now runs on
 Nginx + PHP-FPM + SQLite, without WordPress, MySQL or Redis. The URL is
-`https://clog.loft.hsimah.com/`; frontend routes start at `/`.
+`https://clog.hsimah.com/`; frontend routes start at `/`.
 
 ```text
 Cloudflare → viking-prod tunnel → mushr:8080 (Caddy) → clog:8080 (Nginx)
@@ -123,8 +123,8 @@ sudo docker compose -f services/mushr/docker-compose.yml \
   up -d --no-deps --wait mushr
 clog_compose run --rm --no-deps --entrypoint nginx clog -t
 clog_compose up -d --wait
-curl --noproxy '*' --fail-with-body -H 'Host: clog.loft.hsimah.com' http://127.0.0.1:8080/healthz
-curl --noproxy '*' --fail -o /dev/null -H 'Host: clog.loft.hsimah.com' http://127.0.0.1:8080/auth/login
+curl --noproxy '*' --fail-with-body -H 'Host: clog.hsimah.com' http://127.0.0.1:8080/healthz
+curl --noproxy '*' --fail -o /dev/null -H 'Host: clog.hsimah.com' http://127.0.0.1:8080/auth/login
 curl --noproxy '*' --fail -o /dev/null -H 'Host: hsimah.com' http://127.0.0.1:8080/
 curl --noproxy '*' --fail -o /dev/null -H 'Host: hbla.ke' http://127.0.0.1:8080/
 curl --noproxy '*' -o /dev/null -w '%{http_code}\n' -H 'Host: unknown.invalid' http://127.0.0.1:8080/
@@ -142,12 +142,9 @@ readiness nor ordinary app startup applies migrations.
 **This is the point to log into Cloudflare and add the public route.** Certificate
 coverage can be checked earlier without exposing the app.
 
-In the `hsimah.com` zone, first confirm an active edge certificate covers
-`clog.loft.hsimah.com` (or `*.loft.hsimah.com`). Standard Universal SSL on a full
-`hsimah.com` zone only covers the apex and one subdomain level. This hostname
-needs deeper coverage, such as an advanced certificate/Total TLS, unless the
-zone already has suitable coverage. Origin certificates do not solve browser-to-
-Cloudflare coverage. See [Cloudflare's certificate limitations](https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/limitations/).
+In the `hsimah.com` zone, confirm the existing `*.hsimah.com` edge certificate
+is active. It covers `clog.hsimah.com`; no advanced certificate add-on is needed.
+See [Cloudflare's wildcard coverage](https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/limitations/).
 
 In Cloudflare One, open **Networks → Connectors → Cloudflare Tunnels →
 `viking-prod` → Published application routes** (some dashboards call these public
@@ -155,19 +152,19 @@ hostnames). Add:
 
 | Field | Value |
 | --- | --- |
-| Subdomain | `clog.loft` |
+| Subdomain | `clog` |
 | Domain | `hsimah.com` |
 | Path | Leave blank; all app routes |
 | Service type | HTTP |
 | URL | `mushr:8080` |
-| HTTP Host Header | `clog.loft.hsimah.com` |
+| HTTP Host Header | `clog.hsimah.com` |
 
 Caddy forwards that exact hostname to Nginx. Do not use `localhost`: inside the
 connector that would refer to the connector container. Preserve both existing
 Pawst routes and the final unmatched-host 404; do not add a wildcard or private
 network route.
 
-Confirm the dashboard created a **proxied CNAME** for `clog.loft` targeting the
+Confirm the dashboard created a **proxied CNAME** for `clog` targeting the
 actual `viking-prod` tunnel ID followed by `.cfargotunnel.com`. If an existing DNS
 record conflicts, inspect it before replacing it. Tunnel ID in the existing
 restore record is `77cdbc17-f2cb-4977-88e1-1fc4337e909c`; verify against the dashboard.
@@ -181,20 +178,9 @@ Clog's own login protects inventory; no additional Access identity gate is assum
 
 ## 4. LAN DNS and external acceptance
 
-The space-needle DNS wildcard currently resolves `*.loft.hsimah.com` locally.
-The new exact-domain forwarding exception in
-[dnsmasq.conf](../../services/mushr/dnsmasq.conf) sends Clog queries to public DNS.
-After Cloudflare DNS is ready, update the reviewed checkout on **space-needle**:
-
-```bash
-cd /srv/the-loft
-sudo docker exec mushr-dns dnsmasq --test
-sudo docker compose -f services/mushr/docker-compose.yml restart mushr-dns
-```
-
-Restart is needed to reread the config; flush client DNS caches as needed. Verify
-`clog.loft.hsimah.com` returns public Cloudflare addresses from LAN DNS, while other
-loft names still resolve locally. Test on cellular and LAN:
+`clog.hsimah.com` is outside the LAN's `*.loft.hsimah.com` wildcard, so no
+space-needle DNS change is needed. Verify it resolves to public Cloudflare
+addresses from the LAN. Test on cellular and LAN:
 
 - HTTPS certificate valid; `/healthz` succeeds and login works.
 - Inventory read/write, deep links, assets, session expiry and logout work.
@@ -252,7 +238,7 @@ logout, deep links/assets, denied paths, body limits, forged-header throttling
 and SQLite backup. The test uses rootless Podman on the workstation; its tmpfs
 uses mode 1777 because Podman's CLI rejects Docker's uid/gid tmpfs options.
 Production retains UID/GID-owned mode 1770 tmpfs. CI is configured to validate
-that setup with Docker; the new CI job has not yet run. This does not establish ARM performance or live network isolation.
+that setup with Docker; the initial deployment PR passed both CI jobs. This does not establish ARM performance or live network isolation.
 
 Compose isolation and archive-extraction regressions, existing repository tests,
 Caddy/dnsmasq configuration validation and local documentation links also passed.
@@ -265,3 +251,19 @@ python3 tests/clog-runtime.py /path/to/clog-standalone.tar.gz
 The test creates only temporary local containers/storage and a loopback port.
 It does not connect to Viking. CI validates server configurations and repository
 regressions; the runtime test needs an app archive and is run separately.
+
+## Operator rollout record
+
+On 2026-09-27 the operator staged standalone release `0.1`, SHA-256
+`91ab6b72fb196f0d11a8c9534064100c26db52016254bbb44b87361dd85b280b`,
+initialized SQLite and created an editor account. Both images reported arm64.
+Caddy and both Clog containers became healthy; existing sites and the private
+Clog health endpoint passed. These checks used the initial hostname; apply the
+`clog.hsimah.com` configuration and repeat the origin check before public cutover.
+
+Docker reported no memory/swap limit support. The active boot command line has
+`cgroup_disable=memory` and cgroup v2 exposes no memory controller. The operator
+explicitly deferred boot changes/reboot to finish bringing up the app. Compose
+memory limits are therefore **not enforced** on Viking; PHP's request allocation
+limit and worker count still apply. Enabling the controller, checking actual
+cgroup limits, off-host backup/restore and reboot acceptance remain follow-ups.

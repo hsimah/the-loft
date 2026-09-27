@@ -1,0 +1,95 @@
+# Runtime images are independent of the checksum-pinned application archive.
+x-php: &php
+  image: php:8.4.24-fpm-alpine
+  user: "1003:1003"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  network_mode: none
+  mem_limit: 256m
+  cpus: 1.0
+  pids_limit: 32
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "3"}
+  tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
+  environment:
+    CLOG_DB: /var/lib/clog/clog.sqlite
+    CLOG_SESSION_PATH: /var/lib/clog/sessions
+    CLOG_ORIGIN: https://clog.loft.hsimah.com
+  volumes:
+    - type: bind
+      source: ${CLOG_RELEASE_DIR:-/opt/clog/releases/pending}
+      target: /opt/clog
+      read_only: true
+      bind: {create_host_path: false}
+    - type: bind
+      source: /var/lib/clog/data
+      target: /var/lib/clog
+      bind: {create_host_path: false}
+    - type: bind
+      source: /var/lib/clog/runtime
+      target: /run/clog
+      bind: {create_host_path: false}
+    - ./php-fpm.conf:/usr/local/etc/clog-fpm.conf:ro
+    - ./php.ini:/usr/local/etc/php/conf.d/zz-clog.ini:ro
+    - ./health.php:/usr/local/lib/clog-health.php:ro
+
+services:
+  clog-php:
+    <<: *php
+    container_name: clog-php
+    restart: unless-stopped
+    command: [php-fpm, --nodaemonize, --fpm-config, /usr/local/etc/clog-fpm.conf]
+    healthcheck:
+      test: [CMD, php, /usr/local/lib/clog-health.php]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  clog-cli:
+    <<: *php
+    profiles: [tools]
+    entrypoint: [php, /opt/clog/server/standalone/cli.php]
+    command: [schema]
+  clog:
+    image: nginx:1.30.4-alpine
+    container_name: clog
+    user: "1003:1003"
+    entrypoint: [nginx, -g, "daemon off;"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 48m
+    cpus: 0.50
+    pids_limit: 32
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
+    tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./fastcgi.conf:/etc/nginx/clog-fastcgi.conf:ro
+      - type: bind
+        source: ${CLOG_RELEASE_DIR:-/opt/clog/releases/pending}/client/dist/assets
+        target: /srv/assets
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /var/lib/clog/runtime
+        target: /run/clog
+        read_only: true
+        bind: {create_host_path: false}
+    networks: [clog-prod]
+    depends_on:
+      clog-php: {condition: service_healthy}
+    healthcheck:
+      test: [CMD-SHELL, "wget -q -O /dev/null --header='Host: clog.loft.hsimah.com' http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  clog-prod:
+    name: loft-clog-prod
+    external: true

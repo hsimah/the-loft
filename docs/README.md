@@ -12,6 +12,8 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 
 ## Services
 
+- [Clog](services/clog.md) — standalone inventory on Viking; deployment prepared
+
 - [Houstn](services/houstn.md) — dashboards and Glances
 - [Snoot](services/snoot.md) — Beszel agents
 - [Howlr](services/howlr.md) — Music Assistant and Snapcast
@@ -25,6 +27,7 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 ## Runbooks and scripts
 
 - [Application platform, DMZ policy and Pawst cutover](operations/application-platform.md)
+- [Clog on Viking deployment plan](../plans/clog-viking.md) — Nginx, PHP-FPM and public routing
 - [Viking restore procedure](operations/viking-restore.md)
 - [Viking live hardening and monitoring record](operations/viking-hardening.md)
 

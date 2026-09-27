@@ -50,6 +50,21 @@ jobs:
             --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
             -v "$PWD/services/pawst/nginx-unprivileged.conf:/etc/nginx/nginx.conf:ro" \
             --entrypoint nginx nginx:1.30.4-alpine -t
+          docker run --rm --network none --read-only --user 1003:1003 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
+            -v "$PWD/services/clog/nginx.conf:/etc/nginx/nginx.conf:ro" \
+            -v "$PWD/services/clog/fastcgi.conf:/etc/nginx/clog-fastcgi.conf:ro" \
+            --entrypoint nginx nginx:1.30.4-alpine -t
+          docker run --rm --network none --read-only --user 1003:1003 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
+            -e CLOG_DB=/var/lib/clog/clog.sqlite \
+            -e CLOG_SESSION_PATH=/var/lib/clog/sessions \
+            -e CLOG_ORIGIN=https://clog.loft.hsimah.com \
+            -v "$PWD/services/clog/php-fpm.conf:/usr/local/etc/clog-fpm.conf:ro" \
+            -v "$PWD/services/clog/php.ini:/usr/local/etc/php/conf.d/zz-clog.ini:ro" \
+            php:8.4.24-fpm-alpine php-fpm --test --fpm-config /usr/local/etc/clog-fpm.conf
           for host in fjord viking; do
             docker run --rm --network none --read-only --user 1003:1003 \
               --cap-drop ALL --cap-add NET_BIND_SERVICE --security-opt no-new-privileges \

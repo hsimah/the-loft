@@ -165,3 +165,11 @@ logs, monitoring, fresh SSH and denied trusted-network connections. Reboot and
 repeat checks before retiring replacement/old hardware. Record the new commit,
 release manifest and tested backup/restore result. A Git pull does not install
 system policy files; run the reviewed steps for each restored host.
+
+## Clog recovery
+
+Clog configuration is prepared separately from the pinned Pawst restore manifest.
+`hosts/viking/restore` restores Pawst only. After restoring the host boundary,
+follow the [Clog runbook](../services/clog.md) with its recorded app checksum,
+matching SQLite backup and image versions. Restore accounts from the database,
+clear sessions and verify the private origin before restoring its public route.

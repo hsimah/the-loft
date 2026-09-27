@@ -24,6 +24,14 @@ The production configuration was committed as `aed0b3e` and both production
 and infrastructure checkouts were reconciled. Public routing uses the separate `viking-prod`
 tunnel. Do not reprovision from the old audio-role manifest.
 
+## Clog deployment preparation
+
+The manifest now includes Clog, with a prepared Nginx/PHP-FPM/SQLite service and
+exact `clog.loft.hsimah.com` Caddy route. This is not a live-deployment record.
+Follow the [Clog runbook](../services/clog.md) to stage the final archive, create
+accounts, verify the private origin and then configure Cloudflare. Setup cannot
+start Clog successfully until its release and writable directories are prepared.
+
 ## Monitoring and provisioning
 
 Preserve Snoot's existing credentials. Viking's Houstn override runs Glances

@@ -18,6 +18,15 @@
             header_up Host hsimah.com
         }
     }
+    @clog host clog.loft.hsimah.com
+    handle @clog {
+        reverse_proxy clog:8080 {
+            header_up Host clog.loft.hsimah.com
+            # Cloudflare supplies this via the isolated connector network.
+            # Overwrite any caller-provided application identity header.
+            header_up X-Clog-Client-IP {http.request.header.Cf-Connecting-Ip}
+        }
+    }
     handle {
         respond "Unknown application" 404
     }

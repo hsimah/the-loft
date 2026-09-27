@@ -15,6 +15,7 @@ The configuration described below is space-needle's retained infrastructure stac
 - [Caddyfile](../../services/mushr/Caddyfile) is the route table. Bridge services use container names; host listeners and VPN-published ports use `host.docker.internal`.
 - [dnsmasq.conf](../../services/mushr/dnsmasq.conf) resolves `*.space-needle`, `*.loft.hsimah.com` and fleet hostnames locally. Both public Pawst domains now use its public upstream resolvers. Router DHCP should advertise this resolver. `space-needle` covers `hblake.space-needle`, although Caddy also needs a matching route.
 - [.env.example](../../services/mushr/.env.example) lists LOFT_DOMAIN, Cloudflare DNS API token, tunnel token and briefing basic-auth settings. Scope the DNS token to the zones whose certificates Caddy issues.
+- Clog has a prepared exact public-DNS exception for `clog.loft.hsimah.com`; deploy it on space-needle after its Cloudflare route is ready. See the [Clog rollout](clog.md).
 - Public hostnames are managed separately in Cloudflare's tunnel dashboard. A Caddy route is not proof of public exposure. Keep Sputnik, n8n and briefing off that list.
 - Admin listens at `127.0.0.1:8880` **inside Caddy's container**. The host publishes 80/443 only. Its Docker healthcheck probes the admin endpoint and gates tunnel startup.
 - Caddy's named `caddy-data` and `caddy-config` volumes persist certificates/configuration. Do not remove them as a routine response to TLS errors.

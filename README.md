@@ -18,6 +18,7 @@ For deep dives, see [`docs/`](docs/README.md).
 
 | Service | Purpose |
 |---------|---------|
+| [clog](docs/services/clog.md) | Standalone inventory — Nginx, PHP-FPM and SQLite; deployment prepared |
 | [houstn](docs/services/houstn.md) | Fleet observability — Beszel, Uptime Kuma, Homepage, Glances |
 | [howlr](docs/services/howlr.md) | Music Assistant + Snapcast — whole-home audio |
 | [mushr](docs/services/mushr.md) | Caddy reverse proxy + Cloudflare Tunnel + LAN DNS |

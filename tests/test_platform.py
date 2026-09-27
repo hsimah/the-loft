@@ -60,6 +60,17 @@ class PlatformTests(unittest.TestCase):
         self.assertNotIn('environment', tunnel)
         self.assertEqual(cfg['services']['mushr']['ports'][0]['host_ip'], '127.0.0.1')
 
+    def test_clog_proxy_network_and_trusted_address_match(self):
+        cfg = self.config('viking', 'mushr', public=True)
+        network = cfg['networks']['clog-prod']
+        self.assertTrue(network['internal'])
+        self.assertEqual(network['name'], 'loft-clog-prod')
+        self.assertEqual(network['ipam']['config'][0]['subnet'], '172.30.93.0/29')
+        address = cfg['services']['mushr']['networks']['clog-prod']['ipv4_address']
+        nginx = (ROOT / 'services/clog/nginx.conf').read_text()
+        self.assertIn(f'set_real_ip_from {address};', nginx)
+        self.assertNotIn('clog-prod', cfg['services']['mushr-tunnel']['networks'])
+
     def test_apps_are_separate_nonroot_and_unpublished(self):
         for host, environments in [('fjord', ['dev', 'test']), ('viking', ['prod'])]:
             apps = self.config(host, 'pawst')

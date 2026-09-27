@@ -27,7 +27,11 @@ services: !override
       XDG_DATA_HOME: /tmp/data
       XDG_CONFIG_HOME: /tmp/config
     tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
-    networks: [ingress, pawst-prod]
+    networks:
+      ingress: {}
+      pawst-prod: {}
+      clog-prod:
+        ipv4_address: 172.30.93.2
     healthcheck:
       test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:8880/config/"]
       interval: 10s
@@ -61,3 +65,9 @@ networks: !override
   pawst-prod:
     name: loft-pawst-prod
     internal: true
+  clog-prod:
+    name: loft-clog-prod
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.93.0/29

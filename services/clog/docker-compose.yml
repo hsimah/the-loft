@@ -16,7 +16,7 @@ x-php: &php
   environment:
     CLOG_DB: /var/lib/clog/clog.sqlite
     CLOG_SESSION_PATH: /var/lib/clog/sessions
-    CLOG_ORIGIN: https://clog.loft.hsimah.com
+    CLOG_ORIGIN: https://clog.hsimah.com
   volumes:
     - type: bind
       source: ${CLOG_RELEASE_DIR:-/opt/clog/releases/pending}
@@ -84,7 +84,7 @@ services:
     depends_on:
       clog-php: {condition: service_healthy}
     healthcheck:
-      test: [CMD-SHELL, "wget -q -O /dev/null --header='Host: clog.loft.hsimah.com' http://127.0.0.1:8080/healthz"]
+      test: [CMD-SHELL, "wget -q -O /dev/null --header='Host: clog.hsimah.com' http://127.0.0.1:8080/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3

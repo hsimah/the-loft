@@ -61,7 +61,7 @@ jobs:
             --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
             -e CLOG_DB=/var/lib/clog/clog.sqlite \
             -e CLOG_SESSION_PATH=/var/lib/clog/sessions \
-            -e CLOG_ORIGIN=https://clog.loft.hsimah.com \
+            -e CLOG_ORIGIN=https://clog.hsimah.com \
             -v "$PWD/services/clog/php-fpm.conf:/usr/local/etc/clog-fpm.conf:ro" \
             -v "$PWD/services/clog/php.ini:/usr/local/etc/php/conf.d/zz-clog.ini:ro" \
             php:8.4.24-fpm-alpine php-fpm --test --fpm-config /usr/local/etc/clog-fpm.conf

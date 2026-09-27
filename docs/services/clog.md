@@ -1,6 +1,6 @@
 # Clog — inventory on Viking
 
-Private service running; **public cutover pending**. The app now runs on
+Public service verified by the operator; backup/recovery follow-ups remain. The app now runs on
 Nginx + PHP-FPM + SQLite, without WordPress, MySQL or Redis. The URL is
 `https://clog.hsimah.com/`; frontend routes start at `/`.
 
@@ -31,111 +31,76 @@ capacity. Measure total host memory, latency and concurrent search/write behavio
 SQLite must stay on local storage. Session cleanup uses PHP's probabilistic GC;
 sessions expire in the application after eight hours even before files are removed.
 
-## 1. Prepare the host and release
+## Deploy with one command
 
-Run the commands on **Viking** from the reviewed checkout at `/srv/the-loft`.
-Keep the existing tunnel running for Pawst. Do not run a whole-fleet rebuild.
-The existing DMZ attestation and firewall must already be in place.
+From the reviewed checkout on Viking (normally `/srv/the-loft`, or `~/loft`):
 
 ```bash
-cd /srv/the-loft
-sudo test -f /etc/loft/dmz-ready
-sudo systemctl is-active loft-firewall.service
-uname -m
-free -m
-df -h / /var/lib
-sudo docker network ls
-sudo docker network inspect $(sudo docker network ls -q) --format '{{.Name}} {{json .IPAM.Config}}'
+loft-ctl deploy clog
 ```
 
-Select the final **standalone** archive `clog-standalone.tar.gz` produced and
-verified by the app release workflow. Obtain its independently recorded SHA-256
-from that release/build record. Transfer it to Viking or download it there using
-the existing GitHub credentials. Do not use the old WordPress ZIP or install
-Composer/Node on Viking. The local development archive used for infrastructure
-verification is not automatically selected for production.
+The command asks for sudo if needed. It reads the approved version, URL and SHA-256
+from [the release pin](../../hosts/viking/clog-release.json). To preview without
+host changes, use `loft-ctl deploy clog --plan`. `setup.sh` prepares the host and
+leaves Clog installation to this command. It never installs a database as a side
+effect of general fleet provisioning.
 
-```bash
-# Replace this value with the approved release's actual SHA-256.
-CLOG_SHA256=REPLACE_WITH_APPROVED_SHA256
-sudo python3 services/clog/stage-release.py /tmp/clog-standalone.tar.gz "$CLOG_SHA256"
-sudo install -d -o 1003 -g 1003 -m 0700 \
-  /var/lib/clog/data /var/lib/clog/data/sessions /var/lib/clog/runtime
-printf 'CLOG_RELEASE_DIR=/opt/clog/releases/%s\n' "$CLOG_SHA256" > services/clog/.env
-chmod 600 services/clog/.env
-```
+The deploy command:
 
-The staging tool verifies the checksum, rejects links/path traversal, checks
-required release files and refuses to overwrite an existing release. It does not
-switch the running app. Preserve `.env`, the checksum, release archive and the
-infrastructure commit in the deployment record.
+1. Checks the Viking role, DMZ attestation, firewall and Docker. It warns when
+   Docker cannot enforce memory limits; it does not edit boot settings or reboot.
+2. Downloads and verifies the pinned standalone archive, stages it under its
+   checksum and prepares private writable directories. An existing release is
+   reused only after comparing its contents against the verified archive.
+3. Pulls runtime images and validates Compose, PHP extensions, FPM, Nginx and
+   Caddy before stopping Clog. Caddy validation uses an isolated container so it
+   cannot collide with the running proxy's fixed network address.
+4. Applies the proxy/network configuration and checks the existing websites.
+   The first managed deployment refreshes Caddy once; later runs force a refresh
+   only when the proxy configuration changes. A refresh briefly interrupts its
+   sites. It does not recreate the tunnel or Pawst.
+5. Stops Clog writes, backs up any existing database using the previous release's
+   SQLite backup command, and runs the selected release's explicit installer.
+6. Creates the first editor account only if none exists. Username/password prompts
+   happen before downtime; passwords are hidden, confirmed and passed through
+   stdin. Existing accounts and inventory are preserved.
+7. Selects the release in `.env`, recreates Nginx/FPM, waits for readiness and
+   checks Clog's health/login endpoints plus both existing websites through Caddy.
+8. Records success and prints the public URL, backup path and first-cutover
+   Cloudflare settings. DNS and Cloudflare remain operator-managed.
 
-Define this helper in your current Bash session; all following `clog_compose`
-commands use it:
+An existing installation from the manual walkthrough is supported: the command
+reads its `.env` and database, verifies the existing staged release, takes a
+backup and preserves accounts. No reinstall/reset is required. Normal runs use
+one deployment lock so concurrent invocations cannot modify the database.
 
-```bash
-clog_compose() {
-  sudo docker compose --env-file /srv/the-loft/services/clog/.env \
-    -f /srv/the-loft/services/clog/docker-compose.yml "$@"
-}
-clog_compose config --quiet
-clog_compose --profile tools pull
-clog_compose run --rm --no-deps --entrypoint php clog-cli -r \
-  'foreach (["pdo_sqlite", "mbstring", "Zend OPcache"] as $e) { if (!extension_loaded($e)) { fwrite(STDERR, "$e missing\n"); exit(1); } }'
-clog_compose run --rm --no-deps --entrypoint php-fpm clog-cli \
-  --test --fpm-config /usr/local/etc/clog-fpm.conf
-clog_compose run --rm --no-deps clog-cli install
-```
+For a pre-downloaded or private release, supply a local archive with
+`loft-ctl deploy clog --archive /path/to/clog-standalone.tar.gz`. The manifest's
+checksum is still enforced. The default download is the pinned public GitHub
+asset. Use `--user NAME` to preselect the first username; it does not change any
+existing account.
 
-Confirm the pulled images are arm64 using `sudo docker image inspect` and record
-their RepoDigests. Runtime image pins follow the fleet's version-tag convention;
-the app is separately pinned by archive checksum. Check memory headroom before
-starting additional services.
+To update the app, review and change the release pin in Git, pull that reviewed
+configuration on Viking and run `loft-ctl deploy clog` again. The command does not
+pull Git, choose “latest”, run Composer or build frontend assets. Use this command
+for Clog releases instead of generic `loft-ctl update`/`rebuild`.
 
-Create your editor account with a password of 12–72 bytes. Passwords go through
-stdin, never command arguments or a committed file. `reader` grants read-only
-inventory access. There is no registration or email reset flow; keep credentials
-in your password manager. The current CLI creates accounts but does not reset or
-disable existing ones; add that recovery capability in the app before relying on
-it for unattended operation.
+### Deployment state and failures
 
-```bash
-sudo -v
-read -rsp 'Clog password: ' CLOG_NEW_PASSWORD
-printf '\n'
-printf '%s' "$CLOG_NEW_PASSWORD" | clog_compose run --rm --no-deps -T clog-cli user:add admin editor
-unset CLOG_NEW_PASSWORD
-```
+State lives under `/var/lib/loft/deploy/`:
 
-## 2. Attach Nginx and verify the private origin
+- `clog.json`: last successful release, directory, proxy fingerprint, backup and time.
+- `clog-pending.json`: interrupted/failed operation phase, previous directory and backup.
+- `clog.lock`: serializes deployments.
 
-Caddy owns the new internal network. Its network membership changes, so a Caddy
-reload alone is insufficient. Validate its configuration, then recreate only
-`mushr`; expect a short interruption to the existing sites. This leaves the
-running tunnel and Pawst containers intact.
+Download/checksum/image/config failures occur before Clog is stopped. Once writes
+are stopped, a failure leaves Clog stopped and retains the pending record. The
+script does not automatically run old code against a potentially migrated
+schema. Further deployments refuse to proceed until the operator resolves the
+record using the recovery procedure below. Existing sites remain separate.
 
-```bash
-sudo docker compose -f services/mushr/docker-compose.yml \
-  -f hosts/viking/overrides/mushr/docker-compose.override.yml \
-  run --rm --no-deps mushr caddy validate --config /etc/caddy/Caddyfile
-sudo docker compose -f services/mushr/docker-compose.yml \
-  -f hosts/viking/overrides/mushr/docker-compose.override.yml \
-  up -d --no-deps --wait mushr
-clog_compose run --rm --no-deps --entrypoint nginx clog -t
-clog_compose up -d --wait
-curl --noproxy '*' --fail-with-body -H 'Host: clog.hsimah.com' http://127.0.0.1:8080/healthz
-curl --noproxy '*' --fail -o /dev/null -H 'Host: clog.hsimah.com' http://127.0.0.1:8080/auth/login
-curl --noproxy '*' --fail -o /dev/null -H 'Host: hsimah.com' http://127.0.0.1:8080/
-curl --noproxy '*' --fail -o /dev/null -H 'Host: hbla.ke' http://127.0.0.1:8080/
-curl --noproxy '*' -o /dev/null -w '%{http_code}\n' -H 'Host: unknown.invalid' http://127.0.0.1:8080/
-loft-ctl health clog
-sudo docker stats --no-stream clog clog-php mushr pawst
-```
-
-Require `{"ok":true}`, a login HTTP 200, both existing sites healthy and unknown
-host HTTP 404. Browser sessions require public HTTPS; local HTTP probes do not
-prove browser login. Nginx readiness exercises FPM and the SQLite schema. Neither
-readiness nor ordinary app startup applies migrations.
+No public exposure or external login is inferred from local health. Complete the
+Cloudflare and external acceptance steps below on first installation.
 
 ## 3. Cloudflare — do this after the private checks pass
 
@@ -202,7 +167,9 @@ Create a consistent SQLite backup with the app's `VACUUM INTO` command; never
 copy only the live main database while WAL writes are active:
 
 ```bash
-clog_compose run --rm --no-deps clog-cli backup /var/lib/clog/backup-YYYYMMDD-HHMM.sqlite
+sudo docker compose --env-file services/clog/.env \
+  -f services/clog/docker-compose.yml run --rm --no-deps -T \
+  clog-cli backup /var/lib/clog/backup-YYYYMMDD-HHMM.sqlite
 ```
 
 Choose a new filename each time. The host file is beneath `/var/lib/clog/data`.
@@ -212,11 +179,10 @@ Set up a daily backup schedule and failure monitoring before storing real data;
 backup transport/credentials are not provisioned by this change. Delete local
 backup copies only after verifying off-host recovery. Sessions need not be backed up.
 
-For updates: stage a new archive into a new directory, stop Nginx and FPM to pause
-writes, create the backup using the old release, change `.env`, run the new
-release's explicit `install`, then recreate both services and run smoke tests.
-Do not modify the release directory in place: this would violate asset/code and
-OPcache consistency. Keep the prior release and backup.
+For updates, change the reviewed release pin and run `loft-ctl deploy clog`.
+Each deployment with existing data creates a local `pre-deploy-*.sqlite` snapshot
+after stopping writes. Copy snapshots off-host; scheduled encrypted backups and
+retention are still separate operational work.
 
 For database rollback, stop both services, move the current database **and any
 `-wal`/`-shm` sidecars** into a recovery directory, restore the matching backup as
@@ -224,6 +190,19 @@ For database rollback, stop both services, move the current database **and any
 files, select the matching release in `.env`, then start and verify. Never replace
 a database beneath running workers. An app-only rollback is safe only if its
 schema remains compatible. Rehearse restoration in an isolated copy first.
+
+After an interrupted deployment, inspect `clog-pending.json` before retrying.
+If its phase is `stopping`, no installer was invoked; resolve the stop/backup
+failure and restart the selected old release if appropriate. If it says
+`backed-up` or `installing`, retain the recorded backup and follow the matching
+release/database restore procedure above, or diagnose and explicitly complete the
+selected migration. A pending record with no previous database is a failed fresh
+installation; inspect its schema/account state before continuing.
+
+After verifying the recovered release and database, move the pending record into
+an incident archive under `/var/lib/loft/deploy/` so a subsequent deployment can
+proceed. Do not delete it merely to bypass an unresolved migration. The command
+prints its location on failure.
 
 For a failed first cutover, remove only Clog's published route and stop its two
 runtime containers; preserve data for diagnosis. Caddy/Pawst need not be rolled
@@ -258,8 +237,9 @@ On 2026-09-27 the operator staged standalone release `0.1`, SHA-256
 `91ab6b72fb196f0d11a8c9534064100c26db52016254bbb44b87361dd85b280b`,
 initialized SQLite and created an editor account. Both images reported arm64.
 Caddy and both Clog containers became healthy; existing sites and the private
-Clog health endpoint passed. These checks used the initial hostname; apply the
-`clog.hsimah.com` configuration and repeat the origin check before public cutover.
+Clog health endpoint passed. After the hostname correction, the operator verified `clog.hsimah.com` locally
+and over cellular, including login and creating, reloading, viewing from another
+device and deleting a test location. The Cloudflare route is serving the app.
 
 Docker reported no memory/swap limit support. The active boot command line has
 `cgroup_disable=memory` and cgroup v2 exposes no memory controller. The operator
@@ -267,3 +247,11 @@ explicitly deferred boot changes/reboot to finish bringing up the app. Compose
 memory limits are therefore **not enforced** on Viking; PHP's request allocation
 limit and worker count still apply. Enabling the controller, checking actual
 cgroup limits, off-host backup/restore and reboot acceptance remain follow-ups.
+
+## Deployment command validation
+
+The deployment state machine is tested with disposable SQLite databases and
+mocked host commands: first install, repeat deployment, preserved accounts/data,
+backup ordering, checksum/pull/backup/migration/health failures, concurrent runs
+and side-effect-free plans. These tests do not operate on Viking. The command
+itself has not yet been run on the live host.

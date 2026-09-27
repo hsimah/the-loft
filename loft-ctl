@@ -41,6 +41,7 @@ usage() {
   echo "  rebuild <service ...| --all>   Full rebuild (down + up, fresh mounts)"
   echo "  health  [service ...]          Run health checks (defaults to --all)"
   echo "  update  <service ...| --all>   Pull config, rebuild, health check"
+  echo "  deploy  clog [--plan]          Deploy the pinned Clog release on Viking"
   echo ""
   echo "Options:"
   echo "  --all                          Target all services on this host"
@@ -60,6 +61,19 @@ usage() {
 
 if [[ $# -eq 0 ]]; then
   usage
+fi
+
+# Stateful app deployment has its own parser, root provisioning and release lock.
+if [[ "$1" == deploy ]]; then
+  [[ "${2:-}" == clog && "$HOST_NAME" == viking && " ${SERVICES[*]} " == *" clog "* ]] || {
+    error "deploy currently supports only clog on Viking"
+    exit 1
+  }
+  shift 2
+  if [[ " $* " == *" --plan "* || " $* " == *" --help "* || $EUID -eq 0 ]]; then
+    exec python3 "${REPO_DIR}/control-plane/clog-deploy.py" "$@"
+  fi
+  exec sudo python3 "${REPO_DIR}/control-plane/clog-deploy.py" "$@"
 fi
 
 # Operator attestation, not a firewall implementation. Never start the

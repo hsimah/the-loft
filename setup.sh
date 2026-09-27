@@ -342,6 +342,11 @@ info "Deploying services..."
 source "${REPO_DIR}/control-plane/common.sh"
 
 for service in "${SERVICES[@]}"; do
+  # Stateful Clog installation/migrations belong to the pinned deploy command.
+  if [[ "$service" == clog ]]; then
+    info "Clog is managed by: loft-ctl deploy clog (run after host setup)"
+    continue
+  fi
   compose_args=$(compose_args_for "$service") || {
     warn "No compose config for ${service}, skipping"
     continue

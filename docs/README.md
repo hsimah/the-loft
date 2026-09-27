@@ -12,7 +12,7 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 
 ## Services
 
-- [Clog](services/clog.md) — standalone inventory on Viking; deployment prepared
+- [Clog](services/clog.md) — standalone inventory on Viking; scripted deployment
 
 - [Houstn](services/houstn.md) — dashboards and Glances
 - [Snoot](services/snoot.md) — Beszel agents

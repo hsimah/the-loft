@@ -9,7 +9,20 @@ import tarfile
 import tempfile
 
 
-def stage(archive, digest, releases):
+def inventory(root):
+    result = {}
+    for path in root.rglob('*'):
+        if path.is_symlink() or not (path.is_file() or path.is_dir()):
+            raise ValueError(f'Unexpected file in existing release: {path}')
+        if path.is_dir():
+            result[str(path.relative_to(root))] = None
+        else:
+            with path.open('rb') as src:
+                result[str(path.relative_to(root))] = hashlib.file_digest(src, 'sha256').hexdigest()
+    return result
+
+
+def stage(archive, digest, releases, reuse=False):
     if not re.fullmatch(r'[a-f0-9]{64}', digest):
         raise ValueError('Expected a lowercase SHA-256 checksum')
     # Verify and extract the same open file, avoiding a path replacement race.
@@ -19,7 +32,7 @@ def stage(archive, digest, releases):
         source.seek(0)
         releases.mkdir(parents=True, exist_ok=True)
         target = releases / digest
-        if target.exists():
+        if target.is_symlink() or (target.exists() and not reuse):
             raise ValueError('Release already exists; never overwrite a staged release')
         with tempfile.TemporaryDirectory(prefix='.stage-', dir=releases) as temp:
             root = Path(temp)
@@ -54,6 +67,10 @@ def stage(archive, digest, releases):
                     raise ValueError(f'Missing release file: {required}')
             for directory in [root, *[p for p in root.rglob('*') if p.is_dir()]]:
                 directory.chmod(0o755)
+            if target.exists():
+                if not target.is_dir() or inventory(target) != inventory(root):
+                    raise ValueError('Existing release differs from the verified archive')
+                return target
             # Keep the temporary directory manager separate from the renamed tree.
             root.rename(target)
     return target

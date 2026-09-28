@@ -18,7 +18,7 @@ For deep dives, see [`docs/`](docs/README.md).
 
 | Service | Purpose |
 |---------|---------|
-| [clog](docs/services/clog.md) | Standalone inventory — Nginx, PHP-FPM and SQLite; deployment prepared |
+| [clog](docs/services/clog.md) | Standalone inventory — Nginx, PHP-FPM and SQLite on Viking |
 | [houstn](docs/services/houstn.md) | Fleet observability — Beszel, Uptime Kuma, Homepage, Glances |
 | [howlr](docs/services/howlr.md) | Music Assistant + Snapcast — whole-home audio |
 | [mushr](docs/services/mushr.md) | Caddy reverse proxy + Cloudflare Tunnel + LAN DNS |
@@ -85,6 +85,9 @@ cd /srv/the-loft
 
 sudo bash setup.sh
 ```
+
+For Clog on Viking, run `loft-ctl deploy clog` after host preparation; its reviewed
+release pin supplies the download and checksum. See [Clog](docs/services/clog.md).
 
 Day-to-day after that is `loft-ctl` — see [`docs/scripts/loft-ctl.md`](docs/scripts/loft-ctl.md).
 

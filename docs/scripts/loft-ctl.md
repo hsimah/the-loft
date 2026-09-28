@@ -8,6 +8,7 @@
 | `stop <services> / --all` | Compose `down`, without deleting volumes |
 | `rebuild <services> / --all` | `down`, `pull`, then `up -d --build`; no health check |
 | `health [services]` | Container and URL checks; defaults to all declared services |
+| `deploy clog [--plan]` | Pinned Clog install/update on Viking; provisions storage, backs up data and verifies origin |
 | `update <services> / --all` | Fetch, checkout, fast-forward pull, rebuild and health checks |
 
 `update --branch <name>` selects a branch (default `main`). `update --no-pull` skips Git. Other mutating commands require explicit targets. There is no `reload` command; use the application's own reload operation, such as the Caddy command in [Mushr](../services/mushr.md).
@@ -18,6 +19,11 @@ loft-ctl rebuild howlr
 loft-ctl health howlr
 loft-ctl update --no-pull mushr
 ```
+
+For Clog releases use `loft-ctl deploy clog`; the [Clog runbook](../services/clog.md)
+describes the pin, interactive first account, failure recovery and Cloudflare
+cutover. This command uses sudo for root-owned storage and release provisioning;
+`--plan` needs no elevation. It does not pull Git or change boot settings.
 
 ## Privileges and configuration
 

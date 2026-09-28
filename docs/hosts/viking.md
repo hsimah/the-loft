@@ -24,15 +24,18 @@ The production configuration was committed as `aed0b3e` and both production
 and infrastructure checkouts were reconciled. Public routing uses the separate `viking-prod`
 tunnel. Do not reprovision from the old audio-role manifest.
 
-## Clog rollout in progress
+## Clog
 
-The operator started Clog's Nginx/PHP-FPM/SQLite service and verified private
-health and existing sites on 2026-09-27. The public hostname is now
-`clog.hsimah.com`; apply that correction before configuring Cloudflare. See the
-[Clog runbook](../services/clog.md) for the release checksum and rollout record.
+The operator deployed standalone release `0.1` on 2026-09-27 and verified
+`clog.hsimah.com` on LAN and cellular, including login and persistent writes
+across devices. Use `loft-ctl deploy clog` for repeatable install/update from the
+[release pin](../../hosts/viking/clog-release.json). The new command has local
+test coverage; its first live invocation remains pending. See the
+[Clog runbook](../services/clog.md) for deployment and recovery.
+
 Docker memory limits are currently unenforced because the memory controller is
-disabled at boot; the operator deferred that change and reboot. Public access,
-off-host restore and final acceptance remain pending.
+disabled at boot; the operator deferred that change and reboot. Off-host restore
+and final resource/reboot acceptance remain pending.
 
 ## Monitoring and provisioning
 

@@ -38,6 +38,16 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 stager.stage(archive, digest, root / 'releases')
 
+    def test_reuse_compares_the_existing_release_with_verified_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive, digest = self.bundle(root)
+            release = stager.stage(archive, digest, root / 'releases')
+            self.assertEqual(stager.stage(archive, digest, root / 'releases', reuse=True), release)
+            (release / 'server/standalone/cli.php').write_text('modified')
+            with self.assertRaisesRegex(ValueError, 'differs'):
+                stager.stage(archive, digest, root / 'releases', reuse=True)
+
     def test_checksum_failure_does_not_stage(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

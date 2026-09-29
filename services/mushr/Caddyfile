@@ -47,6 +47,12 @@ pawpcorn.{$LOFT_DOMAIN} {
 	reverse_proxy host.docker.internal:32400
 }
 
+# LAN only: do not add to the public Cloudflare Tunnel hostname list.
+audiobookshelf.{$LOFT_DOMAIN} {
+	import cloudflare_tls
+	reverse_proxy audiobookshelf:8080
+}
+
 pupyrus.{$LOFT_DOMAIN} {
 	import cloudflare_tls
 	reverse_proxy pupyrus:80
@@ -160,6 +166,10 @@ http://jackett.space-needle:80 {
 
 http://pawpcorn.space-needle:80 {
 	reverse_proxy host.docker.internal:32400
+}
+
+http://audiobookshelf.space-needle:80 {
+	reverse_proxy audiobookshelf:8080
 }
 
 http://pupyrus.space-needle:80 {

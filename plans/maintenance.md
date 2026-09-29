@@ -5,7 +5,7 @@ Repository cleanup completed 2026-09-19; these items require runtime evidence or
 | Work | Next evidence/action |
 |---|---|
 | Sputnik empty-inbox flow | Test empty and populated mail/calendar cases in deployed n8n. Add an explicit empty-mail branch if needed; export and retest. Current JSON is unchanged and the no-items path remains unverified |
-| Import/cleanup safety | Check *arr import status, actual inode/link counts and retained library files. Plan a shared-parent mount migration before claiming hardlink support; ratio-based removal does not establish successful import |
+| Import/cleanup safety | Check *arr import status, actual inode/link counts and retained library files. Plan a shared-parent mount migration before claiming hardlink support. Remove the retired Transmission cleanup cron on space-needle; see [Stellarr](../docs/services/stellarr.md) |
 | Host identities/device access | Record actual littledog UID/GID, Plex runtime identity and device groups; the Plex example uses 1004 while fresh provisioning uses 1003. Do not chown existing data by inference |
 | Pi networking | Confirm manager/unit and interface on Viking/Fjord; watchdog defaults to dhcpcd and may need a host override for NetworkManager |
 | Beszel connectivity | Confirm hub-side resolution/reachability and per-system tokens; Homepage host mappings do not apply to Beszel |

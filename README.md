@@ -27,7 +27,7 @@ For deep dives, see [`docs/`](docs/README.md).
 | [pupyrus](docs/services/pupyrus.md) | WordPress (+ MariaDB + Redis) |
 | [snoot](docs/services/snoot.md) | Beszel agent on every host |
 | [sputnik](docs/services/sputnik.md) | Local LLM — Ollama + Open WebUI + n8n, read-only Gmail/Calendar assistant |
-| [stellarr](docs/services/stellarr.md) | *arr stack; Transmission + slskd use NordVPN |
+| [stellarr](docs/services/stellarr.md) | *arr stack + Audiobookshelf; Transmission + slskd use NordVPN |
 
 ## Application lifecycle
 

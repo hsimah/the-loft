@@ -147,6 +147,12 @@
           key: "{{HOMEPAGE_VAR_BAZARR_API_KEY}}"
 
 - Downloads:
+    - LazyLibrarian:
+        icon: lazylibrarian.svg
+        href: https://lazylibrarian.loft.hsimah.com
+        description: Find and import audiobooks
+        server: my-docker
+        container: lazylibrarian
     - Transmission:
         icon: transmission.svg
         href: https://transmission.loft.hsimah.com

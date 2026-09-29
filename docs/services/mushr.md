@@ -15,7 +15,7 @@ The configuration described below is space-needle's retained infrastructure stac
 - [Caddyfile](../../services/mushr/Caddyfile) is the route table. Bridge services use container names; host listeners and VPN-published ports use `host.docker.internal`.
 - [dnsmasq.conf](../../services/mushr/dnsmasq.conf) resolves `*.space-needle`, `*.loft.hsimah.com` and fleet hostnames locally. Both public Pawst domains now use its public upstream resolvers. Router DHCP should advertise this resolver. `space-needle` covers `hblake.space-needle`, although Caddy also needs a matching route.
 - [.env.example](../../services/mushr/.env.example) lists LOFT_DOMAIN, Cloudflare DNS API token, tunnel token and briefing basic-auth settings. Scope the DNS token to the zones whose certificates Caddy issues.
-- Public hostnames are managed separately in Cloudflare's tunnel dashboard. A Caddy route is not proof of public exposure. Keep Sputnik, n8n, briefing and Audiobookshelf off that list.
+- Public hostnames are managed separately in Cloudflare's tunnel dashboard. A Caddy route is not proof of public exposure. Keep Sputnik, n8n, briefing, Audiobookshelf and LazyLibrarian off that list.
 - Admin listens at `127.0.0.1:8880` **inside Caddy's container**. The host publishes 80/443 only. Its Docker healthcheck probes the admin endpoint and gates tunnel startup.
 - Caddy's named `caddy-data` and `caddy-config` volumes persist certificates/configuration. Do not remove them as a routine response to TLS errors.
 
@@ -41,6 +41,27 @@ loft-ctl health mushr
 ```
 
 Build first when changing the image, so compilation failure does not follow a proxy shutdown. For pre-pulls, name only `mushr-tunnel mushr-dns`; the Caddy image is local and cannot be pulled from a registry.
+
+## Caddyfile mount after a Git update
+
+On 2026-09-29, the new Audiobookshelf route existed in the host checkout but was
+absent from `/etc/caddy/Caddyfile` inside the running container. The app itself
+responded to Caddy's HTTP probe; HTTPS failed during the TLS handshake. Recreating
+only Caddy refreshed the file mount and the operator confirmed access.
+
+If host and container files differ after a Git update, validate the current
+checkout with a disposable Compose container, then recreate Caddy:
+
+```bash
+cd /srv/the-loft
+sudo docker compose -f services/mushr/docker-compose.yml run --rm --no-deps \
+  mushr caddy validate --config /etc/caddy/Caddyfile
+sudo docker compose -f services/mushr/docker-compose.yml \
+  up -d --no-deps --force-recreate mushr
+```
+
+This briefly interrupts proxied sites. Certificate volumes are preserved. A
+reload alone cannot refresh a bind mount that still points at the replaced file.
 
 ## Briefing mount and password
 

@@ -5,8 +5,11 @@ Primary server: Minisforum MS-01, x86_64, wired LAN `192.168.86.28`. Named for t
 It runs eight trusted-infrastructure service groups, including Howlr's server profile, Houstn's `hub,metrics` and Sputnik's `engine,chat,agent`. Viking hosts public web applications; Fjord's repository configuration provides dev/test environments.
 
 Stellarr also includes [Audiobookshelf](../services/stellarr.md#audiobookshelf)
-for manually imported audiobooks and Android/iOS listening. Its configuration is
-prepared; deployment and phone playback remain to be verified on this host.
+for Android/iOS listening and [LazyLibrarian](../services/stellarr.md#lazylibrarian)
+for selecting and importing books through Transmission. The operator confirmed
+Audiobookshelf web access on 2026-09-29 after recreating Caddy to refresh its file
+mount. LazyLibrarian deployment, automated imports and phone playback remain
+to be verified on this host.
 
 ## Storage and networking
 

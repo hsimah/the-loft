@@ -19,7 +19,7 @@ Start with the [fleet overview](../README.md). Exact service membership, image t
 - [Howlr](services/howlr.md) — Music Assistant and Snapcast
 - [Mushr](services/mushr.md) — proxy, tunnel and LAN DNS
 - [Pawpcorn](services/pawpcorn.md) — Plex
-- [Stellarr](services/stellarr.md) — media acquisition and Audiobookshelf; Transmission/slskd use the VPN
+- [Stellarr](services/stellarr.md) — media acquisition, LazyLibrarian and Audiobookshelf; Transmission/slskd use the VPN
 - [Pupyrus](services/pupyrus.md) — WordPress, MariaDB and Redis
 - [Pawst](services/pawst.md) — static sites
 - [Sputnik](services/sputnik.md) — local inference, chat and briefing workflow

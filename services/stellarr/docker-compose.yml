@@ -83,6 +83,36 @@ services:
     depends_on:
       - vpn
 
+  lazylibrarian:
+    image: lscr.io/linuxserver/lazylibrarian:afe0394f-ls358
+    container_name: lazylibrarian
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/lazylibrarian:/config
+      # Match Transmission's paths; preserve originals when importing for seeding.
+      - /mammoth/downloads:/downloads
+      - /mammoth/library/audiobooks:/audiobooks
+    healthcheck:
+      # Basic-auth challenges also prove the web server is ready.
+      test: ["CMD-SHELL", "code=$$(curl --silent --location --max-time 5 --output /dev/null --write-out '%{http_code}' http://127.0.0.1:5299/) && { [ \"$$code\" = 200 ] || [ \"$$code\" = 401 ]; }"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - loft-proxy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
   audiobookshelf:
     image: ghcr.io/advplyr/audiobookshelf:2.37.0
     container_name: audiobookshelf

@@ -53,6 +53,12 @@ audiobookshelf.{$LOFT_DOMAIN} {
 	reverse_proxy audiobookshelf:8080
 }
 
+# Private acquisition UI; keep off the public tunnel hostname list.
+lazylibrarian.{$LOFT_DOMAIN} {
+	import cloudflare_tls
+	reverse_proxy lazylibrarian:5299
+}
+
 pupyrus.{$LOFT_DOMAIN} {
 	import cloudflare_tls
 	reverse_proxy pupyrus:80
@@ -170,6 +176,10 @@ http://pawpcorn.space-needle:80 {
 
 http://audiobookshelf.space-needle:80 {
 	reverse_proxy audiobookshelf:8080
+}
+
+http://lazylibrarian.space-needle:80 {
+	reverse_proxy lazylibrarian:5299
 }
 
 http://pupyrus.space-needle:80 {

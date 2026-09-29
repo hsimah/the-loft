@@ -1,8 +1,8 @@
 # Stellarr — media acquisition and audiobooks
 
-[Compose](../../services/stellarr/docker-compose.yml) runs Radarr, Sonarr, Lidarr, Bazarr, Jackett, Transmission, slskd, NordVPN and Audiobookshelf on space-needle. Exact image pins and mounts live there.
+[Compose](../../services/stellarr/docker-compose.yml) runs Radarr, Sonarr, Lidarr, Bazarr, Jackett, Transmission, slskd, NordVPN, LazyLibrarian and Audiobookshelf on space-needle. Exact image pins and mounts live there.
 
-Only **Transmission and slskd** use `network_mode: service:vpn`. NordVPN is a bridge container publishing their ports; the *arr apps join `loft-proxy` and do not route all traffic through that VPN. Radarr/Sonarr/Lidarr reach download clients through `host.docker.internal:9091` and `:5030`. Caddy uses those same host-published endpoints; the *arr UIs have no host port mappings.
+Only **Transmission and slskd** use `network_mode: service:vpn`. NordVPN is a bridge container publishing their ports; the *arr apps join `loft-proxy` and do not route all traffic through that VPN. Radarr/Sonarr/Lidarr/LazyLibrarian reach download clients through `host.docker.internal:9091` and `:5030`. Caddy uses those same host-published endpoints; the *arr UIs have no host port mappings.
 
 ## Configuration and storage
 
@@ -25,20 +25,101 @@ After deploying the updated Compose file, recreate only Transmission to remove t
 sudo docker compose -f services/stellarr/docker-compose.yml up -d --no-deps transmission
 ```
 
-These repository changes have not been applied to the live host. Manage torrent retention manually and verify library imports before deleting downloaded data. Import/mount verification remains tracked in [maintenance](../../plans/maintenance.md).
+Removal of the live cron still needs verification. Manage torrent retention manually and verify library imports before deleting downloaded data. Import/mount verification remains tracked in [maintenance](../../plans/maintenance.md).
+
+## LazyLibrarian
+
+Prepared configuration; live deployment and end-to-end acquisition are pending.
+On 2026-09-29 the pinned image passed a disposable local startup/UI check and
+config/download/library writes as UID/GID 1003. Compose, 54 repository tests,
+documentation links and the new Caddy routes (with local TLS) passed.
+Select books here, download through the existing VPN-backed Transmission, then
+import into Audiobookshelf's library. The container exposes no host port and
+uses the existing Stellarr service identity. Config lives at `/opt/lazylibrarian`.
+Keep `lazylibrarian.loft.hsimah.com` off the public tunnel hostname list.
+
+### Deploy on space-needle
+
+After pulling the reviewed branch, run from `/srv/the-loft`:
+
+```bash
+sudo docker compose -f services/stellarr/docker-compose.yml pull lazylibrarian
+sudo bash setup.sh
+sudo docker compose -f services/mushr/docker-compose.yml run --rm --no-deps \
+  mushr caddy validate --config /etc/caddy/Caddyfile
+sudo docker compose -f services/mushr/docker-compose.yml \
+  up -d --no-deps --force-recreate mushr
+loft-ctl health stellarr
+```
+
+Setup provisions the new config/download directories and starts the container.
+It runs full host provisioning. Recreating Caddy briefly interrupts proxied sites
+and refreshes the file mount; no certificate deletion is needed.
+
+Open `https://lazylibrarian.loft.hsimah.com` at home. Set a UI login password,
+then configure the following once in the UI. Credentials and selected providers
+remain on the host; Compose cannot infer them. Disable application auto-update
+and update via the pinned image instead.
+
+| Setting | Value |
+| --- | --- |
+| Downloaders: Use Transmission | Enabled |
+| Transmission host / port | `host.docker.internal` / `9091` |
+| Transmission username / password | Existing Transmission credentials, if configured |
+| Transmission download directory | `/downloads/transmission/audiobooks` |
+| Download directory watched by LazyLibrarian | `/downloads/transmission/audiobooks` |
+| Processing: AudioBook Library Folder | `/audiobooks` |
+| Audiobook folder pattern | `$Author/$Title` |
+| Keep Original Files | Enabled |
+| Keep seeding | Enabled |
+| New book, audiobook and new-author book statuses | `Skipped` |
+| Post-processing interval | `1` minute initially |
+
+Test the Transmission connection before searching. Both containers see the same
+`/downloads` paths, so remote path mapping is unnecessary. These are copies
+across separate mounts, not hardlinks. Keep originals for seeding and leave
+retention manual. The application imports only after a download completes.
+
+For providers, reuse Jackett: copy an individual audiobook-capable indexer's
+Torznab feed URL, replace its scheme/host/port with `http://jackett:9117` while
+preserving the path, and add it under Torznab providers with the Jackett API key.
+Set provider Types to `A` and test it. Provider access and credentials must
+already be configured in Jackett; installing LazyLibrarian supplies no content.
+Provider queries use the normal container network; only Transmission/slskd use
+the VPN. See upstream [providers](https://lazylibrarian.gitlab.io/config_providers/),
+[downloaders](https://lazylibrarian.gitlab.io/config_downloaders/) and
+[processing](https://lazylibrarian.gitlab.io/config_processing/) settings.
+
+Search for a title, choose its audiobook and mark only that book **Wanted**.
+Keep other titles skipped so adding an author does not download their catalogue.
+Leave scheduled post-processing enabled to import completed downloads. Enable
+Audiobookshelf's library watcher or scheduled scans for `/audiobooks` so imported
+books appear there. Verify the first multi-file book has all chapters after the
+import finishes; rescan if it was observed during copying.
+
+Start with MP3/M4B files. No Calibre or FFmpeg Docker mods are installed; conversion
+and merging are separate optional work. Back up `/opt/lazylibrarian` alongside
+the library, and stop the container before directly editing its config file.
+
+### Acceptance
+
+Confirm one selected book reaches Transmission, completes, is copied to the
+library, appears in Audiobookshelf and plays on a phone. Confirm the original
+still seeds and that unrelated titles remain skipped. This requires operator
+checks; local startup tests cannot verify private indexers or live RPC credentials.
 
 ## Audiobookshelf
 
-Prepared for space-needle; live deployment and phone playback are not yet verified.
+The operator confirmed web access on 2026-09-29 after recreating Caddy to refresh
+its stale Caddyfile mount. Phone playback and imports are not yet verified.
 Local validation on 2026-09-29 passed Compose configuration, the 54 repository
 tests, documentation links and the new Caddy routes (using local TLS in the
 test container). The pinned Audiobookshelf image started as UID/GID 1003 with a
 read-only book mount; `/ping`, `/status` and the first-run page returned HTTP 200.
-Cloudflare certificate issuance, imports and mobile playback still need the
-operator checks below.
+Imports and mobile playback still need the operator checks below.
 
-[Audiobookshelf](https://www.audiobookshelf.org/) serves manually imported books.
-There is no automatic book search, download or import service. Transmission keeps
+[Audiobookshelf](https://www.audiobookshelf.org/) serves books imported by
+[LazyLibrarian](#lazylibrarian) or copied into the library manually. Transmission keeps
 its existing VPN configuration; Audiobookshelf joins `loft-proxy` and publishes
 no host port. Keep it off the public Cloudflare Tunnel hostname list.
 
@@ -61,15 +142,17 @@ getent group pack-member
 sudo rm -f /etc/cron.d/transmission-cleanup
 sudo docker compose -f services/stellarr/docker-compose.yml pull audiobookshelf
 sudo bash setup.sh
-sudo docker exec mushr caddy validate --config /etc/caddy/Caddyfile
-sudo docker exec mushr caddy reload --config /etc/caddy/Caddyfile
+sudo docker compose -f services/mushr/docker-compose.yml run --rm --no-deps \
+  mushr caddy validate --config /etc/caddy/Caddyfile
+sudo docker compose -f services/mushr/docker-compose.yml \
+  up -d --no-deps --force-recreate mushr
 loft-ctl health stellarr
 ```
 
 `setup.sh` provisions the new directories, starts the configured fleet services
 and removes the retired cleanup cron. It is a full host provisioning run; see
-[setup side effects](../scripts/setup.md). Caddy needs the explicit reload above
-because a changed bind-mounted Caddyfile does not cause Compose to restart it.
+[setup side effects](../scripts/setup.md). Recreate Caddy to refresh its file mount after the Git update; this briefly
+interrupts proxied sites. See the [observed mount issue](mushr.md#caddyfile-mount-after-a-git-update).
 The existing LAN DNS wildcard already covers the new hostname. Homepage has an
 Audiobookshelf link under Audio; refresh the dashboard after deployment.
 
@@ -135,7 +218,7 @@ sudo docker exec transmission curl -fsS https://ipinfo.io/ip
 
 Compare download-container egress with the home's public IP and expected VPN exit. A reachable web UI does not prove VPN protection. When recreating the VPN namespace, recreate its dependent clients too.
 
-Back up `/opt/{radarr,sonarr,lidarr,bazarr,jackett,transmission,slskd}` before upgrades. Preserve these exceptions:
+Back up `/opt/{radarr,sonarr,lidarr,bazarr,jackett,transmission,slskd,lazylibrarian,audiobookshelf}` before upgrades. Preserve these exceptions:
 
 - **VPN:** digest pinned after the `v3.12.3` tag failed authentication on 2026-07-27. Do not replace the digest with that older tag. A maintained replacement is open work.
 - **Lidarr:** pinned nightly because its existing DB schema was ahead of the stable line. Do not downgrade the database by changing the tag. Verify plugin compatibility with the selected build.

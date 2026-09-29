@@ -4,6 +4,10 @@ Primary server: Minisforum MS-01, x86_64, wired LAN `192.168.86.28`. Named for t
 
 It runs eight trusted-infrastructure service groups, including Howlr's server profile, Houstn's `hub,metrics` and Sputnik's `engine,chat,agent`. Viking hosts public web applications; Fjord's repository configuration provides dev/test environments.
 
+Stellarr also includes [Audiobookshelf](../services/stellarr.md#audiobookshelf)
+for manually imported audiobooks and Android/iOS listening. Its configuration is
+prepared; deployment and phone playback remain to be verified on this host.
+
 ## Storage and networking
 
 `/mammoth` is an XFS volume configured on `/dev/sda1`. Confirm the device before provisioning a replacement machine; setup mounts but does not format it. Media/model weights live there, while application state generally lives under `/opt`. Exact paths are in host.conf and each Compose file. Directory provisioning ownership is not a universal application UID; see service-specific requirements.

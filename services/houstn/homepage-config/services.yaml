@@ -176,6 +176,12 @@
         server: my-docker
 
 - Audio:
+    - Audiobookshelf:
+        icon: audiobookshelf.svg
+        href: https://audiobookshelf.loft.hsimah.com
+        description: Audiobooks and listening progress
+        server: my-docker
+        container: audiobookshelf
     - Music Assistant:
         icon: music-assistant.png
         href: https://howlr.loft.hsimah.com

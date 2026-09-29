@@ -17,7 +17,7 @@ sudo bash setup.sh
 | SSH fields | Restricts SSH to adminhabl and optionally disables password authentication |
 | CONFIG_DIRS / MEDIA_DIRS | Creates directories; resets their top-level ownership to littledog:pack-member and modes to 755/775 |
 | SERVICES and service environments | Runs Compose with host overrides; skips deployment when an expected `.env` is missing |
-| Per-service setup scripts | Sources them after service deployment; currently WordPress initialization and torrent-cleanup cron |
+| Per-service setup scripts | Sources them after service deployment; currently WordPress initialization and removal of the retired Transmission cleanup cron |
 | Optional host bootstrap | Sources `hosts/<hostname>/bootstrap`; Calavera installs/configures the dashboard and hardware workarounds |
 | Wi-Fi fields | Installs watchdog script, defaults file and cron; see [Calavera](../hosts/calavera.md) for firmware recovery |
 | DEPLOY_TARGETS | Replaces `/etc/cron.d/loft-deploy-*` with the configured hourly release jobs |

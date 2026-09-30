@@ -6,7 +6,6 @@ import sys
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-HISTORICAL = (ROOT / "docs/archive", ROOT / "docs/audits")
 
 
 def prose(text):
@@ -28,7 +27,7 @@ def headings(path):
 def main():
     errors, checked = [], 0
     for path in sorted(ROOT.rglob("*.md")):
-        if ".git" in path.parts or any(path.is_relative_to(p) for p in HISTORICAL):
+        if ".git" in path.parts:
             continue
         for match in re.finditer(r"\[[^\]\n]*\]\(([^)\s]+)\)", prose(path.read_text())):
             dest = match.group(1).strip("<>")

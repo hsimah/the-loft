@@ -1,6 +1,6 @@
 # The Loft project rules
 
-Shared instructions for all coding agents. Maintain project rules in this file.
+Shared instructions for all coding agents; `CLAUDE.md` is a symlink to this file.
 
 ## Repository and remote hosts
 
@@ -22,12 +22,13 @@ is needed, provide the specific operator check rather than assuming remote acces
 
 ## Working conventions
 
-- Prefix privileged host commands (Docker, systemctl, writes under `/opt` or `/mammoth`) with `sudo`. `loft-ctl` handles its own switch to `adminhabl`.
+- Prefix privileged host commands (Docker, systemctl, writes under `/opt` or `/mammoth`) with `sudo`. Run `loft-ctl` as `adminhabl`, the only account on every host.
 - Host manifests: `hosts/<hostname>/host.conf`. Shared Compose: `services/<name>/docker-compose.yml`. Optional overrides: `hosts/<hostname>/overrides/<service>/docker-compose.override.yml`.
 - `setup.sh` provisions the host and sources optional `hosts/<hostname>/bootstrap`. `loft-ctl` provides start, stop, rebuild, health and update; shared helpers live in `control-plane/common.sh`.
 - Prefer profiles in an existing service group for related fleet infrastructure. Current profiles are documented in the service pages; do not duplicate their inventory here.
 - Update the canonical affected documentation when behavior changes. Review README for changes to fleet membership, service purpose or entry-point instructions. Link to config for exact tags, ports and paths instead of copying tables across pages.
-- Label proposals and historical incidents explicitly. Repository configuration does not prove live deployment. Keep observed hardware quirks and measured benchmarks; avoid turning an incident diagnosis into a universal rule.
+- Keep docs short and current-state. Do not record rollout narratives, validation logs, superseded approaches or why something changed unless it prevents a repeat mistake; git history holds the rest. Open work goes in [plans/maintenance.md](plans/maintenance.md); delete it when done.
+- Repository configuration does not prove live deployment; label unverified state briefly.
 
 ## Names
 

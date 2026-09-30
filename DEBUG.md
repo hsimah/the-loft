@@ -1,6 +1,6 @@
 # Fleet triage
 
-Run host commands over SSH as `adminhabl`. The checkout is `/srv/the-loft`.
+Run on the host as `adminhabl` from `/srv/the-loft`.
 
 ```bash
 loft-ctl health
@@ -8,45 +8,33 @@ sudo docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 sudo docker logs <container> --tail 100
 sudo docker inspect <container> --format '{{json .State}}'
 df -h /opt /mammoth
-sudo docker system df
 ```
 
-`loft-ctl health` checks the active Compose services, running state and configured Docker healthchecks. URL probes check reachability only: any HTTP response passes, including 500/502, and certificate verification is disabled. A green result does not verify audio playback, application login, a working VPN, or correct content. See [health helper contract](docs/scripts/common-sh.md).
-
-## Pick the failing layer
+`loft-ctl health` checks container state/healthchecks plus URL reachability. Any HTTP response passes (including 500/502) and TLS is not verified, so green does not prove playback, login, VPN or content. See [health helpers](docs/scripts/common-sh.md).
 
 | Symptom | Next check |
 |---|---|
-| Missing/exited/restarting container | Logs and `.State`; confirm active profiles in the service `.env` |
-| Exit 137 | Inspect `.State.OOMKilled`; check `free -h` and `sudo docker stats --no-stream` |
-| App responds directly but proxy fails | [Mushr](docs/services/mushr.md): upstream network membership, route, DNS and Caddy logs |
-| Names fail to resolve | `dig @192.168.86.28 radarr.space-needle +short`; dnsmasq listens on that LAN address |
-| Permission denied | Compare the service's runtime UID/GID with the specific bind mount; do not recursively chown all service data to one user |
-| New static release missing | [Deploy puller](docs/scripts/deploy-pull.md): release tag, artifact, auth and state file |
-| Briefing stale or wrong | [Sputnik](docs/services/sputnik.md) and [workflow validation](services/sputnik/workflows/briefing.md) |
-| Wi-Fi/audio/display issue | The relevant [host page](docs/README.md#hosts) |
+| Missing/exited/restarting container | Logs and `.State`; active profiles in the service `.env` |
+| Exit 137 | `.State.OOMKilled`, `free -h`, `sudo docker stats --no-stream` |
+| App works directly, proxy fails | [Mushr](docs/services/mushr.md): network membership, route, DNS, Caddy logs |
+| Names fail to resolve | `dig @192.168.86.28 radarr.space-needle +short` |
+| Permission denied | Compare the container's UID/GID with that bind mount; never recursively chown all data |
+| New static release missing | [Release puller](docs/scripts/deploy-pull.md) |
+| Briefing stale | [Sputnik](docs/services/sputnik.md) |
+| Wi-Fi/audio/display | The [host page](docs/README.md#hosts) |
 
-For TLS testing, use the intended hostname as both HTTP host and TLS server name:
+TLS test with the real hostname as both Host and SNI:
 
 ```bash
-curl --resolve radarr.loft.hsimah.com:443:192.168.86.28 \
-  -I https://radarr.loft.hsimah.com
+curl --resolve radarr.loft.hsimah.com:443:192.168.86.28 -I https://radarr.loft.hsimah.com
 sudo docker exec mushr caddy validate --config /etc/caddy/Caddyfile
-sudo docker logs mushr --tail 100
-```
-
-Caddy's admin API is inside the container, not at the host's port 8880:
-
-```bash
-sudo docker exec mushr wget -qO- http://127.0.0.1:8880/config/
+sudo docker exec mushr wget -qO- http://127.0.0.1:8880/config/   # admin API is inside the container
 ```
 
 ## Recovery boundaries
 
-- `loft-ctl rebuild <service>` tears down, pulls and recreates that group. It does **not** run health checks; follow it with `loft-ctl health <service>`. `update` does both.
-- Rebuilds retain declared bind mounts and named volumes. `docker compose down -v` removes named/anonymous volumes, including Caddy's certificate state; it does not delete host bind directories such as `/opt/pupyrus/db`.
-- Image rollback may also require restoring an older database. See [upgrades and backups](docs/operations/upgrades.md).
-- Database errors need an error-specific recovery path. See [Pupyrus](docs/services/pupyrus.md); do not use auto-upgrade as corruption recovery or delete transaction logs on inference alone.
-- `setup.sh` can restart Docker, overwrite managed dotfiles and reapply ownership. It is a provisioner, not a generic repair command.
-
-Known service incidents belong on their service pages: [Mushr](docs/services/mushr.md), [Pupyrus](docs/services/pupyrus.md), [Howlr](docs/services/howlr.md), [Stellarr](docs/services/stellarr.md), [Pawpcorn](docs/services/pawpcorn.md). Preserve rollback images when pruning Docker storage.
+- `loft-ctl rebuild` does down/pull/up but **no** health check; `update` does both.
+- `docker compose down -v` deletes named volumes, including Caddy's certificates. Bind mounts survive.
+- Image rollback may also need the matching database backup; see [upgrades](docs/operations/upgrades.md).
+- `setup.sh` restarts Docker, overwrites dotfiles and reapplies ownership. It is a provisioner, not a repair tool.
+- Keep rollback images when pruning Docker storage.

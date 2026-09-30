@@ -430,22 +430,6 @@ EOF
 chmod 644 /etc/cron.d/loft-wifi-watchdog
 info "Installed WiFi watchdog cron job (${WIFI_IFACE} → ${WIFI_DHCP_UNIT}, every ${WIFI_WATCHDOG_MINUTES} min, fw-recovery=${WIFI_FW_RECOVERY})"
 
-# Deploy puller cron entries (one per DEPLOY_TARGETS entry)
-# Clear any stale entries from a previous run before installing fresh ones.
-rm -f /etc/cron.d/loft-deploy-*
-if [[ -v DEPLOY_TARGETS && ${#DEPLOY_TARGETS[@]} -gt 0 ]]; then
-  for entry in "${DEPLOY_TARGETS[@]}"; do
-    IFS='|' read -r dt_name dt_repo dt_target dt_hook <<< "$entry"
-    safe_name="${dt_name//[^a-zA-Z0-9-]/-}"
-    cat > "/etc/cron.d/loft-deploy-${safe_name}" <<EOF
-# Release puller for ${dt_repo} → ${dt_target} — installed by setup.sh
-0 * * * * root ${REPO_DIR}/control-plane/deploy-pull.sh '${dt_name}' '${dt_repo}' '${dt_target}' '${dt_hook}' >> /var/log/loft/deploy.log 2>&1
-EOF
-    chmod 644 "/etc/cron.d/loft-deploy-${safe_name}"
-    info "Installed deploy puller cron: ${safe_name} (${dt_repo})"
-  done
-fi
-
 # ─── 13. Verification summary ─────────────────────────────────────────────────
 echo ""
 echo "============================================"

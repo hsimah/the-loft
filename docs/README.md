@@ -1,42 +1,34 @@
 # Operations index
 
-Start with the [fleet overview](../README.md). Exact service membership, image tags, mounts and endpoints live in the manifests linked from each page.
+Start with the [fleet overview](../README.md). Exact images, ports and mounts live in the manifests linked from each page.
 
 ## Hosts
 
 - [space-needle](hosts/space-needle.md) — primary server and storage
-- [viking](hosts/viking.md) — production Pawst host; cutover and reboot verified
-- [fjord](hosts/fjord.md) — LAN-only application dev/test + metrics
+- [viking](hosts/viking.md) — production web host (Pawst, Clog)
+- [fjord](hosts/fjord.md) — LAN-only dev/test
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
-- [woodstock](hosts/woodstock.md) — original Surface Pro; Upstairs audio playback verified
+- [woodstock](hosts/woodstock.md) — Upstairs audio and touch dashboard
 
 ## Services
 
-- [Clog](services/clog.md) — standalone inventory on Viking; scripted deployment
-
+- [Clog](services/clog.md) — inventory app on Viking
 - [Houstn](services/houstn.md) — dashboards and Glances
-- [Snoot](services/snoot.md) — Beszel agents
 - [Howlr](services/howlr.md) — Music Assistant and Snapcast
 - [Mushr](services/mushr.md) — proxy, tunnel and LAN DNS
 - [Pawpcorn](services/pawpcorn.md) — Plex
-- [Stellarr](services/stellarr.md) — media acquisition, LazyLibrarian and Audiobookshelf; Transmission/slskd use the VPN
-- [Pupyrus](services/pupyrus.md) — WordPress, MariaDB and Redis
 - [Pawst](services/pawst.md) — static sites
-- [Sputnik](services/sputnik.md) — local inference, chat and briefing workflow
+- [Pupyrus](services/pupyrus.md) — WordPress
+- [Snoot](services/snoot.md) — Beszel agents
+- [Sputnik](services/sputnik.md) — local LLM and briefing
+- [Stellarr](services/stellarr.md) — media acquisition and audiobooks
 
 ## Runbooks and scripts
 
-- [Application platform, DMZ policy and Pawst cutover](operations/application-platform.md)
-- [Clog on Viking deployment plan](../plans/clog-viking.md) — Nginx, PHP-FPM and public routing
-- [Viking restore procedure](operations/viking-restore.md)
-- [Viking live hardening and monitoring record](operations/viking-hardening.md)
-
 - [Triage](../DEBUG.md)
-- [Pi provisioning](operations/raspberry-pi.md)
-- [Calavera reimage](operations/calavera-reimage.md)
+- [Application platform](operations/application-platform.md) — Fjord/Viking conventions, promotion, network policy
+- [Viking restore](operations/viking-restore.md)
 - [Upgrades and backups](operations/upgrades.md)
-- [Setup](scripts/setup.md), [loft-ctl](scripts/loft-ctl.md), [shared health helpers](scripts/common-sh.md)
-- [Release deployment](scripts/deploy-pull.md), [GitHub App authentication](scripts/github-app-token.md)
-- [Open maintenance work](../plans/maintenance.md)
-
-Historical migration plans live in [archive](archive/README.md). The [September notes audit](audits/2026-09-19-notes.md) records the cleanup baseline; its old line numbers and quoted instructions are historical evidence.
+- [setup.sh](scripts/setup.md), [loft-ctl](scripts/loft-ctl.md), [health helpers](scripts/common-sh.md)
+- [Release puller](scripts/deploy-pull.md), [GitHub App tokens](scripts/github-app-token.md)
+- [Open work](../plans/maintenance.md)

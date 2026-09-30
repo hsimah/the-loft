@@ -8,8 +8,8 @@ Stellarr also includes [Audiobookshelf](../services/stellarr.md#audiobookshelf)
 for Android/iOS listening and [LazyLibrarian](../services/stellarr.md#lazylibrarian)
 for selecting and importing books through Transmission. The operator confirmed
 Audiobookshelf web access on 2026-09-29 after recreating Caddy to refresh its file
-mount. LazyLibrarian is deployed with passing Transmission and Jackett tests;
-automated imports and phone playback remain to be verified on this host.
+mount. One LazyLibrarian acquisition, import and offline iPhone playback passed
+the same day; Android and cross-device sync remain to be verified.
 
 ## Storage and networking
 

@@ -29,9 +29,9 @@ Removal of the live cron still needs verification. Manage torrent retention manu
 
 ## LazyLibrarian
 
-Deployed on space-needle; end-to-end acquisition is pending. On 2026-09-29 the
-operator reached the web UI and the Transmission and Jackett provider tests
-passed. Earlier that day the pinned image passed a disposable local startup/UI check and
+Deployed on space-needle; one end-to-end acquisition passed on 2026-09-29 (see
+[Acceptance](#acceptance)). The operator reached the web UI and the Transmission
+and Jackett provider tests passed. Earlier that day the pinned image passed a disposable local startup/UI check and
 config/download/library writes as UID/GID 1003. Compose, 54 repository tests,
 documentation links and the new Caddy routes (with local TLS) passed.
 Select books here, download through the existing VPN-backed Transmission, then
@@ -121,16 +121,22 @@ library, appears in Audiobookshelf and plays on a phone. Confirm the original
 still seeds and that unrelated titles remain skipped. This requires operator
 checks; local startup tests cannot verify private indexers or live RPC credentials.
 
+On 2026-09-29 the operator confirmed one AudioBook Bay book: LazyLibrarian
+grabbed it into Transmission, imported it into `/audiobooks`, Audiobookshelf
+picked it up, the original kept seeding, and it played offline on an iPhone.
+That unrelated titles remain skipped was not separately checked.
+
 ## Audiobookshelf
 
 The operator confirmed web access on 2026-09-29 after recreating Caddy to refresh
 its stale Caddyfile mount. An iOS client (Plappa) logged in on the home Wi-Fi
-the same day. Phone playback and imports are not yet verified.
+the same day and played an imported book offline. Android, a second phone and
+cross-device progress sync are not yet verified.
 Local validation on 2026-09-29 passed Compose configuration, the 54 repository
 tests, documentation links and the new Caddy routes (using local TLS in the
 test container). The pinned Audiobookshelf image started as UID/GID 1003 with a
 read-only book mount; `/ping`, `/status` and the first-run page returned HTTP 200.
-Imports and mobile playback still need the operator checks below.
+The remaining mobile checks are listed below.
 
 [Audiobookshelf](https://www.audiobookshelf.org/) serves books imported by
 [LazyLibrarian](#lazylibrarian) or copied into the library manually. Transmission keeps
@@ -207,7 +213,8 @@ offline playback. Mobile downloads are independent of automated server acquisiti
 On iOS, allow the client under Settings → Privacy & Security → **Local Network**.
 Without it, Safari still reaches the server but the app fails with "The internet
 connection appears to be offline" because iOS blocks its LAN connections. Plappa
-logged in on the home Wi-Fi on 2026-09-29 after that permission was enabled.
+logged in on the home Wi-Fi on 2026-09-29 after that permission was enabled,
+and offline playback of a downloaded book worked.
 
 Verify on both phones: streaming, chapters, resume position after switching
 devices, a complete offline download in airplane mode, and progress sync after

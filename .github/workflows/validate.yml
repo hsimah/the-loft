@@ -127,7 +127,7 @@ jobs:
       - name: Health, deployment and platform regression tests and documentation links
         run: |
           python3 -m unittest discover -s tests -v
-          python3 control-plane/check-docs.py
+          bash control-plane/check-docs.sh
 
       - name: Validate JSON and Python syntax
         run: |

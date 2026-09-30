@@ -25,7 +25,7 @@ if [[ "$MODE" == --apply ]]; then
   [[ $EUID -eq 0 ]] || fail "Run --apply with sudo"
   [[ "$(hostname)" == viking ]] || fail "This restore entrypoint requires the viking role hostname"
   [[ -f /etc/loft/dmz-ready ]] || fail "Complete the Viking restore runbook and DMZ checks first"
-  for cmd in docker nft systemctl curl rsync flock python3; do
+  for cmd in docker nft systemctl curl rsync flock; do
     command -v "$cmd" >/dev/null || fail "Missing dependency: $cmd"
   done
   systemctl is-active --quiet loft-firewall.service || fail "Loft firewall is not active"

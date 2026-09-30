@@ -1,6 +1,5 @@
 """Release extraction and effective Clog isolation regressions."""
 import hashlib
-import importlib.util
 import io
 import json
 from pathlib import Path
@@ -10,9 +9,17 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('clog_stage', ROOT / 'services/clog/stage-release.py')
-stager = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(stager)
+STAGER = ROOT / 'services/clog/stage-release.sh'
+
+
+def stage(archive, digest, releases, reuse=False):
+    """Run the stager; return the release path or raise ValueError with its error."""
+    args = ['bash', str(STAGER), str(archive), digest, '--releases', str(releases)]
+    result = subprocess.run(args + (['--reuse'] if reuse else []), text=True, capture_output=True)
+    if result.returncode:
+        raise ValueError(result.stderr.strip())
+    return Path(result.stdout.strip())
+
 
 class ReleaseTests(unittest.TestCase):
     def bundle(self, directory, extra=None):
@@ -32,28 +39,28 @@ class ReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             archive, digest = self.bundle(root)
-            release = stager.stage(archive, digest, root / 'releases')
+            release = stage(archive, digest, root / 'releases')
             self.assertEqual(release.name, digest)
             self.assertEqual(release.stat().st_mode & 0o777, 0o755)
             with self.assertRaises(ValueError):
-                stager.stage(archive, digest, root / 'releases')
+                stage(archive, digest, root / 'releases')
 
     def test_reuse_compares_the_existing_release_with_verified_archive(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             archive, digest = self.bundle(root)
-            release = stager.stage(archive, digest, root / 'releases')
-            self.assertEqual(stager.stage(archive, digest, root / 'releases', reuse=True), release)
+            release = stage(archive, digest, root / 'releases')
+            self.assertEqual(stage(archive, digest, root / 'releases', reuse=True), release)
             (release / 'server/standalone/cli.php').write_text('modified')
             with self.assertRaisesRegex(ValueError, 'differs'):
-                stager.stage(archive, digest, root / 'releases', reuse=True)
+                stage(archive, digest, root / 'releases', reuse=True)
 
     def test_checksum_failure_does_not_stage(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             archive, _ = self.bundle(root)
             with self.assertRaises(ValueError):
-                stager.stage(archive, '0' * 64, root / 'releases')
+                stage(archive, '0' * 64, root / 'releases')
             self.assertFalse((root / 'releases').exists())
 
     def test_traversal_and_links_are_rejected(self):
@@ -68,7 +75,7 @@ class ReleaseTests(unittest.TestCase):
                 info.linkname = '/etc/passwd' if kind != tarfile.REGTYPE else ''
                 archive, digest = self.bundle(root, info)
                 with self.assertRaises(ValueError):
-                    stager.stage(archive, digest, root / 'releases')
+                    stage(archive, digest, root / 'releases')
                 self.assertEqual(list((root / 'releases').iterdir()), [])
 
 class IsolationTests(unittest.TestCase):

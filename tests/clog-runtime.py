@@ -6,7 +6,6 @@ Usage: python3 tests/clog-runtime.py /path/to/clog-standalone.tar.gz
 """
 import hashlib
 import http.client
-import importlib.util
 import json
 from pathlib import Path
 import re
@@ -19,9 +18,6 @@ import urllib.parse
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('stage', ROOT / 'services/clog/stage-release.py')
-stager = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(stager)
 PHP = 'docker.io/library/php:8.4.24-fpm-alpine'
 NGINX = 'docker.io/library/nginx:1.30.4-alpine'
 
@@ -34,7 +30,8 @@ def main(archive):
     names = ['loft-clog-test-' + uuid.uuid4().hex[:10] + suffix for suffix in ('-php', '-nginx')]
     with tempfile.TemporaryDirectory(prefix='loft-clog-test-') as tmp:
         root = Path(tmp)
-        release = stager.stage(archive, hashlib.sha256(archive.read_bytes()).hexdigest(), root / 'releases')
+        release = Path(run('bash', str(ROOT / 'services/clog/stage-release.sh'), str(archive),
+                           hashlib.sha256(archive.read_bytes()).hexdigest(), '--releases', str(root / 'releases')))
         config = root / 'config'
         shutil.copytree(ROOT / 'services/clog', config)
         for directory in ('data', 'data/sessions', 'runtime'):

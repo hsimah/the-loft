@@ -50,4 +50,4 @@ Fjord runs dev/test; Viking runs production. Promote the same GitHub release art
 
 ## CI
 
-[validate.yml](.github/workflows/validate.yml) checks every Compose/override/profile combination, `bash -n` on scripts and manifests, JSON/Python syntax, the regression tests in `tests/`, and local doc links (`control-plane/check-docs.py`).
+[validate.yml](.github/workflows/validate.yml) checks every Compose/override/profile combination, `bash -n` on scripts and manifests, JSON/Python syntax, the regression tests in `tests/`, and local doc links (`control-plane/check-docs.sh`).

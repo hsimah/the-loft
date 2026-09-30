@@ -111,7 +111,7 @@ mkdir -p "$PARENT"
 
 STAGING="$(mktemp -d "${PARENT}/.${BASENAME}.deploy.XXXXXX")"
 trap 'rm -f "$TARBALL"; rm -rf "$STAGING"' EXIT
-python3 "${CONTROL_PLANE_DIR}/extract-release.py" "$TARBALL" "$STAGING" || fail "Unsafe or invalid release archive"
+bash "${CONTROL_PLANE_DIR}/extract-release.sh" "$TARBALL" "$STAGING" || fail "Unsafe or invalid release archive"
 
 chown -R littledog:pack-member "$STAGING" 2>/dev/null || true
 chmod -R u=rwX,go=rX "$STAGING"

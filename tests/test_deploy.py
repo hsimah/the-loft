@@ -24,7 +24,7 @@ class DeployTests(unittest.TestCase):
         script = script.replace('STATE_DIR="/var/lib/loft/deploy"', f'STATE_DIR="{self.state}"')
         self.script = self.root / 'deploy-pull.sh'
         self.script.write_text(script)
-        shutil.copy(ROOT / 'control-plane/extract-release.py', self.root)
+        shutil.copy(ROOT / 'control-plane/extract-release.sh', self.root)
         auth = self.root / 'github-app-token.sh'
         auth.write_text('#!/bin/sh\nexit 1\n')
         auth.chmod(0o755)

@@ -22,6 +22,7 @@ is needed, provide the specific operator check rather than assuming remote acces
 
 ## Working conventions
 
+- Prefer terse, medium-level technical prose aimed at the repository owner. Assume technical competence; omit novice explanations and retain only actionable detail, constraints and validation.
 - Prefix privileged host commands (Docker, systemctl, writes under `/opt` or `/mammoth`) with `sudo`. Run `loft-ctl` as `adminhabl`, the only account on every host.
 - Host manifests: `hosts/<hostname>/host.conf`. Shared Compose: `services/<name>/docker-compose.yml`. Optional overrides: `hosts/<hostname>/overrides/<service>/docker-compose.override.yml`.
 - `setup.sh` provisions the host and sources optional `hosts/<hostname>/bootstrap`. `loft-ctl` provides start, stop, rebuild, health and update; shared helpers live in `control-plane/common.sh`.
@@ -29,6 +30,7 @@ is needed, provide the specific operator check rather than assuming remote acces
 - Update the canonical affected documentation when behavior changes. Review README for changes to fleet membership, service purpose or entry-point instructions. Link to config for exact tags, ports and paths instead of copying tables across pages.
 - Keep docs short and current-state. Do not record rollout narratives, validation logs, superseded approaches or why something changed unless it prevents a repeat mistake; git history holds the rest. Open work goes in [plans/maintenance.md](plans/maintenance.md); delete it when done.
 - Repository configuration does not prove live deployment; label unverified state briefly.
+- Write scripts and tests in bash (with jq, curl and coreutils), not Python; the owner reviews everything and does not read Python. Existing Python is being migrated.
 
 ## Names
 

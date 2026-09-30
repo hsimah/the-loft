@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 import fcntl
 import getpass
 import hashlib
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -111,16 +110,16 @@ class Deployment:
             print('WARNING: Docker memory limits are not enforced. Boot settings are unchanged.')
 
     def stage(self, archive):
-        spec = importlib.util.spec_from_file_location('stage_clog', self.root / 'services/clog/stage-release.py')
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        def stage_archive(path):
+            return Path(self.run([self.root / 'services/clog/stage-release.sh', path, self.release['sha256'],
+                                  '--releases', self.releases, '--reuse'], capture=True))
         if archive is None:
             with tempfile.TemporaryDirectory(prefix='clog-download-') as tmp:
                 archive = Path(tmp) / 'clog.tar.gz'
                 self.run(['curl', '--fail', '--location', '--proto', '=https', '--proto-redir', '=https',
                           '--connect-timeout', '20', '--max-time', '300', '--output', archive, self.release['url']])
-                return module.stage(archive, self.release['sha256'], self.releases, reuse=True)
-        return module.stage(archive, self.release['sha256'], self.releases, reuse=True)
+                return stage_archive(archive)
+        return stage_archive(archive)
 
     def prepare_storage(self):
         for directory in (self.data, self.data / 'sessions', self.runtime):

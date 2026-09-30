@@ -2,9 +2,9 @@
 # calavera host bootstrap — sourced by setup.sh (§11b)
 # Expects: REPO_DIR, HOST_NAME, info/warn/error functions available in caller
 #
-# i3 touch-dashboard kiosk provisioning + Surface Pro 2 hardware quirks.
-# Gated by hostname (this file only exists for calavera), not I3_ENABLED —
-# see hosts/calavera/host.conf for the I3_* config knobs this reads.
+# i3 touch-dashboard kiosk provisioning + Surface hardware quirks. Shared by
+# calavera and woodstock (hosts/woodstock/bootstrap sources this file); reads
+# the I3_* and AUDIO_* knobs from the host's host.conf.
 
 info "Provisioning i3 desktop..."
 
@@ -17,10 +17,25 @@ echo "lightdm shared/default-x-display-manager select lightdm" | debconf-set-sel
 # hides the idle cursor; x11-xserver-utils gives xset/xrdb for the always-on
 # display + HiDPI resources; dmenu is the launcher. (Chromium was tried first
 # but trixie's build SIGTRAPs on startup — a broken crashpad helper — so the
-# dashboard runs on Firefox instead.)
+# dashboard runs on Firefox instead.) alsa-utils (amixer for loft-dac) and the
+# dashboard fonts are named explicitly: otherwise they are only dependencies of
+# the desktop packages purged below, and autoremove would take them too.
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
   xorg i3 lightdm kitty firefox-esr unclutter x11-xserver-utils dmenu \
-  xprintidle python3-websockets feh > /dev/null
+  xprintidle python3-websockets feh alsa-utils \
+  fonts-dejavu-core fonts-noto-color-emoji > /dev/null
+
+# `apt-get purge` aborts the whole transaction on one unknown package name, so
+# a single rename in a later release would silently skip an entire list.
+# Purge only what is actually installed.
+purge_pkgs() {
+  local pkgs=() p
+  for p in "$@"; do
+    dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'ok installed' && pkgs+=("$p")
+  done
+  (( ${#pkgs[@]} )) || return 0
+  apt-get purge -y -qq "${pkgs[@]}" > /dev/null 2>&1 || true
+}
 
 # ── Remove desktop/laptop-task cruft ───────────────────────────────────────
 # The Debian installer ticks "print server" by default and auto-selects the
@@ -37,7 +52,7 @@ systemctl disable --now \
   ModemManager.service upower.service power-profiles-daemon.service \
   switcheroo-control.service fwupd.service fwupd-refresh.timer \
   colord.service accounts-daemon.service 2>/dev/null || true
-apt-get purge -y -qq \
+purge_pkgs \
   cups cups-browsed cups-daemon cups-client cups-common cups-core-drivers \
   cups-filters cups-filters-core-drivers cups-ipp-utils cups-pk-helper \
   cups-ppdc cups-server-common python3-cups python3-cupshelpers \
@@ -47,7 +62,7 @@ apt-get purge -y -qq \
   packagekit packagekit-tools gstreamer1.0-packagekit \
   speech-dispatcher speech-dispatcher-audio-plugins speech-dispatcher-espeak-ng \
   upower power-profiles-daemon switcheroo-control fwupd colord \
-  accountsservice > /dev/null 2>&1 || true
+  accountsservice
 apt-get autoremove -y -qq > /dev/null
 
 # ── Remove full desktop-environment task cruft ─────────────────────────────
@@ -64,7 +79,7 @@ apt-get autoremove -y -qq > /dev/null
 # pipewire/gstreamer are deliberately left alone — WiFi and audio playback
 # are load-bearing for this host.
 info "Removing desktop-task cruft (GNOME apps, Evolution, Chromium, LibreOffice)..."
-apt-get purge -y -qq \
+purge_pkgs \
   chromium \
   libreoffice-base-core libreoffice-calc libreoffice-common libreoffice-core \
   libreoffice-draw libreoffice-gnome libreoffice-gtk3 libreoffice-help-common \
@@ -84,8 +99,16 @@ apt-get purge -y -qq \
   gnome-text-editor gnome-tour gnome-tweaks gnome-user-docs gnome-weather \
   nautilus file-roller baobab evince totem totem-plugins shotwell \
   simple-scan rygel-playbin rygel-tracker loupe yelp zenity tecla seahorse \
-  task-desktop task-laptop laptop-detect dmidecode > /dev/null 2>&1 || true
+  task-desktop task-laptop laptop-detect dmidecode
+
+# locales-all alone is ~236 MB; the configured locale comes from `locales`.
+info "Removing surplus locales and installer docs..."
+purge_pkgs \
+  locales-all util-linux-locales krb5-locales \
+  debian-faq doc-debian installation-report reportbug apt-listchanges \
+  kitty-doc xterm inetutils-telnet
 apt-get autoremove -y -qq > /dev/null
+apt-get clean
 
 # ── lightdm auto-login (rodnik → i3) ──────────────────────────────────────
 info "Configuring lightdm auto-login (rodnik → i3)..."
@@ -250,6 +273,29 @@ info "Installing Surface Pro 2 WiFi udev rule..."
 echo 'ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="1286", ATTR{power/autosuspend}="-1"' \
   > /etc/udev/rules.d/99-surface-wifi.rules
 info "Marvell WiFi USB autosuspend disabled"
+
+# ── USB DAC power and volume ─────────────────────────────────────────────
+# loft-dac keeps the DAC out of USB runtime suspend and sets its hardware
+# volume to AUDIO_VOLUME. udev starts it whenever the card named AUDIO_CARD
+# appears (boot and replug), ordered after alsa-restore so it wins.
+if [[ -n "${AUDIO_CARD:-}" && -n "${AUDIO_VOLUME:-}" ]]; then
+  info "Installing loft-dac (${AUDIO_CARD}/${AUDIO_CONTROL:-PCM} → ${AUDIO_VOLUME})..."
+  install -o root -g root -m 755 "${REPO_DIR}/control-plane/loft-dac.sh" /usr/local/bin/loft-dac
+  install -o root -g root -m 644 "${REPO_DIR}/control-plane/loft-dac.service" /etc/systemd/system/loft-dac.service
+  cat > /etc/default/loft-dac <<DACENV
+AUDIO_CARD="${AUDIO_CARD}"
+AUDIO_CONTROL="${AUDIO_CONTROL:-PCM}"
+AUDIO_VOLUME="${AUDIO_VOLUME}"
+DACENV
+  cat > /etc/udev/rules.d/99-loft-dac.rules <<DACRULE
+ACTION=="add", SUBSYSTEM=="sound", KERNEL=="card*", ATTR{id}=="${AUDIO_CARD}", TAG+="systemd", ENV{SYSTEMD_WANTS}+="loft-dac.service"
+DACRULE
+  systemctl daemon-reload
+  udevadm control --reload-rules 2>/dev/null || true
+  # Apply now so a setup re-run takes effect without a replug or reboot.
+  systemctl start loft-dac.service \
+    || warn "loft-dac failed; check: journalctl -u loft-dac"
+fi
 
 # ── Remove screen rotation sensor ────────────────────────────────────────
 apt-get remove -y iio-sensor-proxy 2>/dev/null || true

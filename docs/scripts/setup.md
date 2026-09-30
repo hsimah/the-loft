@@ -1,99 +1,44 @@
-# Host provisioning
+# setup.sh
 
-[setup.sh](../../setup.sh) runs as root on Debian/Ubuntu and loads `hosts/$(hostname)/host.conf`. Use [Pi provisioning](../operations/raspberry-pi.md) or [Calavera reimage](../operations/calavera-reimage.md) for fresh hardware.
+[setup.sh](../../setup.sh) provisions a Debian/Ubuntu host from `hosts/$(hostname)/host.conf`. Run as root; it is repeatable but has side effects.
 
 ```bash
 cd /srv/the-loft
 sudo bash setup.sh
 ```
 
-## Inputs and effects
-
 | Input | Effect |
 |---|---|
-| Hostname | Selects host.conf; unknown hosts fail before provisioning |
-| Storage fields | Adds a missing fstab device entry and mounts the configured filesystem; does not format disks |
-| User/group fields | Creates pack-member/littledog as GID/UID 1003 if absent; preserves existing IDs; adds configured groups |
-| SSH fields | Restricts SSH to adminhabl and optionally disables password authentication |
-| CONFIG_DIRS / MEDIA_DIRS | Creates directories; resets their top-level ownership to littledog:pack-member and modes to 755/775 |
-| SERVICES and service environments | Runs Compose with host overrides; skips deployment when an expected `.env` is missing |
-| Per-service setup scripts | Sources them after service deployment; currently WordPress initialization and removal of the retired Transmission cleanup cron |
-| Optional host bootstrap | Sources `hosts/<hostname>/bootstrap`; Calavera installs/configures the dashboard and hardware workarounds |
-| Wi-Fi fields | Installs watchdog script, defaults file and cron; see [Calavera](../hosts/calavera.md) for firmware recovery |
-| DEPLOY_TARGETS | Replaces `/etc/cron.d/loft-deploy-*` with the configured hourly release jobs |
+| Hostname | Selects host.conf; unknown hosts fail |
+| Storage fields | Adds fstab entry and mounts; never formats or rewrites an existing entry |
+| Users | Creates `pack-member`/`littledog` as 1003 if absent; adds groups. On `PRODUCTION_ROLE=true`, removes littledog from Docker |
+| SSH fields | Restricts SSH to adminhabl; optionally disables passwords |
+| `CONFIG_DIRS` / `MEDIA_DIRS` | Creates dirs; resets top-level owner to littledog:pack-member, mode 755/775 |
+| `SERVICES` + `.env` | Validates and starts each service with host overrides; skips a service whose `.env` is missing |
+| Service `setup.sh` | Sourced after deploy (WordPress install; removes the retired Transmission cleanup cron) |
+| `hosts/<host>/bootstrap` | Host provisioning (Surface kiosks: i3, dashboard, power daemon, hardware fixes) |
+| Wi-Fi fields | Installs the watchdog script, defaults file and cron |
 
-The script also installs base packages (including tmux and terminal definitions), activates tracked Git hooks, installs Docker if missing, creates `loft-proxy`, and copies daemon.json. Changing daemon.json restarts Docker. Git hooks update `.deployed-version` after checkout/merge; that marker records checkout state, not proof every container was redeployed.
+It also installs base packages, Docker (if missing), Git hooks, the `loft-proxy` network, Fastfetch with [laiko.txt](../../laiko.txt), and copies [daemon.json](../../daemon.json) — **which restarts Docker if it changed**. It overwrites adminhabl's `.bashrc`, `.inputrc` and `.tmux.conf` with includes of the repo's dotfiles, and rewrites SSH/sudoers config.
 
-## Re-running and managed files
+It does not stop services removed from the manifest; stop them first. Rerun after changing directories, groups, cron, bootstrap/watchdog scripts, dotfiles or daemon settings — `loft-ctl update` does not refresh files copied into `/usr/local/bin`.
 
-Provisioning is repeatable but has side effects. It **overwrites** adminhabl's `.bashrc`, `.inputrc` and `.tmux.conf` with includes of the repo's `bashrc.d`, `inputrc.d` and `tmux.d`. Back up local customizations before adopting those files. It rewrites SSH/sudoers configuration and validates the generated sudoers file.
+Kiosk wallpaper: supply `/home/rodnik/Pictures/wallpaper.webp` by hand; `Mod+Shift+r` reloads i3.
 
-Directory provisioning does not establish every container's runtime UID. Images have their own users; WordPress ownership differs from the host convention. See [Pupyrus](../services/pupyrus.md) and verify actual mount ownership before changing existing data.
+## Fresh host
 
-The script starts declared services but does not stop ones removed from the manifest. It does not automatically rewrite an existing fstab entry when a device setting changes. Calavera's bootstrap purges unwanted desktop/laptop packages and masks sleep targets; inspect it before repurposing that host.
+1. Install a minimal OS with user `adminhabl` and key SSH. Pis: Raspberry Pi OS Lite 64-bit. Surfaces: see [Calavera reimage](../hosts/calavera.md#reimage).
+2. Give adminhabl read access to `hsimah-services/the-loft` and clone it:
 
-Re-run after changes to host directories, groups, cron, installed watchdog/bootstrap scripts, managed dotfiles or daemon settings. Routine application configuration normally needs only [loft-ctl](loft-ctl.md). Fill skipped `.env` files from their examples and rerun the necessary setup/deployment steps.
+   ```bash
+   sudo install -d -o adminhabl -g adminhabl /srv/the-loft
+   git clone git@github.com:hsimah-services/the-loft.git /srv/the-loft
+   ```
 
-Calavera and Woodstock share Surface dashboard provisioning, which installs feh and configures i3 to apply `/home/rodnik/Pictures/wallpaper.webp` on session startup and i3 restart. Supply that image locally on each host, readable by rodnik; setup does not copy the wallpaper. After provisioning an existing session, press `Mod+Shift+r` to apply the updated i3 config.
+3. Create each service's `.env` from its example (Houstn `COMPOSE_PROFILES=metrics`, [Snoot](../services/snoot.md) with a new Beszel system).
+4. Run setup. Keep the first SSH session open while testing a new key login and `sudo`.
+5. Check `sudo sshd -T | grep -E 'allowusers|passwordauthentication'`, `id littledog`, mounts, cron and `loft-ctl health`.
 
-## Fastfetch welcome
+Viking additionally needs `/etc/loft/dmz-ready` and follows [Viking restore](../operations/viking-restore.md); setup alone does not install its firewall, Tailscale, secrets or site content.
 
-Setup installs Fastfetch on every host and copies [laiko.txt](../../laiko.txt)
-and [fastfetch.jsonc](../../fastfetch.jsonc) to `/etc/fastfetch/laiko.txt` and
-`/etc/fastfetch/config.jsonc`. These are managed files, replaced on each setup
-run. Rerun setup after changing the artwork or configuration.
-
-Fastfetch uses the apt package when available, preserves an existing installation,
-and otherwise downloads the checksum-verified official 2.68.1 `.deb` for amd64
-or arm64. See the [upstream installation instructions](https://github.com/fastfetch-cli/fastfetch#installation).
-The logo uses [file-raw mode](https://github.com/fastfetch-cli/fastfetch/wiki/Logo-options#file-raw)
-to display the ASCII artwork without requiring terminal image support.
-
-After `sudo bash setup.sh`, open a new SSH session or terminal as `adminhabl` to
-see Laiko beside the host's system information. The shared bashrc only displays
-the welcome in interactive shells with terminal output; automated SSH commands
-remain quiet. To preview it in an existing session:
-
-```bash
-fastfetch --config /etc/fastfetch/config.jsonc
-```
-
-Plain `fastfetch` also uses the system configuration unless a personal Fastfetch
-configuration takes precedence. The automatic welcome explicitly uses the fleet
-configuration.
-
-## Shared tmux
-
-[tmux.d](../../tmux.d) provides mouse support, 50,000 lines of scrollback, windows numbered from 1, splits that inherit the current directory, and a hostname/session status line. The prefix remains `Ctrl-b`; press `Ctrl-b d` to detach.
-
-For existing hosts, adopt just tmux after pulling the repo. Run as `adminhabl`:
-
-```bash
-sudo apt-get update
-sudo apt-get install -y tmux ncurses-term kitty-terminfo
-if [ -e ~/.tmux.conf ]; then
-  cp -a ~/.tmux.conf ~/.tmux.conf.backup-$(date +%Y%m%d-%H%M%S)
-fi
-printf 'source-file /srv/the-loft/tmux.d\n' > ~/.tmux.conf
-tmux new-session -A -s loft
-```
-
-An already-running server needs `tmux source-file ~/.tmux.conf` to load changes. Existing panes keep their current terminal environment and scrollback limit; new panes receive the updated defaults.
-
-## Verification
-
-Keep an existing SSH session open while verifying a fresh host's key login and sudo access. Check `sudo sshd -T`, `id littledog`, mounts, installed cron, and `loft-ctl health`. A setup completion summary is not an application acceptance test.
-
-For a Docker restart failure, inspect `sudo journalctl -u docker --since '5 min ago'` and the installed `/etc/docker/daemon.json`. Editing the repo's copy alone does not update the installed file. Do not launch a second daemon as a generic diagnostic.
-
-## Production gate
-
-Viking provisioning requires `/etc/loft/dmz-ready` after completing the [application platform network and host checklist](../operations/application-platform.md). This is operator attestation, not automatic firewall configuration. Setup validates merged Compose configuration before starting each service; host overrides can intentionally omit the base service environment file. Python 3 and util-linux support verified release extraction and deployment locking.
-
-On `PRODUCTION_ROLE=true` hosts, setup removes littledog from Docker instead of granting daemon access. Adminhabl retains Docker access. Existing live firewall files are not automatically overwritten; follow the [hardening record](../operations/viking-hardening.md).
-
-For Viking rebuilds, follow the [restore runbook](../operations/viking-restore.md)
-first. `setup.sh` alone does not restore the DMZ boundary, Tailscale enrollment,
-secrets or pinned site content. `hosts/viking/restore --plan` previews the
-recorded recovery releases; `--apply` is an explicit offline-content recovery
-step and leaves the public connector stopped.
+If Docker fails to restart: `sudo journalctl -u docker --since '5 min ago'` and the installed `/etc/docker/daemon.json`.

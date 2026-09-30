@@ -59,7 +59,7 @@ services:
     # The briefing tile fetches https://briefing.loft.hsimah.com, and Docker's
     # embedded resolver drops the host's loopback resolv.conf entry, so loft
     # names are NXDOMAIN inside the container without this. Per-service rather
-    # than daemon-wide — see the container DNS quirk in docs/hosts/space-needle.
+    # than daemon-wide — see docs/services/mushr.md troubleshooting.
     dns:
       - 192.168.86.28
     extra_hosts:

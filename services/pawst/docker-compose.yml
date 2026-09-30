@@ -1,20 +1,18 @@
+# Shared definition only: Fjord and Viking replace this service map with their
+# own environments (hosts/*/overrides/pawst). Content comes from deploy-pull.sh.
 services:
   pawst:
     image: nginx:1.30.4-alpine
     container_name: pawst
+    user: "1003:1003"
+    entrypoint: [nginx, -g, "daemon off;"]
     restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     logging:
       driver: json-file
-      options:
-        max-size: "5m"
-        max-file: "3"
+      options: {max-size: "5m", max-file: "3"}
+    tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /opt/pawst/hblake-html:/usr/share/nginx/hblake:ro
-      - /opt/pawst/hsimah-html:/usr/share/nginx/hsimah:ro
-    networks:
-      - loft-proxy
-
-networks:
-  loft-proxy:
-    external: true
+      - ./nginx-unprivileged.conf:/etc/nginx/nginx.conf:ro

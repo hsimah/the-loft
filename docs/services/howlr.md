@@ -1,38 +1,35 @@
 # Howlr — whole-home audio
 
-[Compose](../../services/howlr/docker-compose.yml) uses `server` for Music Assistant (`howlr`) on space-needle and `client` for Snapcast (`howlr-snapclient`) on Viking/Calavera. Fjord no longer runs audio. Both profiles use host networking.
-
-Music Assistant provides the web UI on 8095 and embedded Snapcast on 1704/1705/1780; there are no separate snapserver, shairport-sync or librespot containers. Caddy routes `https://howlr.loft.hsimah.com` and `https://snapweb.loft.hsimah.com`.
+[Compose](../../services/howlr/docker-compose.yml) profiles: `server` runs Music Assistant (`howlr`) on space-needle; `client` runs Snapclient (`howlr-snapclient`) on Calavera and Woodstock. Both use host networking. MA embeds Snapcast (1704/1705/1780) and serves its UI on 8095. Caddy routes `howlr.loft.hsimah.com` and `snapweb.loft.hsimah.com`.
 
 ## Configuration
 
-Copy [.env.example](../../services/howlr/.env.example). Server hosts need `COMPOSE_PROFILES=server`; MA's providers/users/groups live in `/opt/howlr` and are configured through its UI. Clients use `client`, `SNAPSERVER_HOST`, `SOUND_DEVICE` and a stable `HOST_ID`. Device settings belong on the [Viking](../hosts/viking.md) and [Calavera](../hosts/calavera.md) pages.
+[.env.example](../../services/howlr/.env.example). Server: `COMPOSE_PROFILES=server`; providers, users and groups live in `/opt/howlr` and are set in MA's UI (not in Git). Clients: `client`, `SNAPSERVER_HOST`, `SOUND_DEVICE`, stable `HOST_ID`; device details are on the host pages.
 
-Recorded room layout:
+| Group | Players |
+|---|---|
+| Downstairs | Calavera |
+| Upstairs | Woodstock |
+| All | both |
 
-| Player | Host | Group |
-|---|---|---|
-| `ma_viking` | Viking | Upstairs |
-| `ma_calavera` | Calavera | Downstairs |
+The kiosks' display-power daemon keys off Snapcast stream IDs in each host.conf; recheck them after changing groups.
 
-All spans both. These are UI-managed observations; confirm after reimage or player migration. Calavera's display-power daemon depends on specific stream IDs recorded in its host config.
+## Spotify
+
+Two Spotify provider instances, one per person (same Premium Family plan), using Soloist as the playback engine (one active player per account). Each user sees only their own via MA's per-user **provider_filter** allowlist (Settings → Users). AirPlay Receiver and Spotify Connect are disabled.
+
+- **Deleting a provider removes it from every user's allowlist**, and the replacement gets a new ID that isn't added. It loads fine but is invisible in Browse, with no errors. After re-adding any provider, recheck Settings → Users.
+- Premium is only checked at authorization. A "needs Premium" error on re-add usually means the browser authorized the wrong account, not an MA bug.
 
 ## Operations
 
 ```bash
 loft-ctl rebuild howlr
 loft-ctl health howlr
-# On a client:
-sudo docker logs howlr-snapclient --tail 50
+sudo docker logs howlr-snapclient --tail 50   # on a client
 ```
 
-Verify actual playback, not just the MA login page. Back up `/opt/howlr` before server upgrades; validate providers, room groups, kiosk login and display wake as described in [upgrades](../operations/upgrades.md). New rooms start with the [Pi provisioning guide](../operations/raspberry-pi.md) plus a host manifest.
+Verify actual playback, not just the UI. Back up `/opt/howlr` before server upgrades.
 
-## Retained operational observations
-
-- **Connected but silent:** verify ALSA device, DAC power/mixer, MA queue and client logs. A down/up can reset stream state, but the historical cross-container FIFO explanation belongs to the retired multi-container stack and is not an established diagnosis for current MA.
-- **Missing player after recreation:** check HOST_ID and compare the actual ID with the UI. Remove orphaned players only after confirming the intended replacement.
-- **Spotify loads but is absent from Browse:** a recorded provider replacement removed its old instance ID from per-user source allowlists without granting the new one. Review Settings → Users for each affected user, then sync the new provider. Applies to other replaced providers too.
-- **Account authorization fails:** verify which account the browser authorized and its entitlement; inspect MA logs. Do not infer entitlement from an old provider's still-working stored token.
-- **Recorded account layout:** hsimah used Hamish's Spotify account (Plexamp was the usual path); gemo and calavera shared Georgia's account. Two MA Spotify provider instances used Soloist credentials and phone pairing. AirPlay Receiver/Spotify Connect were disabled. These settings are not encoded in Git and may have changed; check the current UI before rebuilding them from notes.
-- **Wi-Fi dropouts:** use the relevant host page; a client connection does not prove uninterrupted stream delivery.
+- **Connected but silent**: ALSA device, DAC power/mixer, MA queue, client logs.
+- **Missing player after recreation**: check `HOST_ID` against the UI; remove orphans only once the replacement works.

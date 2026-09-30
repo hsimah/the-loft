@@ -117,22 +117,10 @@ cat "$FIXTURE/release.json"
         self.assertNotEqual(self.deploy('v2', '').returncode, 0)
         self.assertFalse((self.root / 'calls').exists())
 
-    def test_production_host_refuses_latest(self):
-        hostname = self.bin / 'hostname'
-        hostname.write_text('#!/bin/sh\nprintf test-production\n')
-        hostname.chmod(0o755)
-        # Match the real script's control-plane/../hosts layout.
-        control = self.root / 'control-plane'
-        control.mkdir()
-        copied = control / 'deploy-pull.sh'
-        shutil.copy(self.script, copied)
-        manifest = self.root / 'hosts/test-production'
-        manifest.mkdir(parents=True)
-        (manifest / 'host.conf').write_text('PRODUCTION_ROLE=true\n')
-        self.script = copied
+    def test_unpinned_deployment_is_refused(self):
         result = self.deploy('', '')
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('Production deployments require', result.stderr)
+        self.assertIn('require a release tag', result.stderr)
         self.assertFalse((self.root / 'calls').exists())
 
     def test_concurrent_deployment_is_rejected(self):

@@ -1,19 +1,20 @@
-# Open maintenance work
+# Open work
 
-Repository cleanup completed 2026-09-19; these items require runtime evidence or a separate implementation decision. This list does not assert that a host has already been changed. Baseline: [notes audit](../docs/audits/2026-09-19-notes.md).
+Items needing live evidence or a decision. None of these are done unless stated.
 
-| Work | Next evidence/action |
+| Area | Work |
 |---|---|
-| Sputnik empty-inbox flow | Test empty and populated mail/calendar cases in deployed n8n. Add an explicit empty-mail branch if needed; export and retest. Current JSON is unchanged and the no-items path remains unverified |
-| Import/cleanup safety | Check *arr import status, actual inode/link counts and retained library files. Plan a shared-parent mount migration before claiming hardlink support. Remove the retired Transmission cleanup cron on space-needle; see [Stellarr](../docs/services/stellarr.md) |
-| Host identities/device access | Record actual littledog UID/GID, Plex runtime identity and device groups; the Plex example uses 1004 while fresh provisioning uses 1003. Do not chown existing data by inference |
-| Pi networking | Confirm manager/unit and interface on Viking/Fjord; watchdog defaults to dhcpcd and may need a host override for NetworkManager |
-| Beszel connectivity | Confirm hub-side resolution/reachability and per-system tokens; Homepage host mappings do not apply to Beszel |
-| Exposure and OAuth | Check live Cloudflare names, Plex Remote Access/router state and granted Google scopes; these are not fully described in Git |
-| Image maintenance | Evaluate maintained Snapclient/VPN replacements without reusing the older nonworking VPN tag; assess pinned application upgrades separately |
-| Reproducibility | Pin Caddy's module source in a dedicated tested build change; verify Jackett self-updating behavior |
-| Deployment availability | Consider pull/build-before-down in loft-ctl and surfacing registry failures currently suppressed during rebuild |
-| Backup/restore | Verify recoverable application data and secrets backups; local tarballs on the same host are insufficient for host loss |
-| Oxbow | [Proposed Brisbane replica](../memory/project_oxbow_host.md); confirm actual hardware/deployment before adding a manifest |
-
-Completed locally: curl transport failures no longer pass health; missing/stopped/unhealthy active Compose services fail health; Caddy uses its container healthcheck; active documentation was consolidated and the old provisioning plans archived. Deployment of those code changes has not been performed.
+| Backups | No off-host backup/restore exists for any host. Clog SQLite, Pawst content/state, Viking `/etc/loft` secrets and service `.env` files need encrypted off-host copies and a tested restore |
+| Viking | Enable the memory cgroup (`cgroup_disable=memory` is on the boot line, so Compose memory limits are not enforced), then reboot and recheck. Remove the stale `address=/viking/192.168.86.26` dnsmasq entry. Enroll a second admin. Verify Cloudflare edge HTTPS redirect and IPv6 denial probes |
+| Clog | First live run of `loft-ctl deploy clog`; scheduled backups; capacity measurement on the Pi; account reset/recovery in the app |
+| Fjord | Validate Pawst dev/test live. Confirm its network manager; the watchdog defaults to dhcpcd |
+| Woodstock | Add the Upstairs stream ID to `I3_POWER_GROUPS`; test Wi-Fi firmware recovery |
+| Audiobookshelf | Verify Android, a second phone and cross-device progress sync |
+| Stellarr | Hardlink-safe imports need a shared-parent mount migration |
+| Sputnik | Test the empty-inbox path in deployed n8n; add an explicit empty-mail branch if it stalls |
+| Identities | Record actual littledog UID/GID and Plex runtime identity; the Plex example uses 1004 while fresh setup uses 1003 |
+| Beszel | Confirm hub-side resolution and per-system tokens |
+| Exposure | Check live Cloudflare hostnames, Plex Remote Access/router state and granted Google scopes |
+| Images | Find maintained Snapclient/VPN images (not the old `v3.12.3` VPN tag); pin Caddy's Cloudflare module source; check Jackett self-update |
+| loft-ctl | Pull/build before `down` in rebuild; stop suppressing registry pull errors |
+| Oxbow (proposed) | Brisbane Pi+NAS at Kangaroo Point, named for the river's oxbow bend. Syncthing-only replica of `/mammoth/photos` and `/mammoth/documents`. Not built |

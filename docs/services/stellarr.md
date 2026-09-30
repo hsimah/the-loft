@@ -29,8 +29,9 @@ Removal of the live cron still needs verification. Manage torrent retention manu
 
 ## LazyLibrarian
 
-Prepared configuration; live deployment and end-to-end acquisition are pending.
-On 2026-09-29 the pinned image passed a disposable local startup/UI check and
+Deployed on space-needle; end-to-end acquisition is pending. On 2026-09-29 the
+operator reached the web UI and the Transmission and Jackett provider tests
+passed. Earlier that day the pinned image passed a disposable local startup/UI check and
 config/download/library writes as UID/GID 1003. Compose, 54 repository tests,
 documentation links and the new Caddy routes (with local TLS) passed.
 Select books here, download through the existing VPN-backed Transmission, then
@@ -86,7 +87,19 @@ preserving the path, and add it under Torznab providers with the Jackett API key
 Set provider Types to `A` and test it. Provider access and credentials must
 already be configured in Jackett; installing LazyLibrarian supplies no content.
 Provider queries use the normal container network; only Transmission/slskd use
-the VPN. See upstream [providers](https://lazylibrarian.gitlab.io/config_providers/),
+the VPN.
+
+Add one provider per Jackett indexer, not the aggregate `all` feed, so Types,
+priority and seeder minimums stay per tracker and log entries name one source.
+As of 2026-09-29 AudioBook Bay (`audiobookbay`) is the audiobook indexer; set its
+Seeders minimum to `0` because it does not report real seeder counts.
+TorrentLeech is a general tracker; give it Types `E` or leave it out, so it does not
+run audiobook searches. The provider Test checks connectivity, not whether a
+title is found. When a Wanted book is not grabbed, query the indexer's feed
+directly with `…/results/torznab/api?apikey=<key>&t=search&q=<title>` and
+compare results with and without `&cat=3030`. Jackett puts its API key in every
+download and cover link, so redact result XML, logs and screenshots before
+sharing them. See upstream [providers](https://lazylibrarian.gitlab.io/config_providers/),
 [downloaders](https://lazylibrarian.gitlab.io/config_downloaders/) and
 [processing](https://lazylibrarian.gitlab.io/config_processing/) settings.
 
@@ -111,7 +124,8 @@ checks; local startup tests cannot verify private indexers or live RPC credentia
 ## Audiobookshelf
 
 The operator confirmed web access on 2026-09-29 after recreating Caddy to refresh
-its stale Caddyfile mount. Phone playback and imports are not yet verified.
+its stale Caddyfile mount. An iOS client (Plappa) logged in on the home Wi-Fi
+the same day. Phone playback and imports are not yet verified.
 Local validation on 2026-09-29 passed Compose configuration, the 54 repository
 tests, documentation links and the new Caddy routes (using local TLS in the
 test container). The pinned Audiobookshelf image started as UID/GID 1003 with a
@@ -189,6 +203,11 @@ The official iOS app uses TestFlight and availability can be limited; an App Sto
 client from that directory is an alternative. Connect using the HTTPS URL above
 and the same listening account. Download books in each app while at home for
 offline playback. Mobile downloads are independent of automated server acquisition.
+
+On iOS, allow the client under Settings → Privacy & Security → **Local Network**.
+Without it, Safari still reaches the server but the app fails with "The internet
+connection appears to be offline" because iOS blocks its LAN connections. Plappa
+logged in on the home Wi-Fi on 2026-09-29 after that permission was enabled.
 
 Verify on both phones: streaming, chapters, resume position after switching
 devices, a complete offline download in airplane mode, and progress sync after

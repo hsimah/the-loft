@@ -1,0 +1,8 @@
+[Unit]
+Description=Loft USB DAC power and volume
+After=alsa-restore.service sound.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/default/loft-dac
+ExecStart=/usr/local/bin/loft-dac

@@ -15,9 +15,12 @@ HOST_ID=woodstock
 
 Its MA player is in Upstairs and All. If the DAC is missing, check **dock power** first — the tablet battery keeps the computer up while dock USB is off.
 
+`loft-dac` (from `AUDIO_*` in host.conf) runs whenever udev sees the card: it disables USB runtime suspend on the DAC (suspend between streams causes a pop or clipped start) and sets the hardware volume to `AUDIO_VOLUME`, since the card otherwise powers up at ~50%. Change the level in host.conf and rerun setup.
+
 ```bash
 cat /proc/asound/cards
 sudo docker logs howlr-snapclient --tail 50
+journalctl -u loft-dac
 sudo speaker-test -D plughw:Audio,0 -c 2 -t wav -l 2   # with howlr stopped
 ```
 

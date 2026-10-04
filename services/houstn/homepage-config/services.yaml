@@ -146,6 +146,17 @@
           url: http://bazarr:6767
           key: "{{HOMEPAGE_VAR_BAZARR_API_KEY}}"
 
+# Immich's own Homepage widget (type: immich) needs a full-account API key in
+# the Homepage environment. Not wired up: the tile below is a link plus the
+# container's health, which is what the other application tiles show.
+- Photos:
+    - Hubbl:
+        icon: immich.svg
+        href: https://hubbl.loft.hsimah.com
+        description: Immich photo library
+        container: hubbl
+        server: my-docker
+
 - Downloads:
     - LazyLibrarian:
         icon: lazylibrarian.svg

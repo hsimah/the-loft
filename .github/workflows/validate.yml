@@ -74,6 +74,25 @@ jobs:
               caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile
           done
 
+      - name: Validate the space-needle Caddyfile
+        run: |
+          # Needs the xcaddy build, not stock Caddy: the tls snippet uses the
+          # caddy-dns/cloudflare plugin and stock rejects the directive. This
+          # is the only automated check on the file every route is added to.
+          #
+          # validate provisions modules as well as adapting the Caddyfile, so
+          # the dummy token has to be well formed (40 chars) or the Cloudflare
+          # provider rejects it on a format check. Nothing calls the API: the
+          # container has no network.
+          docker build -q -f services/mushr/Dockerfile.caddy -t mushr-caddy:ci services/mushr
+          docker run --rm --network none \
+            -e LOFT_DOMAIN=loft.example.com \
+            -e CLOUDFLARE_API_TOKEN=0123456789abcdef0123456789abcdef01234567 \
+            -e BRIEFING_USER=ci \
+            -e 'BRIEFING_HASH=$2a$14$Zkx19XLiW6VYouLHR5NmfOFU0z2GTNmpkT/5qqR7hx4IjWJPDhjvG' \
+            -v "$PWD/services/mushr/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            mushr-caddy:ci caddy validate --config /etc/caddy/Caddyfile
+
       - name: Validate Viking public tunnel profile
         run: |
           docker compose -f services/mushr/docker-compose.yml \
@@ -105,7 +124,7 @@ jobs:
 
       - name: Syntax-check shell scripts
         run: |
-          for f in setup.sh loft-ctl bashrc.d control-plane/*.sh control-plane/hooks/* services/*/*.sh services/*/*/*.sh hosts/*/bootstrap hosts/*/restore; do
+          for f in setup.sh loft-ctl bashrc.d control-plane/*.sh control-plane/hooks/* tests/*.sh services/*/*.sh services/*/*/*.sh hosts/*/bootstrap hosts/*/restore; do
             [ -e "$f" ] || continue
             echo "Checking $f..."
             bash -n "$f"
@@ -127,6 +146,10 @@ jobs:
       - name: Health, deployment and platform regression tests and documentation links
         run: |
           python3 -m unittest discover -s tests -v
+          for t in tests/*.sh; do
+            echo "Running $t..."
+            bash "$t"
+          done
           bash control-plane/check-docs.sh
 
       - name: Validate JSON and Python syntax

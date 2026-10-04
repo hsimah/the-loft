@@ -57,7 +57,7 @@ The first run takes hours. The cron keeps firing; each tick fails to take the `f
 
 Wait for `Up to date — 0 new files` across several consecutive ticks, and confirm the total matches step 1 — a single such line also appears when the remote path is wrong.
 
-Create an API key (Account Settings → API Keys), set `IMMICH_API_KEY` in `services/hubbl/.env`, then run the import. The key needs asset upload/read and album create/read/update **plus the user-read permission its preflight uses** — a key without that fails as a connection error. Grant no delete permission; nothing in an import needs one.
+Create an API key (Account Settings → API Keys), set `IMMICH_API_KEY` in `services/hubbl/.env`, then run the import. The key needs, at minimum: `asset.upload`, `asset.read`, `album.create`, `album.read`, `albumAsset.create`, and the user-read permission the preflight uses. `albumAsset.create` is separate from `album.create` and is only reached after the assets have already uploaded, so a key missing it fails late, not early. Grant no delete permission; nothing in an import needs one. Select-all is defensible for a key revoked the same day.
 
 ```bash
 cd /srv/the-loft

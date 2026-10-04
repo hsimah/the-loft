@@ -40,42 +40,126 @@ all_caddyfiles() {
   find "${ROOT}/hosts" -path '*/overrides/mushr/Caddyfile' | sort
 }
 
-# ── Rule: a publicly served name must sit one label below a registrable
-# domain. Cloudflare's free Universal SSL covers example.com and
-# *.example.com only; *.sub.example.com needs paid Advanced Certificate
-# Manager. A deeper name silently fails TLS at the edge.
-#
-# Only literal names are checkable. A name written as foo.{$LOFT_DOMAIN} is
-# LAN-only by convention and carries a Caddy-issued certificate instead, so
-# the depth limit does not apply to it.
-violations=""
-while IFS= read -r file; do
+# ── Declared public hostnames ────────────────────────────────────────────────
+# host.conf declares INTENT; the tunnel's real list lives in Cloudflare. What
+# the repository can enforce is that whatever it claims to publish is
+# publishable, routed, and resolved locally — and that nothing publishable
+# appears without being declared.
+loft_domain=$(sed -nE 's/^LOFT_DOMAIN=(.+)$/\1/p' "${ROOT}/services/mushr/.env.example")
+[[ -n "$loft_domain" ]] || loft_domain="loft.hsimah.com"
+
+mushr_hosts() { ls "${ROOT}/hosts"; }
+
+caddyfile_for() { # host
+  if [[ "$1" == "space-needle" ]]; then
+    echo "${ROOT}/services/mushr/Caddyfile"
+  else
+    echo "${ROOT}/hosts/$1/overrides/mushr/Caddyfile"
+  fi
+}
+
+declared_for() { # host — PUBLIC_HOSTNAMES from that host.conf, one per line
+  local conf="${ROOT}/hosts/$1/host.conf"
+  [[ -f "$conf" ]] || return 0
+  ( set +u
+    # shellcheck disable=SC1090
+    source "$conf" >/dev/null 2>&1
+    [[ -v PUBLIC_HOSTNAMES ]] || exit 0
+    printf '%s\n' "${PUBLIC_HOSTNAMES[@]}" ) | grep -v '^$' || true
+}
+
+# A hostname is "publishable-looking" if it is a literal FQDN under a real
+# domain: not a {$LOFT_DOMAIN} template, not a wildcard, not under a fleet
+# host name used as an internal TLD.
+publishable_names() { # caddyfile
+  { site_addresses "$1"; host_matchers "$1"; } | while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    [[ "$name" == *'{$'* ]] && continue
+    [[ "$name" == '*'* ]] && continue
+    [[ "$name" != *.* ]] && continue
+    is_internal "$name" && continue
+    printf '%s\n' "$name"
+  done | sort -u
+}
+
+labels_of() { tr '.' '\n' <<< "$1" | grep -c .; }
+
+# Rule 1: a declared name must be at most one label below its registrable
+# domain, and must not be a loft name. Cloudflare's free Universal SSL covers
+# example.com and *.example.com only; anything deeper fails at the edge.
+bad_depth=""
+while IFS= read -r host; do
   while IFS= read -r name; do
     [[ -n "$name" ]] || continue
-    [[ "$name" == *'{$'* ]] && continue      # LAN, Caddy-issued cert
-    [[ "$name" == '*'* ]] && continue        # wildcard fallback
-    [[ "$name" != *.* ]] && continue         # bare host, not an FQDN
-    is_internal "$name" && continue          # *.space-needle, *.fjord, ...
-    labels=$(tr '.' '\n' <<< "$name" | grep -c .)
-    if (( labels > 3 )); then
-      violations+="${name} (${file##*/the-loft/}, ${labels} labels)"$'\n'
+    if [[ "$name" == *".${loft_domain}" || "$name" == "$loft_domain" ]]; then
+      bad_depth+="${name} (${host}) is a loft name — LAN-only, cannot be published"$'\n'
+    elif (( $(labels_of "$name") > 3 )); then
+      bad_depth+="${name} (${host}) is $(labels_of "$name") labels deep"$'\n'
     fi
-  done < <( { site_addresses "$file"; host_matchers "$file"; } )
-done < <(all_caddyfiles)
+  done < <(declared_for "$host")
+done < <(mushr_hosts)
 
-if [[ -z "$violations" ]]; then
-  ok "every public hostname is at most one label below its domain"
+if [[ -z "$bad_depth" ]]; then
+  ok "every declared public hostname is first-level"
 else
-  bad "every public hostname is at most one label below its domain" \
-      "Cloudflare free Universal SSL cannot cover these:"$'\n'"${violations}"
+  bad "every declared public hostname is first-level" \
+      "free Universal SSL cannot cover these:"$'\n'"${bad_depth}"
+fi
+
+# Rule 2: a declared name with no route 502s; a routed public name that is
+# not declared is exposure nobody wrote down.
+undeclared=""
+unrouted=""
+while IFS= read -r host; do
+  cf=$(caddyfile_for "$host")
+  [[ -f "$cf" ]] || continue
+  decl=$(declared_for "$host")
+  routed=$(publishable_names "$cf")
+  while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    grep -qxF "$name" <<< "$decl" || undeclared+="${name} (${host})"$'\n'
+  done <<< "$routed"
+  while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    grep -qxF "$name" <<< "$routed" || unrouted+="${name} (${host})"$'\n'
+  done <<< "$decl"
+done < <(mushr_hosts)
+
+if [[ -z "$undeclared" ]]; then
+  ok "no Caddyfile serves a public hostname that host.conf does not declare"
+else
+  bad "no Caddyfile serves a public hostname that host.conf does not declare" \
+      "add to PUBLIC_HOSTNAMES, or use a {\$LOFT_DOMAIN} name if it is LAN-only:"$'\n'"${undeclared}"
+fi
+
+if [[ -z "$unrouted" ]]; then
+  ok "every declared public hostname has a Caddy route"
+else
+  bad "every declared public hostname has a Caddy route" \
+      "declared but no site block or host matcher:"$'\n'"${unrouted}"
+fi
+
+# Rule 3: without a local DNS answer, a LAN client resolves the public name
+# through Cloudflare and hairpins back in, so the tunnel's request-body cap
+# applies to uploads from inside the house too.
+dnsmasq="${ROOT}/services/mushr/dnsmasq.conf"
+nolocal=""
+while IFS= read -r name; do
+  [[ -n "$name" ]] || continue
+  grep -qE "^address=/${name//./\\.}/" "$dnsmasq" || nolocal+="${name}"$'\n'
+done < <(declared_for space-needle)
+
+if [[ -z "$nolocal" ]]; then
+  ok "space-needle's public hostnames resolve locally via dnsmasq"
+else
+  bad "space-needle's public hostnames resolve locally via dnsmasq" \
+      "missing address= entry, so LAN clients hairpin through Cloudflare:"$'\n'"${nolocal}"
 fi
 
 # ── Rule: every hostname space-needle health-checks must have a route, or
 # the probe fails for a reason that has nothing to do with the service.
 conf="${ROOT}/hosts/space-needle/host.conf"
 caddy="${ROOT}/services/mushr/Caddyfile"
-loft_domain=$(sed -nE 's/^LOFT_DOMAIN=(.+)$/\1/p' "${ROOT}/services/mushr/.env.example")
-[[ -n "$loft_domain" ]] || loft_domain="loft.hsimah.com"
 
 routes=$(site_addresses "$caddy" | sed "s/{\$LOFT_DOMAIN}/${loft_domain}/" | sort -u)
 missing=""

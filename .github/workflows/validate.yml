@@ -79,10 +79,15 @@ jobs:
           # Needs the xcaddy build, not stock Caddy: the tls snippet uses the
           # caddy-dns/cloudflare plugin and stock rejects the directive. This
           # is the only automated check on the file every route is added to.
+          #
+          # validate provisions modules as well as adapting the Caddyfile, so
+          # the dummy token has to be well formed (40 chars) or the Cloudflare
+          # provider rejects it on a format check. Nothing calls the API: the
+          # container has no network.
           docker build -q -f services/mushr/Dockerfile.caddy -t mushr-caddy:ci services/mushr
           docker run --rm --network none \
             -e LOFT_DOMAIN=loft.example.com \
-            -e CLOUDFLARE_API_TOKEN=ci \
+            -e CLOUDFLARE_API_TOKEN=0123456789abcdef0123456789abcdef01234567 \
             -e BRIEFING_USER=ci \
             -e 'BRIEFING_HASH=$2a$14$Zkx19XLiW6VYouLHR5NmfOFU0z2GTNmpkT/5qqR7hx4IjWJPDhjvG' \
             -v "$PWD/services/mushr/Caddyfile:/etc/caddy/Caddyfile:ro" \

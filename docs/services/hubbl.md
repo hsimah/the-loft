@@ -10,20 +10,24 @@
 
 The library and the database are one unit. Immich addresses files under `/data` by content hash and resolves them through Postgres, so restoring one without the other gives a catalogue pointing at absent files. Dump with `pg_dumpall`; never copy `/opt/hubbl/db` from under a running cluster, and never reorganise the library from the host side.
 
-`hubbl.loft.hsimah.com` is **on the tunnel's public hostname list** so the mobile app can back up away from home — Immich's own login is the only boundary in front of the whole library. Keep signup disabled after the first account and enable two-factor. The route in [the Caddyfile](../../services/mushr/Caddyfile) does not prove the hostname is published; check Cloudflare.
+`hubbl.hsimah.com` is **on the tunnel's public hostname list** so the mobile app can back up away from home. The name is first-level on purpose: Cloudflare's free Universal SSL covers `hsimah.com` and `*.hsimah.com` but not a second level like `*.loft.hsimah.com`, which would need paid Advanced Certificate Manager. `hubbl.loft.hsimah.com` stays LAN-only.
+
+Immich has **no two-factor authentication** for local accounts and **no public registration** — the register page exists only until the first admin is created, and after that users are added from Administration → Users. So the admin password is the single factor, with no account-creation surface behind it. Cloudflare Access would add a gate but breaks the mobile app, which cannot complete its browser login. OIDC against an external provider is the only supported way to add a second factor.
+
+dnsmasq answers `hubbl.hsimah.com` with `192.168.86.28`, so uploads from the LAN go straight to Caddy and skip the tunnel's size cap. The route in [the Caddyfile](../../services/mushr/Caddyfile) does not prove the hostname is published; check Cloudflare.
 
 ## Setup
 
 1. Copy [.env.example](../../services/hubbl/.env.example). Generate `DB_PASSWORD` with `openssl rand -hex 32` **before** the first start — Postgres reads it only when initialising an empty `/opt/hubbl/db`, and changing it later locks the server out of its own database.
 2. `sudo bash setup.sh` to provision the directories, then `sudo loft-ctl start hubbl` and `loft-ctl health hubbl`.
-3. Register the first account immediately at `https://hubbl.loft.hsimah.com` — Immich makes it the admin and the hostname is publicly reachable. Disable signup in Administration → Settings.
-4. Publish the hostname on the tunnel in Cloudflare, then confirm a test upload from the phone app before trusting it with a backup.
+3. Register the first account **before** publishing — Immich makes the first account the admin, and there is no way to close registration while the server has none. Do it over the LAN.
+4. Publish `hubbl.hsimah.com` on the tunnel in Cloudflare, pointing at Caddy over HTTPS. Confirm a test upload from the phone app on mobile data before trusting it with a backup; a LAN test resolves through dnsmasq and proves nothing about the tunnel.
 
 ## Upload size over the tunnel
 
 The Caddy route sets no request-body limit deliberately: a cap surfaces in the mobile app as a silent backup failure. The real ceiling is Cloudflare's per-request limit — **100 MB on the free plan** — which this repository does not control.
 
-The symptom is specific: phone photos sync anywhere, long videos fail only off-LAN and succeed at home. Check the file size against the plan limit before suspecting Immich. LAN uploads do not traverse the tunnel.
+The symptom is specific: phone photos sync anywhere, long videos fail only off-LAN and succeed at home. Check the file size against the plan limit before suspecting Immich. LAN uploads do not traverse the tunnel — but only because dnsmasq answers the public name locally. Remove that entry and every upload is capped, everywhere.
 
 ## Hardware acceleration
 

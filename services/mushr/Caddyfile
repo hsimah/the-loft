@@ -99,14 +99,25 @@ uptime.{$LOFT_DOMAIN} {
 	reverse_proxy uptime:3001
 }
 
-# hubbl — Immich. Unlike the rest of the loft names this one IS on the tunnel's
-# public hostname list, so the phone app can sync away from home; Immich's own
-# login is therefore the only boundary in front of the whole photo library.
+# hubbl — Immich. The public name is deliberately first-level: Cloudflare's
+# free Universal SSL covers hsimah.com and *.hsimah.com but NOT a second level
+# like *.loft.hsimah.com, so a loft name cannot be served through the tunnel
+# without paid Advanced Certificate Manager. This is the one loft application
+# on the tunnel's public hostname list, which makes Immich's own login the
+# only boundary in front of the whole photo library.
 #
-# No request_body limit here on purpose — Immich uploads originals, and a cap
-# would surface as a silent mobile backup failure rather than an error. The
-# effective ceiling for tunnelled uploads is Cloudflare's, not Caddy's; see
-# docs/services/hubbl.md.
+# dnsmasq answers this name with the LAN address too, so uploads from home go
+# straight here and skip the tunnel's request-body cap entirely.
+#
+# No request_body limit on purpose — Immich uploads originals, and a cap would
+# surface as a silent mobile backup failure rather than an error. The ceiling
+# for tunnelled uploads is Cloudflare's, not Caddy's; see docs/services/hubbl.md.
+hubbl.hsimah.com {
+	import cloudflare_tls
+	reverse_proxy hubbl:2283
+}
+
+# LAN browser access over the loft name; never reachable from outside.
 hubbl.{$LOFT_DOMAIN} {
 	import cloudflare_tls
 	reverse_proxy hubbl:2283

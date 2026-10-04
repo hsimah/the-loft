@@ -74,6 +74,20 @@ jobs:
               caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile
           done
 
+      - name: Validate the space-needle Caddyfile
+        run: |
+          # Needs the xcaddy build, not stock Caddy: the tls snippet uses the
+          # caddy-dns/cloudflare plugin and stock rejects the directive. This
+          # is the only automated check on the file every route is added to.
+          docker build -q -f services/mushr/Dockerfile.caddy -t mushr-caddy:ci services/mushr
+          docker run --rm --network none \
+            -e LOFT_DOMAIN=loft.example.com \
+            -e CLOUDFLARE_API_TOKEN=ci \
+            -e BRIEFING_USER=ci \
+            -e 'BRIEFING_HASH=$2a$14$Zkx19XLiW6VYouLHR5NmfOFU0z2GTNmpkT/5qqR7hx4IjWJPDhjvG' \
+            -v "$PWD/services/mushr/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            mushr-caddy:ci caddy validate --config /etc/caddy/Caddyfile
+
       - name: Validate Viking public tunnel profile
         run: |
           docker compose -f services/mushr/docker-compose.yml \

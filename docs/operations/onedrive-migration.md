@@ -95,4 +95,4 @@ sudo rm -rf /mammoth/hubbl/staging
 
 `setup.sh` removes the cron unconditionally on every run, so the flag is what stops it; a hand-deleted cron file comes back. Then drop the `ONEDRIVE_PULL_*` block and the staging path from host.conf, the `cli` service from [Compose](../../services/hubbl/docker-compose.yml), and this page. Hubbl still needs a real backup covering the library and database together — see [upgrades](upgrades.md).
 
-Not yet executed; the remote name, folder path and disk headroom are unverified.
+Executed 2026-10-03: `onedrive:Pictures` drained to 31,738 files / 194 GiB, matching `rclone size`, and the import is running. Steps 1–4 are verified; the teardown in step 5 has not been run yet.

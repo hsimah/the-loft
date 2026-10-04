@@ -103,14 +103,21 @@ services:
     shm_size: 128mb
     stop_grace_period: 60s
 
-  # One-shot importer for the OneDrive migration. Versioned independently of
-  # the server. Uploads over the HTTP API, so the staging mount is read-only:
-  # a failed or repeated run can never damage the source photos. Immich
-  # deduplicates by checksum, so re-running is safe.
+  # One-shot importer for the OneDrive migration. Uploads over the HTTP API,
+  # so the staging mount is read-only: a failed or repeated run can never
+  # damage the source photos. Immich deduplicates by checksum, so re-running
+  # is safe.
+  #
+  # Deliberately NOT ghcr.io/immich-app/immich-cli — that image is abandoned
+  # at v0.41.0, which still pings the removed /api/server-info/ping endpoint
+  # and fails against a v3 server with a misleading "Error connecting to
+  # server". The CLI now ships only on npm, versioned in lockstep with the
+  # server, so this pin must move with the server tag above.
   #   docs/operations/onedrive-migration.md
   cli:
-    image: ghcr.io/immich-app/immich-cli:v0.41.0
+    image: node:22.21.1-alpine
     container_name: hubbl-cli
+    entrypoint: ["npx", "--yes", "@immich/cli@3.2.4"]
     logging:
       driver: json-file
       options:
@@ -119,13 +126,17 @@ services:
     environment:
       IMMICH_INSTANCE_URL: http://hubbl:2283/api
       IMMICH_API_KEY: ${IMMICH_API_KEY:-}
+      # npx would otherwise re-download the package on every invocation.
+      NPM_CONFIG_CACHE: /npm-cache
     volumes:
       - /mammoth/hubbl/staging:/import:ro
+      - npm-cache:/npm-cache
     profiles:
       - cli
 
 volumes:
   model-cache:
+  npm-cache:
 
 networks:
   loft-proxy:

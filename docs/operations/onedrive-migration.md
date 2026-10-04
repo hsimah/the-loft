@@ -57,15 +57,27 @@ The first run takes hours. The cron keeps firing; each tick fails to take the `f
 
 Wait for `Up to date — 0 new files` across several consecutive ticks, and confirm the total matches step 1 — a single such line also appears when the remote path is wrong.
 
-Create an API key (Account Settings → API Keys), set `IMMICH_API_KEY` in `services/hubbl/.env`, then:
+Create an API key (Account Settings → API Keys), set `IMMICH_API_KEY` in `services/hubbl/.env`, then run the import. The key needs asset upload/read and album create/read/update **plus the user-read permission its preflight uses** — a key without that fails as a connection error. Grant no delete permission; nothing in an import needs one.
 
 ```bash
 cd /srv/the-loft
 sudo docker compose -f services/hubbl/docker-compose.yml --profile cli run --rm cli \
-  upload --recursive --album-name "OneDrive" /import
+  upload --recursive --album /import
 ```
 
-Staging mounts read-only, so a failed or repeated run cannot touch the source. Immich deduplicates by checksum, so re-running resumes. Point the last argument at a subdirectory to import in batches. That key can read and delete every photo in the library — revoke it afterwards.
+`--album` creates one album per source folder, preserving the OneDrive structure; `--album-name` would flatten everything into one. Files loose at the top of staging land outside any album.
+
+Staging mounts read-only, so a failed or repeated run cannot touch the source. Immich deduplicates by checksum, so re-running resumes. Point the last argument at a subdirectory to import in batches. Revoke the key afterwards.
+
+The CLI pin must move with the server pin — it is versioned in lockstep. **`Error connecting to server` from this CLI almost never means the network.** It is the message for a missing API key, an insufficiently permissioned key, and a CLI too old for the server's API, all three. Before touching DNS or ports, check the key reaches the API:
+
+```bash
+sudo docker compose -f services/hubbl/docker-compose.yml --profile cli run --rm \
+  --entrypoint sh cli -c 'wget -qO- --header="x-api-key: $IMMICH_API_KEY" \
+  http://hubbl:2283/api/users/me | head -c 80'
+```
+
+JSON means the key and the network are both fine and the fault is the CLI itself.
 
 ## 5. Verify, then tear down
 

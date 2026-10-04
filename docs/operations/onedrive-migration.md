@@ -51,7 +51,9 @@ cd /srv/the-loft && sudo bash setup.sh      # installs the cron
 tail -f /var/log/loft/onedrive-pull.log
 ```
 
-The first run takes hours. The cron keeps firing; each tick fails to take the `flock` and exits silently, so overlapping pulls are impossible. Throttling is expected — `--retries 1` makes a throttled run surrender the lock for the next tick rather than block behind rclone's backoff. Lower `ONEDRIVE_PULL_TPSLIMIT` or set `ONEDRIVE_PULL_BWLIMIT` if needed.
+The first run takes hours. The cron keeps firing; each tick fails to take the `flock` and exits silently, so overlapping pulls are impossible.
+
+Note that `copy` re-downloads anything missing locally. Deleting files from staging while the cron is still enabled does not stick — the next tick fetches them again. Stop the cron before pruning staging, or do the pruning in Immich after the import instead. Throttling is expected — `--retries 1` makes a throttled run surrender the lock for the next tick rather than block behind rclone's backoff. Lower `ONEDRIVE_PULL_TPSLIMIT` or set `ONEDRIVE_PULL_BWLIMIT` if needed.
 
 ## 4. Import
 
@@ -95,4 +97,4 @@ sudo rm -rf /mammoth/hubbl/staging
 
 `setup.sh` removes the cron unconditionally on every run, so the flag is what stops it; a hand-deleted cron file comes back. Then drop the `ONEDRIVE_PULL_*` block and the staging path from host.conf, the `cli` service from [Compose](../../services/hubbl/docker-compose.yml), and this page. Hubbl still needs a real backup covering the library and database together — see [upgrades](upgrades.md).
 
-Executed 2026-10-03: `onedrive:Pictures` drained to 31,738 files / 194 GiB, matching `rclone size`, and the import is running. Steps 1–4 are verified; the teardown in step 5 has not been run yet.
+Executed 2026-10-04: 31,430 assets imported across 147 albums, 383 duplicates skipped by checksum, no failures. Pulls are stopped. The rclone credential and the staging copy are still to be removed, and this page goes with them.

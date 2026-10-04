@@ -49,4 +49,4 @@ The `hubbl-redis` and `hubbl-db` digests are upstream's own, part of the release
 - **Slow first pass:** face detection and smart search run over every asset on CPU. Check `hubbl-ml` logs for progress.
 - **Apparent duplicates:** Immich deduplicates by checksum, so re-running an import is safe. Genuine source duplicates resolve in Immich's duplicate view, not in staging.
 
-Deployed on space-needle 2026-10-03: containers healthy, both Caddy routes serving, the tunnel hostname live and the library importing. Pins come from the upstream v3.2.4 release compose.
+Deployed on space-needle 2026-10-03; the OneDrive library imported 2026-10-04 (31,430 assets, 147 albums). Pins come from the upstream v3.2.4 release compose.

@@ -19,7 +19,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [clog](docs/services/clog.md) | viking | Inventory app — Nginx, PHP-FPM, SQLite |
 | [houstn](docs/services/houstn.md) | all (hub on space-needle) | Observability — Beszel, Uptime Kuma, Homepage, Glances |
 | [howlr](docs/services/howlr.md) | space-needle (server); calavera, woodstock (clients) | Music Assistant + Snapcast |
-| [hubbl](docs/services/hubbl.md) | space-needle | Immich photo library; the only service on the public tunnel |
+| [hubbl](docs/services/hubbl.md) | space-needle | Immich photo library; the only space-needle service published on the tunnel |
 | [mushr](docs/services/mushr.md) | space-needle, viking, fjord | Caddy + Cloudflare Tunnel + LAN DNS |
 | [pawpcorn](docs/services/pawpcorn.md) | space-needle | Plex |
 | [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Static sites `hbla.ke` and `hsimah.com` |
@@ -31,7 +31,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 ## Layout
 
 ```
-hosts/<hostname>/host.conf          # Per-host manifest (services, storage, health checks)
+hosts/<hostname>/host.conf          # Per-host manifest (services, storage, health checks, public hostnames)
 hosts/<hostname>/overrides/...      # Per-host compose overrides
 hosts/<hostname>/bootstrap          # Optional host-specific provisioning, sourced by setup.sh
 hosts/<hostname>/i3/...             # Optional i3 desktop config (when I3_ENABLED)
@@ -51,4 +51,6 @@ Fjord runs dev/test; Viking runs production. Promote the same GitHub release art
 
 ## CI
 
-[validate.yml](.github/workflows/validate.yml) checks every Compose/override/profile combination, `bash -n` on scripts and manifests, JSON/Python syntax, the regression tests in `tests/`, and local doc links (`control-plane/check-docs.sh`).
+[validate.yml](.github/workflows/validate.yml) checks every Compose/override/profile combination, `bash -n` on scripts and manifests, JSON/Python syntax, the regression tests in `tests/`, and local doc links (`control-plane/check-docs.sh`). Caddyfiles are validated with the real binary — the space-needle one against the `Dockerfile.caddy` build, since stock Caddy rejects its Cloudflare DNS directive.
+
+Hosts declare intended public hostnames in `PUBLIC_HOSTNAMES`; `tests/test-caddy.sh` checks they are first-level, routed and resolved locally, and that nothing publicly routable is undeclared. That is repository intent — the tunnel's live hostname list is in Cloudflare and must be reconciled separately.

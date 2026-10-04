@@ -95,6 +95,12 @@ sudo shred -u /etc/loft/rclone/rclone.conf && sudo rmdir /etc/loft/rclone
 sudo rm -rf /mammoth/hubbl/staging
 ```
 
-`setup.sh` removes the cron unconditionally on every run, so the flag is what stops it; a hand-deleted cron file comes back. Then drop the `ONEDRIVE_PULL_*` block and the staging path from host.conf, the `cli` service from [Compose](../../services/hubbl/docker-compose.yml), and this page. Hubbl still needs a real backup covering the library and database together — see [upgrades](upgrades.md).
+`setup.sh` removes the cron unconditionally on every run, so the flag is what stops it; a hand-deleted cron file comes back.
 
-Executed 2026-10-04: 31,430 assets imported across 147 albums, 383 duplicates skipped by checksum, no failures. Pulls are stopped. The rclone credential and the staging copy are still to be removed, and this page goes with them.
+**Steps 3 and 4 are deliberately deferred.** The puller is being reused to fetch the rest of the OneDrive account for a planned document store, so the rclone credential stays on the host and the mechanism stays in the repository. Only the photo-side artefacts are disposable: the import key, and eventually `/mammoth/hubbl/staging`. Cancel the OneDrive account only once both fetches are done — tracked in [open work](../../plans/maintenance.md).
+
+Reusing it means retargeting `ONEDRIVE_PULL_REMOTE` and `ONEDRIVE_PULL_DEST` and flipping the flag back; nothing in [onedrive-pull.sh](../../control-plane/onedrive-pull.sh) is photo-specific. Give each fetch its own staging directory so one import's leftovers cannot be mistaken for another's.
+
+This is a migration path, not a backup. Hubbl still needs a real backup covering the library and database together — see [upgrades](upgrades.md).
+
+Executed 2026-10-04 for photos: 31,430 assets imported across 147 albums, 383 duplicates skipped by checksum, no failures. Pulls are stopped but the mechanism and credential are retained for the document fetch, so this page stays.

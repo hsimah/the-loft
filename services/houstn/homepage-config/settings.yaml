@@ -18,6 +18,10 @@ layout:
     tab: Loft
     style: row
     columns: 5
+  Photos:
+    tab: Loft
+    style: row
+    columns: 3
   Downloads:
     tab: Loft
     style: row

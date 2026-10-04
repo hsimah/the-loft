@@ -15,6 +15,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [Clog](services/clog.md) — inventory app on Viking
 - [Houstn](services/houstn.md) — dashboards and Glances
 - [Howlr](services/howlr.md) — Music Assistant and Snapcast
+- [Hubbl](services/hubbl.md) — Immich photo library
 - [Mushr](services/mushr.md) — proxy, tunnel and LAN DNS
 - [Pawpcorn](services/pawpcorn.md) — Plex
 - [Pawst](services/pawst.md) — static sites
@@ -28,6 +29,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [Triage](../DEBUG.md)
 - [Application platform](operations/application-platform.md) — Fjord/Viking conventions, promotion, network policy
 - [Viking restore](operations/viking-restore.md)
+- [OneDrive → Hubbl migration](operations/onedrive-migration.md) — temporary; delete when done
 - [Upgrades and backups](operations/upgrades.md)
 - [setup.sh](scripts/setup.md), [loft-ctl](scripts/loft-ctl.md), [health helpers](scripts/common-sh.md)
 - [Release puller](scripts/deploy-pull.md), [GitHub App tokens](scripts/github-app-token.md)

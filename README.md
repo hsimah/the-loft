@@ -19,6 +19,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [clog](docs/services/clog.md) | viking | Inventory app — Nginx, PHP-FPM, SQLite |
 | [houstn](docs/services/houstn.md) | all (hub on space-needle) | Observability — Beszel, Uptime Kuma, Homepage, Glances |
 | [howlr](docs/services/howlr.md) | space-needle (server); calavera, woodstock (clients) | Music Assistant + Snapcast |
+| [hubbl](docs/services/hubbl.md) | space-needle | Immich photo library; the only service on the public tunnel |
 | [mushr](docs/services/mushr.md) | space-needle, viking, fjord | Caddy + Cloudflare Tunnel + LAN DNS |
 | [pawpcorn](docs/services/pawpcorn.md) | space-needle | Plex |
 | [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Static sites `hbla.ke` and `hsimah.com` |

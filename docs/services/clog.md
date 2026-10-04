@@ -20,6 +20,14 @@ loft-ctl deploy clog
 
 To update, change the pin in Git, pull on Viking, rerun. Do not use `loft-ctl update`/`rebuild` for Clog. `--archive PATH` uses a local archive (checksum still enforced); `--user NAME` preselects the first username.
 
+Deploys never grant administration (user management, from 1.0). Grant an existing account once:
+
+```bash
+sudo docker compose --env-file services/clog/.env \
+  -f services/clog/docker-compose.yml run --rm --no-deps -T \
+  clog-cli user:admin NAME
+```
+
 The command checks the role/firewall/Docker, downloads and verifies the archive, validates images and config **before** stopping Clog, refreshes Caddy only when its config changed, stops writes, backs up the DB (`pre-deploy-*.sqlite`), runs the release installer, creates the first account only if none exists, recreates Nginx/FPM and checks Clog plus both Pawst sites. It never pulls Git or touches Cloudflare.
 
 State in `/var/lib/loft/deploy/`: `clog.json` (last success), `clog-pending.json` (interrupted run), `clog.lock`.

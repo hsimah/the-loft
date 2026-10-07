@@ -252,7 +252,8 @@ cat > /etc/default/loft-dashboard-power <<POWERENV
 LOFT_POWER_GROUPS="${I3_POWER_GROUPS:-}"
 POWERENV
 systemctl daemon-reload
-systemctl enable --now loft-dashboard-power.service
+systemctl enable loft-dashboard-power.service
+systemctl restart loft-dashboard-power.service
 info "loft-dashboard-power watching groups: ${I3_POWER_GROUPS:-(none configured)}"
 
 # ── Disable suspend/sleep (always-on audio sink) ──────────────────────────

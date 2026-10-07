@@ -38,15 +38,26 @@ POLL_SECS = 15
 RECONNECT_MAX_SECS = 30
 
 stream_states = {name: "idle" for name in GROUPS}
-screen_on = True
+
+
+def monitor_on() -> bool | None:
+    # Ask X rather than caching our last command: a touch wakes the panel
+    # without telling us, and a stale "off" would skip every later blank.
+    try:
+        out = subprocess.check_output(["xset", "q"], text=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    for line in out.splitlines():
+        line = line.strip()
+        if line.startswith("Monitor is "):
+            return line == "Monitor is On"
+    return None
 
 
 def set_screen(on: bool) -> None:
-    global screen_on
-    if on == screen_on:
+    if monitor_on() == on:
         return
     subprocess.run(["xset", "dpms", "force", "on" if on else "off"], check=False)
-    screen_on = on
     log.info("screen %s", "on" if on else "off")
 
 

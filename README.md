@@ -51,6 +51,6 @@ Fjord runs dev/test; Viking runs production. Promote the same GitHub release art
 
 ## CI
 
-[validate.yml](.github/workflows/validate.yml) checks every Compose/override/profile combination, `bash -n` on scripts and manifests, JSON/Python syntax, the regression tests in `tests/`, and local doc links (`control-plane/check-docs.sh`). Caddyfiles are validated with the real binary — the space-needle one against the `Dockerfile.caddy` build, since stock Caddy rejects its Cloudflare DNS directive.
+[validate.yml](.github/workflows/validate.yml) checks every Compose/override/profile combination, `bash -n` on scripts and manifests, JSON syntax, the regression tests in `tests/`, and local doc links (`control-plane/check-docs.sh`). Caddyfiles are validated with the real binary — the space-needle one against the `Dockerfile.caddy` build, since stock Caddy rejects its Cloudflare DNS directive.
 
 Hosts declare intended public hostnames in `PUBLIC_HOSTNAMES`; `tests/test-caddy.sh` checks they are first-level, routed and resolved locally, and that nothing publicly routable is undeclared. That is repository intent — the tunnel's live hostname list is in Cloudflare and must be reconciled separately.

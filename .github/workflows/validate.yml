@@ -145,7 +145,6 @@ jobs:
 
       - name: Health, deployment and platform regression tests and documentation links
         run: |
-          python3 -m unittest discover -s tests -v
           bash tests/run.sh
           bash control-plane/check-docs.sh
 

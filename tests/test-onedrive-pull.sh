@@ -6,21 +6,7 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPT="${ROOT}/control-plane/onedrive-pull.sh"
-PASS=0
-FAIL=0
-
-ok()   { printf 'ok     %s\n' "$1"; PASS=$((PASS + 1)); }
-bad()  { printf 'FAIL   %s\n     %s\n' "$1" "$2" >&2; FAIL=$((FAIL + 1)); }
-
-assert_contains() { # haystack needle label
-  case "$1" in *"$2"*) ok "$3" ;; *) bad "$3" "expected to find: $2" ;; esac
-}
-assert_absent() { # haystack needle label
-  case "$1" in *"$2"*) bad "$3" "did not expect: $2" ;; *) ok "$3" ;; esac
-}
-assert_eq() { # actual expected label
-  [[ "$1" == "$2" ]] && ok "$3" || bad "$3" "got '$1', wanted '$2'"
-}
+source "${ROOT}/tests/lib/assert.sh"
 
 # ── Fixture ──────────────────────────────────────────────────────────────────
 WORK="$(mktemp -d)"
@@ -117,5 +103,4 @@ tabs="$(sed -n '/^layout:/,$p' "${ROOT}/services/houstn/homepage-config/settings
 missing="$(comm -23 <(printf '%s\n' "$groups") <(printf '%s\n' "$tabs"))"
 assert_eq "$missing" "" "every Homepage group declares a layout tab"
 
-printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
-[[ "$FAIL" -eq 0 ]]
+finish

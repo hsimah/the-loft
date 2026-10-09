@@ -5,11 +5,7 @@
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PASS=0
-FAIL=0
-
-ok()  { printf 'ok     %s\n' "$1"; PASS=$((PASS + 1)); }
-bad() { printf 'FAIL   %s\n     %s\n' "$1" "$2" >&2; FAIL=$((FAIL + 1)); }
+source "${ROOT}/tests/lib/assert.sh"
 
 # Fleet host names double as internal TLDs (foo.space-needle, bar.fjord).
 # Anything under one of those is LAN-only and never reaches Cloudflare.
@@ -200,5 +196,4 @@ else
       "public='${pub}' loft='${lft}' lan='${lan}'"
 fi
 
-printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
-[[ "$FAIL" -eq 0 ]]
+finish

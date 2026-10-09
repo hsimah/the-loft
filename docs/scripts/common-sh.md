@@ -16,4 +16,4 @@
 
 URL checks are reachability only: 401/403/500/502 pass and certificates are not verified. Inactive profiles are skipped.
 
-host.conf maps `SERVICE_ENDPOINTS[_WARN]` (service → labels) and `HEALTH_URLS[_WARN]` (`label:tier` → URL). Tests: `python3 -m unittest discover -s tests`.
+host.conf maps `SERVICE_ENDPOINTS[_WARN]` (service → labels) and `HEALTH_URLS[_WARN]` (`label:tier` → URL). Tests: `bash tests/run.sh`.

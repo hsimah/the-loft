@@ -145,23 +145,12 @@ jobs:
 
       - name: Health, deployment and platform regression tests and documentation links
         run: |
-          python3 -m unittest discover -s tests -v
           bash tests/run.sh
           bash control-plane/check-docs.sh
 
       - name: Validate JSON
         run: |
           find daemon.json services hosts -name '*.json' -print0 | xargs -0 -n1 jq empty
-
-      - name: Validate Python syntax
-        run: |
-          python3 - <<'PY'
-          import ast
-          from pathlib import Path
-          for directory in ('control-plane', 'tests'):
-              for path in Path(directory).glob('*.py'):
-                  ast.parse(path.read_text(), filename=str(path))
-          PY
 
       - name: Syntax-check host.conf files
         run: |

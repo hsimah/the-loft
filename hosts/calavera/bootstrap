@@ -22,7 +22,7 @@ echo "lightdm shared/default-x-display-manager select lightdm" | debconf-set-sel
 # the desktop packages purged below, and autoremove would take them too.
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
   xorg i3 lightdm kitty firefox-esr unclutter x11-xserver-utils dmenu \
-  xprintidle python3-websockets feh alsa-utils \
+  xprintidle feh alsa-utils \
   fonts-dejavu-core fonts-noto-color-emoji > /dev/null
 
 # `apt-get purge` aborts the whole transaction on one unknown package name, so
@@ -245,7 +245,7 @@ info "Wrote /usr/local/bin/loft-dashboard → ${DASH_URL} (firefox kiosk, ${DASH
 # the group list (I3_POWER_GROUPS) is per-host.
 info "Installing loft-dashboard-power..."
 install -o root -g root -m 755 \
-  "${REPO_DIR}/control-plane/loft-dashboard-power.py" /usr/local/bin/loft-dashboard-power
+  "${REPO_DIR}/control-plane/loft-dashboard-power.sh" /usr/local/bin/loft-dashboard-power
 install -o root -g root -m 644 \
   "${REPO_DIR}/control-plane/loft-dashboard-power.service" /etc/systemd/system/loft-dashboard-power.service
 cat > /etc/default/loft-dashboard-power <<POWERENV

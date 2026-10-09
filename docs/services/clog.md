@@ -18,7 +18,7 @@ loft-ctl deploy clog --plan   # preview, no changes
 loft-ctl deploy clog
 ```
 
-To update, change the pin in Git, pull on Viking, rerun. Do not use `loft-ctl update`/`rebuild` for Clog. `--archive PATH` uses a local archive (checksum still enforced); `--user NAME` preselects the first username.
+To update, change the pin in Git, pull on Viking, rerun. Do not use `loft-ctl update`/`rebuild` for Clog. `--archive PATH` uses a local archive (checksum still enforced); `--user NAME` preselects the first username; with `--password-stdin` the first password is read from stdin instead of prompted.
 
 Deploys never grant administration (user management, from 1.0). Grant an existing account once:
 
@@ -60,4 +60,4 @@ Rollback: stop both containers, move `clog.sqlite` **and** its `-wal`/`-shm` fil
 
 ## Testing
 
-`python3 tests/clog-runtime.py /path/to/clog-standalone.tar.gz` runs a disposable local Nginx/FPM stack (rootless Podman is fine) covering login, CSRF, GraphQL, denied paths, throttling and backup. Run it against a new archive before changing the pin.
+`bash tests/clog-runtime.sh /path/to/clog-standalone.tar.gz` runs a disposable local Nginx/FPM stack (rootless Podman is fine) covering login, CSRF, GraphQL, denied paths, throttling and backup. Run it against a new archive before changing the pin.

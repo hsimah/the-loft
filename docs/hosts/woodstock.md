@@ -28,14 +28,14 @@ sudo speaker-test -D plughw:Audio,0 -c 2 -t wav -l 2   # with howlr stopped
 
 lightdm autologs `rodnik` (video/input/audio only; no sudo/Docker) into i3, which runs `loft-dashboard`: Firefox ESR kiosk on `I3_DASHBOARD_URL` in a restart loop. `I3_DPI=125` ≈ 130% scale. Config: [hosts/woodstock/i3](../../hosts/woodstock/i3).
 
-Bootstrap masks sleep, ignores the lid, removes auto-rotation and installs [loft-dashboard-power](../../control-plane/loft-dashboard-power.py). It watches Snapcast's `ws://192.168.86.28:1780/jsonrpc` and wakes the screen when a stream in `I3_POWER_GROUPS` (Upstairs and All) plays, blanking after 600 s idle with nothing playing. Stream IDs come from Snapserver's `Server.GetStatus`; recheck them after changing MA groups.
+Bootstrap masks sleep, ignores the lid, removes auto-rotation and installs [loft-dashboard-power](../../control-plane/loft-dashboard-power.sh). It watches Snapserver's JSON-RPC over TCP (`192.168.86.28:1705`), seeding state from `Server.GetStatus` on connect, and wakes the screen when a stream in `I3_POWER_GROUPS` (Upstairs and All) plays, blanking after 600 s idle with nothing playing. Stream IDs come from Snapserver's `Server.GetStatus`; recheck them after changing MA groups.
 
 ```bash
 systemctl status loft-dashboard-power lightdm
 journalctl -u loft-dashboard-power --since '10 min ago'
 ```
 
-Screen never wakes: compare live stream IDs with `/etc/default/loft-dashboard-power`. Never blanks: check playing state and whether input keeps resetting idle. Rerun setup after changing URL/DPI or scripts.
+Screen never wakes: compare live stream IDs with `/etc/default/loft-dashboard-power`. Never blanks: check playing state and whether input keeps resetting idle; the journal logs `xprintidle`/`xset` failures. Rerun setup after changing URL/DPI or scripts.
 
 ## Wi-Fi
 

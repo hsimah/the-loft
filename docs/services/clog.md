@@ -60,4 +60,4 @@ Rollback: stop both containers, move `clog.sqlite` **and** its `-wal`/`-shm` fil
 
 ## Testing
 
-`python3 tests/clog-runtime.py /path/to/clog-standalone.tar.gz` runs a disposable local Nginx/FPM stack (rootless Podman is fine) covering login, CSRF, GraphQL, denied paths, throttling and backup. Run it against a new archive before changing the pin.
+`bash tests/clog-runtime.sh /path/to/clog-standalone.tar.gz` runs a disposable local Nginx/FPM stack (rootless Podman is fine) covering login, CSRF, GraphQL, denied paths, throttling and backup. Run it against a new archive before changing the pin.

@@ -69,9 +69,9 @@ if [[ "$1" == deploy ]]; then
   }
   shift 2
   if [[ " $* " == *" --plan "* || " $* " == *" --help "* || $EUID -eq 0 ]]; then
-    exec python3 "${REPO_DIR}/control-plane/clog-deploy.py" "$@"
+    exec bash "${REPO_DIR}/control-plane/clog-deploy.sh" "$@"
   fi
-  exec sudo python3 "${REPO_DIR}/control-plane/clog-deploy.py" "$@"
+  exec sudo bash "${REPO_DIR}/control-plane/clog-deploy.sh" "$@"
 fi
 
 # Operator attestation, not a firewall implementation. Never start the

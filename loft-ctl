@@ -42,6 +42,7 @@ usage() {
   echo "  health  [service ...]          Run health checks (defaults to --all)"
   echo "  update  <service ...| --all>   Pull config, rebuild, health check"
   echo "  deploy  clog [--plan]          Deploy the pinned Clog release on Viking"
+  echo "  deploy  pawst <site> [tag]     Deploy a Pawst site's latest (or given) release on Viking"
   echo ""
   echo "Options:"
   echo "  --all                          Target all services on this host"
@@ -63,15 +64,17 @@ fi
 
 # Stateful app deployment has its own parser, root provisioning and release lock.
 if [[ "$1" == deploy ]]; then
-  [[ "${2:-}" == clog && "$HOST_NAME" == viking && " ${SERVICES[*]} " == *" clog "* ]] || {
-    error "deploy currently supports only clog on Viking"
+  app="${2:-}"
+  [[ ( "$app" == clog || "$app" == pawst ) && "$HOST_NAME" == viking \
+    && " ${SERVICES[*]} " == *" ${app} "* ]] || {
+    error "deploy supports only clog and pawst on Viking"
     exit 1
   }
   shift 2
   if [[ " $* " == *" --plan "* || " $* " == *" --help "* || $EUID -eq 0 ]]; then
-    exec bash "${REPO_DIR}/control-plane/clog-deploy.sh" "$@"
+    exec bash "${REPO_DIR}/control-plane/${app}-deploy.sh" "$@"
   fi
-  exec sudo bash "${REPO_DIR}/control-plane/clog-deploy.sh" "$@"
+  exec sudo bash "${REPO_DIR}/control-plane/${app}-deploy.sh" "$@"
 fi
 
 # Operator attestation, not a firewall implementation. Never start the

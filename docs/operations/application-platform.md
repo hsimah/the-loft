@@ -63,4 +63,4 @@ Outside Git on the destination only: `/etc/loft/deploy.env`, the GitHub App key,
 
 ## Pawst on Fjord
 
-Fjord uses state names `pawst-<dev|test>-<site>` and roots `/opt/pawst/<dev|test>/<site>` with the same [release puller](../scripts/deploy-pull.md) invocation as [production](../services/pawst.md#deploy-and-roll-back).
+Fjord uses state names `pawst-<dev|test>-<site>` and roots `/opt/pawst/<dev|test>/<site>` with a direct [release puller](../scripts/deploy-pull.md) call (tag plus the asset's GitHub digest). `loft-ctl deploy pawst` is Viking-only.

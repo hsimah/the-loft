@@ -1,25 +1,17 @@
 #!/usr/bin/env bash
-# Recover pinned Pawst content after the operator restores Viking's host boundary.
+# Recover each Pawst site's latest release after the operator restores Viking's host boundary.
 set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MODE="${1:---plan}"
-RELEASES="${REPO_DIR}/hosts/viking/releases.json"
 fail() { echo "ERROR: $*" >&2; exit 1; }
 if [[ "$MODE" == --help ]]; then
   echo "Usage: hosts/viking/restore [--plan|--apply]"
-  echo "Default: show pinned content recovery commands without changing anything."
+  echo "Default: show content recovery commands without changing anything."
   echo "Apply requires a prepared Viking, tested firewall, and stopped Pawst/tunnel."
   exit 0
 fi
 [[ $# -le 1 && ( "$MODE" == --plan || "$MODE" == --apply ) ]] || fail "Use --plan or --apply"
 command -v jq >/dev/null || fail "Install jq first"
-jq -e '
-  type == "object" and keys == ["hblake", "hsimah"] and
-  all(.[];
-    type == "object" and keys == ["sha256", "tag"] and
-    (.tag | type == "string" and test("^[A-Za-z0-9][A-Za-z0-9._/-]*$")) and
-    (.sha256 | type == "string" and test("^[a-f0-9]{64}$")))
-' "$RELEASES" >/dev/null || fail "Invalid pinned release manifest"
 
 if [[ "$MODE" == --apply ]]; then
   [[ $EUID -eq 0 ]] || fail "Run --apply with sudo"
@@ -50,10 +42,7 @@ if [[ "$MODE" == --apply ]]; then
 fi
 
 for site in hblake hsimah; do
-  tag="$(jq -r --arg site "$site" '.[$site].tag' "$RELEASES")"
-  digest="$(jq -r --arg site "$site" '.[$site].sha256' "$RELEASES")"
-  args=(env LOFT_FORCE_DEPLOY=1 bash "${REPO_DIR}/control-plane/deploy-pull.sh"
-    "pawst-${site}" "hsimah-services/${site}" "/opt/pawst/prod/${site}" "" "$tag" "$digest")
+  args=(env LOFT_FORCE_DEPLOY=1 bash "${REPO_DIR}/control-plane/pawst-deploy.sh" --no-verify "$site")
   if [[ "$MODE" == --plan ]]; then
     printf '%q ' "${args[@]}"
     printf '\n'
@@ -82,7 +71,7 @@ if [[ "$MODE" == --apply ]]; then
   code="$(curl --noproxy '*' --silent --show-error --max-time 10 -o /dev/null -w '%{http_code}' \
     -H 'Host: unknown.invalid' http://127.0.0.1:8080/)"
   [[ "$code" == 404 ]] || fail "Unexpected catch-all HTTP status: $code"
-  echo "Pinned content restored and local routes verified. Tunnel remains stopped."
+  echo "Latest content restored and local routes verified. Tunnel remains stopped."
 else
   echo "Plan only. Read docs/operations/viking-restore.md before using --apply."
 fi

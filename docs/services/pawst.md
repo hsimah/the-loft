@@ -9,16 +9,16 @@ Production on Viking via its [override](../../hosts/viking/overrides/pawst/docke
 
 ## Deploy and roll back
 
-No cron on Viking; deploy an explicit tag and SHA-256:
+No cron and no pin in Git. On Viking:
 
 ```bash
-sudo /srv/the-loft/control-plane/deploy-pull.sh \
-  pawst-hblake hsimah-services/hblake /opt/pawst/prod/hblake '' "$TAG" "$SHA256"
-loft-ctl health pawst
-curl --fail-with-body -H 'Host: hbla.ke' http://127.0.0.1:8080/index.html
+loft-ctl deploy pawst hblake          # latest GitHub release
+loft-ctl deploy pawst hblake "$TAG"   # a specific release, e.g. rollback
 ```
 
-Roll back by running the same command with the previous tag/checksum. Update [releases.json](../../hosts/viking/releases.json) with every production release so [restore](../operations/viking-restore.md) uses it. Sync is in place, not atomic.
+[pawst-deploy.sh](../../control-plane/pawst-deploy.sh) resolves the tag, takes the checksum from GitHub's asset `digest`, runs the [release puller](../scripts/deploy-pull.md) and checks the site locally. The deployed tag is in `/var/lib/loft/deploy/pawst-<site>.version`. Sync is in place, not atomic.
+
+[Restore](../operations/viking-restore.md) fetches each site's GitHub **latest** release. After rolling back, unmark or delete the bad release on GitHub so a restore does not bring it back.
 
 ## Ingress
 

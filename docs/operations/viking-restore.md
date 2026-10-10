@@ -45,7 +45,7 @@ hosts/viking/restore --plan
 sudo hosts/viking/restore --apply
 ```
 
-`--apply` checks the host, attestation, firewall and IDs, then force-refetches the releases pinned in [releases.json](../../hosts/viking/releases.json), starts only Mushr and Pawst, and checks both sites plus unknown-host 404. It never starts the tunnel. Keep `releases.json` current with each production release. Never swap a pin for `latest` to get past a failed download.
+`--apply` checks the host, attestation, firewall and IDs, then force-fetches each site's latest GitHub release with [pawst-deploy.sh](../../control-plane/pawst-deploy.sh), starts only Mushr and Pawst, and checks both sites plus unknown-host 404. It never starts the tunnel. If production was rolled back, fix GitHub's latest release first or redeploy that tag afterwards with `loft-ctl deploy pawst <site> <tag>`.
 
 ## 4. Enable ingress
 

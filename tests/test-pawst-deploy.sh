@@ -26,8 +26,8 @@ DIGEST="$(printf '%064d' 7 | tr 0 a)"
 
 release() { # tag digest [asset-count]
   jq -n --arg tag "$1" --arg digest "$2" --argjson n "${3:-1}" \
-    '{tag_name: $tag, assets: [range($n) | {name: "site-\(.).tar.gz", digest: $digest}]
-      + [{name: "notes.txt", digest: null}]}' > "$WORK/release.json"
+    '{tag_name: $tag, assets: ([range($n) | {name: "site-\(.).tar.gz", digest: $digest}]
+      + [{name: "notes.txt", digest: null}])}' > "$WORK/release.json"
 }
 deploy() { # args...; sets out and status
   rm -f "$WORK/curl-calls" "$WORK/pull-calls"

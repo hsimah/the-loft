@@ -1,6 +1,6 @@
 # Clog — inventory on Viking
 
-`https://clog.hsimah.com/`: Nginx + PHP-FPM + SQLite, deployed on Viking from the [release pin](../../hosts/viking/clog-release.json).
+`https://clog.hsimah.com/`: Nginx + PHP-FPM + SQLite, deployed on Viking from the latest [GitHub release](https://github.com/hsimah/clog/releases).
 
 ```text
 Cloudflare → viking-prod tunnel → mushr:8080 (Caddy) → clog:8080 (Nginx) → clog-php (Unix socket) → SQLite
@@ -15,10 +15,11 @@ Cloudflare → viking-prod tunnel → mushr:8080 (Caddy) → clog:8080 (Nginx) �
 
 ```bash
 loft-ctl deploy clog --plan   # preview, no changes
-loft-ctl deploy clog
+loft-ctl deploy clog          # latest release
+loft-ctl deploy clog 1.1      # a given release tag
 ```
 
-To update, change the pin in Git, pull on Viking, rerun. Do not use `loft-ctl update`/`rebuild` for Clog. `--archive PATH` uses a local archive (checksum still enforced); `--user NAME` preselects the first username; with `--password-stdin` the first password is read from stdin instead of prompted.
+Nothing is pinned in Git: the command resolves the release through the GitHub API and uses the `clog-standalone.tar.gz` asset's digest as the checksum. Do not use `loft-ctl update`/`rebuild` for Clog. Deploying an older tag only swaps the app; if a newer release changed the schema, restore the matching `pre-deploy-*.sqlite` backup instead (see [rollback](#backups-and-recovery)). `--archive PATH` uses a local archive (release checksum still enforced); `--user NAME` preselects the first username; with `--password-stdin` the first password is read from stdin instead of prompted.
 
 Deploys never grant administration (user management, from 1.0). Grant an existing account once:
 
@@ -60,4 +61,4 @@ Rollback: stop both containers, move `clog.sqlite` **and** its `-wal`/`-shm` fil
 
 ## Testing
 
-`bash tests/clog-runtime.sh /path/to/clog-standalone.tar.gz` runs a disposable local Nginx/FPM stack (rootless Podman is fine) covering login, CSRF, GraphQL, denied paths, throttling and backup. Run it against a new archive before changing the pin.
+`bash tests/clog-runtime.sh /path/to/clog-standalone.tar.gz` runs a disposable local Nginx/FPM stack (rootless Podman is fine) covering login, CSRF, GraphQL, denied paths, throttling and backup. Run it against a new release archive before deploying it.

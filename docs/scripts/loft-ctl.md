@@ -9,7 +9,7 @@
 | `rebuild <services> / --all` | `down`, `pull`, `up -d --build`; **no health check** |
 | `health [services]` | Container and URL checks ([contract](common-sh.md)) |
 | `update <services> / --all` | Git fetch + fast-forward (`--branch`, default `main`; `--no-pull` skips), rebuild, health |
-| `deploy clog [--plan]` | Pinned [Clog](../services/clog.md) install/update on Viking |
+| `deploy clog [--plan] [version]` | Latest or given [Clog](../services/clog.md#deploy-and-update) release on Viking |
 | `deploy pawst <site> [tag]` | Latest or given [Pawst](../services/pawst.md#deploy-and-roll-back) release on Viking |
 
 `--all` means this host's manifest, not the fleet. There is no `reload`; use the app's own (e.g. Caddy in [Mushr](../services/mushr.md)).

@@ -41,7 +41,7 @@ usage() {
   echo "  rebuild <service ...| --all>   Full rebuild (down + up, fresh mounts)"
   echo "  health  [service ...]          Run health checks (defaults to --all)"
   echo "  update  <service ...| --all>   Pull config, rebuild, health check"
-  echo "  deploy  clog [--plan]          Deploy the pinned Clog release on Viking"
+  echo "  deploy  clog [--plan] [version] Deploy Clog's latest (or given) release on Viking"
   echo "  deploy  pawst <site> [tag]     Deploy a Pawst site's latest (or given) release on Viking"
   echo ""
   echo "Options:"

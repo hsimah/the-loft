@@ -7,6 +7,7 @@ Items needing live evidence or a decision. None of these are done unless stated.
 | Backups | No off-host backup/restore exists for any host. Clog SQLite, Pawst content/state, Viking `/etc/loft` secrets and service `.env` files need encrypted off-host copies and a tested restore |
 | Viking | Enable the memory cgroup (`cgroup_disable=memory` is on the boot line, so Compose memory limits are not enforced), then reboot and recheck. Remove the stale `address=/viking/192.168.86.26` dnsmasq entry. Enroll a second admin. Verify Cloudflare edge HTTPS redirect and IPv6 denial probes |
 | Clog | First live run of `loft-ctl deploy clog`; scheduled backups; capacity measurement on the Pi; account reset/recovery in the app |
+| hbla.ke | Replace the Pawst holding page with the consulting site (`hsimah-services/hblake`, PHP/SQLite like Clog). Decide legacy `/posts/*` handling: Pawst 302s them to hsimah.com, but the consulting site has its own `/posts/:slug` |
 | Fjord | Validate Pawst dev/test live. Confirm its network manager; the watchdog defaults to dhcpcd |
 | Woodstock | Test Wi-Fi firmware recovery |
 | Audiobookshelf | Verify Android, a second phone and cross-device progress sync |

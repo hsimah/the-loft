@@ -37,14 +37,14 @@ deploy() { # args...; sets out and status
 
 # ── latest release ───────────────────────────────────────────────────────────
 release deploy-2 "sha256:${DIGEST}"
-deploy hblake
+deploy hsimah
 assert_eq "$status" 0 "deploys the latest release"
-assert_contains "$(cat "$WORK/curl-calls")" "repos/hsimah-services/hblake/releases/latest" "asks GitHub for latest"
+assert_contains "$(cat "$WORK/curl-calls")" "repos/hsimah-services/hsimah/releases/latest" "asks GitHub for latest"
 assert_file "$WORK/pull-calls" \
-  "pawst-hblake hsimah-services/hblake /opt/pawst/prod/hblake  deploy-2 ${DIGEST}" \
+  "pawst-hsimah hsimah-services/hsimah /opt/pawst/prod/hsimah  deploy-2 ${DIGEST}" \
   "passes tag and bare digest to the puller"
-assert_contains "$(cat "$WORK/curl-calls")" "Host: hbla.ke" "checks the site afterwards"
-assert_contains "$out" "hbla.ke serving deploy-2" "reports the live tag"
+assert_contains "$(cat "$WORK/curl-calls")" "Host: hsimah.com" "checks the site afterwards"
+assert_contains "$out" "hsimah.com serving deploy-2" "reports the live tag"
 
 # ── explicit tag (rollback) ──────────────────────────────────────────────────
 release deploy-1 "sha256:${DIGEST}"
@@ -55,7 +55,7 @@ assert_contains "$(cat "$WORK/curl-calls")" "Host: hsimah.com" "checks the hsima
 
 # ── no verify ────────────────────────────────────────────────────────────────
 release deploy-2 "sha256:${DIGEST}"
-SITE_STATUS=7 deploy --no-verify hblake
+SITE_STATUS=7 deploy --no-verify hsimah
 assert_eq "$status" 0 "--no-verify skips the site check"
 assert_absent "$(cat "$WORK/curl-calls")" "Host:" "no local request"
 
@@ -64,25 +64,29 @@ deploy pupyrus
 assert_fails "$status" "rejects an unknown site"
 assert_missing "$WORK/curl-calls" "unknown site makes no requests"
 
-deploy hblake one two
+deploy hblake
+assert_fails "$status" "rejects hblake: hbla.ke is a holding page, not a release"
+assert_missing "$WORK/curl-calls" "hblake makes no requests"
+
+deploy hsimah one two
 assert_fails "$status" "rejects extra arguments"
 
 release deploy-3 ""
-deploy hblake
+deploy hsimah
 assert_fails "$status" "rejects a release without a digest"
 assert_missing "$WORK/pull-calls" "missing digest deploys nothing"
 
 release deploy-3 "sha256:${DIGEST}" 2
-deploy hblake
+deploy hsimah
 assert_fails "$status" "rejects more than one archive"
 assert_missing "$WORK/pull-calls" "ambiguous asset deploys nothing"
 
 release deploy-2 "sha256:${DIGEST}"
-PULL_STATUS=1 deploy hblake
+PULL_STATUS=1 deploy hsimah
 assert_fails "$status" "puller failure fails the deploy"
 assert_absent "$(cat "$WORK/curl-calls")" "Host:" "failed pull skips the site check"
 
-SITE_STATUS=22 deploy hblake
+SITE_STATUS=22 deploy hsimah
 assert_fails "$status" "site check failure fails the deploy"
 assert_contains "$out" "did not serve index.html" "explains the failed check"
 
@@ -95,9 +99,9 @@ echo 'SERVICES=(mushr pawst clog)' > "$LC/hosts/viking/host.conf"
 printf '#!/bin/sh\necho viking\n' > "$LC/bin/hostname"
 printf '#!/bin/sh\necho sudo "$@"\n' > "$LC/bin/sudo"
 chmod +x "$LC/bin/"*
-out="$(PATH="$LC/bin:$PATH" "$BASH" "$LC/loft-ctl" deploy pawst hblake 2>&1)"
+out="$(PATH="$LC/bin:$PATH" "$BASH" "$LC/loft-ctl" deploy pawst hsimah 2>&1)"
 assert_eq "$?" 0 "loft-ctl routes pawst deploys"
-assert_eq "$out" "sudo bash ${LC}/control-plane/pawst-deploy.sh hblake" "loft-ctl runs pawst-deploy.sh under sudo"
+assert_eq "$out" "sudo bash ${LC}/control-plane/pawst-deploy.sh hsimah" "loft-ctl runs pawst-deploy.sh under sudo"
 out="$(PATH="$LC/bin:$PATH" "$BASH" "$LC/loft-ctl" deploy pupyrus 2>&1)"
 assert_fails "$?" "loft-ctl rejects other apps"
 

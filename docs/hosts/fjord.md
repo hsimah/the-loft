@@ -9,6 +9,6 @@ loft-ctl start mushr pawst
 loft-ctl health
 ```
 
-Pawst healthchecks fail until both sites are deployed to each environment; setup only creates empty roots.
+Pawst healthchecks fail until the blog is deployed to each environment; setup only creates empty roots. The hbla.ke holding page ships in the repo.
 
 Confirm which network manager the OS uses. The Wi-Fi watchdog defaults to `dhcpcd`; set `WIFI_DHCP_UNIT` in host.conf if it differs, then rerun setup.

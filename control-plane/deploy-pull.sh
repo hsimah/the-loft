@@ -2,8 +2,8 @@
 # deploy-pull.sh — deploy a pinned GitHub Release to a directory.
 #
 # Usage: deploy-pull.sh <name> <repo> <target_dir> <post_hook> <release_tag> <sha256>
-#   name         — short identifier, used for state file & log prefix (e.g. pawst-hblake)
-#   repo         — GitHub repo in "owner/repo" form (e.g. hsimah-services/hbla.ke)
+#   name         — short identifier, used for state file & log prefix (e.g. pawst-hsimah)
+#   repo         — GitHub repo in "owner/repo" form (e.g. hsimah-services/hsimah)
 #   target_dir   — directory to sync the release's tarball contents into
 #   post_hook    — shell snippet run after a successful sync (cwd = target_dir); '' for none
 #   release_tag  — release to deploy; older tags roll back

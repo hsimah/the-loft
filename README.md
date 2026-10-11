@@ -22,7 +22,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [hubbl](docs/services/hubbl.md) | space-needle | Immich photo library; the only space-needle service published on the tunnel |
 | [mushr](docs/services/mushr.md) | space-needle, viking, fjord | Caddy + Cloudflare Tunnel + LAN DNS |
 | [pawpcorn](docs/services/pawpcorn.md) | space-needle | Plex |
-| [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Static sites `hbla.ke` and `hsimah.com` |
+| [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Blog `hsimah.com`; `hbla.ke` holding page |
 | [pupyrus](docs/services/pupyrus.md) | space-needle | WordPress + MariaDB + Redis |
 | [snoot](docs/services/snoot.md) | all | Beszel agent |
 | [sputnik](docs/services/sputnik.md) | space-needle | Ollama + Open WebUI + n8n; read-only Gmail/Calendar briefing |

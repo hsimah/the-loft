@@ -18,7 +18,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [Hubbl](services/hubbl.md) — Immich photo library
 - [Mushr](services/mushr.md) — proxy, tunnel and LAN DNS
 - [Pawpcorn](services/pawpcorn.md) — Plex
-- [Pawst](services/pawst.md) — static sites
+- [Pawst](services/pawst.md) — blog and hbla.ke holding page
 - [Pupyrus](services/pupyrus.md) — WordPress
 - [Snoot](services/snoot.md) — Beszel agents
 - [Sputnik](services/sputnik.md) — local LLM and briefing

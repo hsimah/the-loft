@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Recover each Pawst site's latest release after the operator restores Viking's host boundary.
+# Recover the Pawst blog's latest release after the operator restores Viking's host boundary.
 set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MODE="${1:---plan}"
@@ -41,7 +41,7 @@ if [[ "$MODE" == --apply ]]; then
   STATE_BACKUP="$(mktemp -d /var/backups/loft/pawst-restore-state.XXXXXX)"
 fi
 
-for site in hblake hsimah; do
+for site in hsimah; do
   args=(env LOFT_FORCE_DEPLOY=1 bash "${REPO_DIR}/control-plane/pawst-deploy.sh" --no-verify "$site")
   if [[ "$MODE" == --plan ]]; then
     printf '%q ' "${args[@]}"

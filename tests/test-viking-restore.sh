@@ -46,7 +46,7 @@ reset
 restore
 assert_eq "$status" 0 "plan succeeds"
 assert_contains "$out" "LOFT_FORCE_DEPLOY=1" "plan shows forced deploys"
-assert_contains "$out" "pawst-deploy.sh --no-verify hblake" "plan deploys each site unverified"
+assert_contains "$out" "pawst-deploy.sh --no-verify hsimah" "plan deploys the blog unverified"
 assert_missing "$WORK/docker-calls" "plan runs no docker commands"
 assert_missing "$WORK/deploy-calls" "plan deploys nothing"
 assert_missing "$WORK/var" "plan writes no state"
@@ -61,19 +61,18 @@ assert_missing "$WORK/deploy-calls" "running tunnel prevents deploys"
 # ── apply ────────────────────────────────────────────────────────────────────
 reset
 mkdir -p "$WORK/var/lib/loft/deploy"
-echo -n old-release > "$WORK/var/lib/loft/deploy/pawst-hblake.version"
+echo -n old-release > "$WORK/var/lib/loft/deploy/pawst-hsimah.version"
 restore --apply
 assert_eq "$status" 0 "apply succeeds"
 mapfile -t calls < "$WORK/deploy-calls"
-assert_eq "${#calls[@]}" 2 "deploys both sites"
+assert_eq "${#calls[@]}" 1 "deploys the blog only"
 assert_eq "$(grep -vc '^1|--no-verify ' "$WORK/deploy-calls")" 0 "every deploy is forced and unverified"
-assert_eq "${calls[0]#*|}" "--no-verify hblake" "deploys hblake first"
-assert_eq "${calls[1]#*|}" "--no-verify hsimah" "deploys hsimah second"
+assert_eq "${calls[0]#*|}" "--no-verify hsimah" "deploys hsimah"
 mapfile -t starts < <(grep 'up -d --wait' "$WORK/docker-calls")
 assert_eq "${#starts[@]}" 2 "starts two services"
 assert_eq "${starts[0]##*up -d --wait }" mushr "starts mushr first"
 assert_eq "${starts[1]##*up -d --wait }" pawst "starts pawst second"
-backups=("$WORK"/var/backups/loft/*/pawst-hblake.version)
+backups=("$WORK"/var/backups/loft/*/pawst-hsimah.version)
 assert_eq "${#backups[@]}" 1 "backs up the previous state once"
 assert_file "${backups[0]}" old-release "backup holds the previous version"
 

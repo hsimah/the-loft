@@ -6,13 +6,14 @@ set -euo pipefail
 
 CONTROL_PLANE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROD_ROOT="/opt/pawst/prod"
-declare -A DOMAINS=([hblake]=hbla.ke [hsimah]=hsimah.com)
+declare -A DOMAINS=([hsimah]=hsimah.com)
 
 usage() {
   cat <<'EOF'
-Usage: pawst-deploy.sh [--no-verify] <hblake|hsimah> [tag]
+Usage: pawst-deploy.sh [--no-verify] hsimah [tag]
 
-Deploy the site's latest GitHub release, or the given tag, to Viking prod.
+Deploy the blog's latest GitHub release, or the given tag, to Viking prod.
+hbla.ke is a holding page shipped in services/pawst/holding, not a release.
   --no-verify  skip the local site check (restore runs it with Pawst stopped)
 EOF
 }
@@ -23,7 +24,7 @@ VERIFY=true
 if [[ "${1:-}" == --no-verify ]]; then VERIFY=false; shift; fi
 case "${1:-}" in
   -h|--help) usage; exit 0 ;;
-  hblake|hsimah) ;;
+  hsimah) ;;
   *) usage >&2; fail "Unknown site: ${1:-<none>}" ;;
 esac
 [[ $# -le 2 ]] || { usage >&2; fail "Too many arguments"; }

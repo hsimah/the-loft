@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# clog-deploy.sh — deploy the pinned standalone Clog release on Viking. No Git,
-# DNS or boot edits. Run through `loft-ctl deploy clog`; phases, state files and
-# recovery are in docs/services/clog.md.
+# clog-deploy.sh — deploy the latest (or given) standalone Clog GitHub release on
+# Viking. GitHub's asset digest is the checksum. No Git, DNS or boot edits. Run
+# through `loft-ctl deploy clog`; phases, state files and recovery are in
+# docs/services/clog.md.
 set -euo pipefail
 shopt -s inherit_errexit
 
@@ -13,7 +14,7 @@ DATA="${SYSTEM}/var/lib/clog/data"
 RUNTIME="${SYSTEM}/var/lib/clog/runtime"
 STATE="${SYSTEM}/var/lib/loft/deploy"
 DMZ_READY="${SYSTEM}/etc/loft/dmz-ready"
-MANIFEST="${REPO_DIR}/hosts/viking/clog-release.json"
+CLOG_REPO="hsimah/clog"
 ENV_FILE="${REPO_DIR}/services/clog/.env"
 CADDYFILE="${REPO_DIR}/hosts/viking/overrides/mushr/Caddyfile"
 PENDING="${STATE}/clog-pending.json"
@@ -26,11 +27,11 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
-Usage: clog-deploy.sh [--plan] [--archive PATH] [--user NAME] [--password-stdin]
+Usage: clog-deploy.sh [--plan] [--archive PATH] [--user NAME] [--password-stdin] [version]
 
-Deploy the pinned standalone Clog release on Viking.
+Deploy Clog's latest GitHub release on Viking, or the given version (rollback).
   --plan            print the deployment plan without host changes
-  --archive PATH    use a local archive instead of downloading; checksum still required
+  --archive PATH    use a local archive instead of downloading; release checksum still required
   --user NAME       first editor username; ignored when an editor already exists
   --password-stdin  read the first editor's password from stdin (needs --user)
 EOF
@@ -41,6 +42,7 @@ ARCHIVE=""
 USERNAME=""
 PASSWORD=""
 PASSWORD_STDIN=false
+REQUESTED=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --plan) PLAN=true; shift ;;
@@ -48,20 +50,34 @@ while [[ $# -gt 0 ]]; do
     --user) [[ $# -ge 2 ]] || die "--user needs a name"; USERNAME="$2"; shift 2 ;;
     --password-stdin) PASSWORD_STDIN=true; shift ;;
     -h|--help) usage; exit 0 ;;
-    *) usage >&2; die "Unknown option: $1" ;;
+    -*) usage >&2; die "Unknown option: $1" ;;
+    *) [[ -z "$REQUESTED" ]] || { usage >&2; die "Too many arguments"; }
+       REQUESTED="$1"; shift ;;
   esac
 done
 
-# ── Pinned release ───────────────────────────────────────────────────────────
-jq -e '
-  type == "object" and keys == ["sha256", "url", "version"] and all(.[]; type == "string")
-  and (.version | test("\\A[A-Za-z0-9][A-Za-z0-9._-]*\\z"))
-  and (.sha256 | test("\\A[a-f0-9]{64}\\z"))
-  and .url == "https://github.com/hsimah/clog/releases/download/\(.version)/clog-standalone.tar.gz"
-' "$MANIFEST" > /dev/null 2>&1 || die "Invalid pinned Clog release manifest"
-VERSION="$(jq -r .version "$MANIFEST")"
-URL="$(jq -r .url "$MANIFEST")"
-SHA256="$(jq -r .sha256 "$MANIFEST")"
+# ── Release ──────────────────────────────────────────────────────────────────
+VERSION_RE='^[A-Za-z0-9][A-Za-z0-9._-]*$'
+if [[ -n "$REQUESTED" ]]; then
+  [[ "$REQUESTED" =~ $VERSION_RE ]] || die "Invalid Clog version: ${REQUESTED}"
+  RELEASE_PATH="tags/${REQUESTED}"
+else
+  RELEASE_PATH=latest
+fi
+RELEASE_JSON="$(curl --fail --silent --show-error --proto =https --max-time 30 \
+  -H 'Accept: application/vnd.github+json' \
+  "https://api.github.com/repos/${CLOG_REPO}/releases/${RELEASE_PATH}")" \
+  || die "Failed to query the ${RELEASE_PATH} Clog release"
+VERSION="$(jq -r '.tag_name // empty' <<< "$RELEASE_JSON")"
+[[ "$VERSION" =~ $VERSION_RE ]] || die "Invalid Clog release tag: '${VERSION}'"
+SHA256="$(jq -r '[.assets[]? | select(.name == "clog-standalone.tar.gz")]
+  | if length == 1 then .[0].digest // "" else "" end' <<< "$RELEASE_JSON")"
+[[ "$SHA256" =~ ^sha256:[a-f0-9]{64}$ ]] \
+  || die "Clog ${VERSION} needs one clog-standalone.tar.gz asset with a sha256 digest"
+SHA256="${SHA256#sha256:}"
+URL="https://github.com/${CLOG_REPO}/releases/download/${VERSION}/clog-standalone.tar.gz"
+RELEASE="$(jq -n --arg version "$VERSION" --arg url "$URL" --arg sha256 "$SHA256" \
+  '{version: $version, url: $url, sha256: $sha256}')"
 TARGET="${RELEASES}/${SHA256}"
 
 if $PLAN; then
@@ -263,7 +279,7 @@ BACKUP=""
 write_pending() { # phase previous-directory
   atomic_write "$PENDING" "$(jq --arg phase "$1" --argjson prev "$(null_if_empty "$2")" \
     --argjson backup "$(null_if_empty "$BACKUP")" \
-    '{phase: $phase, release: ., previous_directory: $prev, backup: $backup}' "$MANIFEST")"
+    '{phase: $phase, release: ., previous_directory: $prev, backup: $backup}' <<< "$RELEASE")"
 }
 
 ensure_account() {
@@ -341,7 +357,7 @@ probe hsimah.com / > /dev/null
 probe hbla.ke / > /dev/null
 atomic_write "$RECORD" "$(jq --arg dir "$TARGET" --arg proxy "$PROXY_DIGEST" \
   --argjson backup "$(null_if_empty "$BACKUP")" --arg at "$(date -u +%Y-%m-%dT%H:%M:%S.%6N+00:00)" \
-  '. + {directory: $dir, proxy_sha256: $proxy, backup: $backup, deployed_at: $at}' "$MANIFEST")"
+  '. + {directory: $dir, proxy_sha256: $proxy, backup: $backup, deployed_at: $at}' <<< "$RELEASE")"
 rm -f "$PENDING"
 CRITICAL=false
 

@@ -36,7 +36,9 @@ case "${cmd[0]:-}" in
   -r) [[ "${cmd[1]}" != *clog_users* ]] || grep -c "^user [^ ]* editor " "$db" ;;
 esac
 exit 0'
+# GitHub API calls are logged and answered with the fixture release.
 mock curl 'case "${@: -1}" in
+  *api.github.com*) echo "${@: -1}" >> "$FIXTURE/api-calls"; cat "$FIXTURE/release.json" ;;
   */healthz) [[ "${FAIL_AT:-}" == health ]] && echo "{\"ok\":false}" || echo "{\"ok\":true}" ;;
   *) echo OK ;;
 esac'
@@ -62,7 +64,7 @@ cp "${ROOT}/services/clog/stage-release.sh" "$REPO/services/clog/"
 sed -e "s#^SYSTEM=\"\"#SYSTEM=\"${SYS}\"#" -e 's/\[\[ \$EUID -eq 0 /[[ 0 -eq 0 /' \
   "${ROOT}/control-plane/clog-deploy.sh" > "$REPO/control-plane/clog-deploy.sh"
 
-# A valid release archive, pinned by the fixture manifest.
+# A valid release archive, served by the fixture GitHub release.
 make_archive() { # path [content]
   local src f
   src="$(mktemp -d "$WORK/src.XXXXXX")"
@@ -76,7 +78,12 @@ ARCHIVE="$WORK/clog.tar.gz"
 make_archive "$ARCHIVE"
 SHA="$(sha256sum "$ARCHIVE" | cut -d' ' -f1)"
 TARGET="$RELEASES/$SHA"
-jq --arg sha "$SHA" '.sha256 = $sha' "${ROOT}/hosts/viking/clog-release.json" > "$REPO/hosts/viking/clog-release.json"
+release() { # tag [digest] [asset-name]
+  jq -n --arg tag "$1" --arg digest "${2-sha256:$SHA}" --arg name "${3:-clog-standalone.tar.gz}" \
+    '{tag_name: $tag, assets: [{name: $name, digest: $digest}, {name: "notes.txt", digest: null}]}' \
+    > "$WORK/release.json"
+}
+release 1.2
 make_archive "$WORK/tampered.tar.gz" tampered
 
 reset() {
@@ -85,10 +92,11 @@ reset() {
 }
 # Run a deploy, feeding the first editor's password on stdin; sets out,
 # status and calls (the traced commands).
-deploy() { # [archive]
-  out="$(PATH="$MOCK_BIN:$PATH" DATA="$DATA" FAIL_AT="${FAIL_AT:-}" \
+deploy() { # [archive [version]]
+  rm -f "$WORK/api-calls"
+  out="$(PATH="$MOCK_BIN:$PATH" DATA="$DATA" FIXTURE="$WORK" FAIL_AT="${FAIL_AT:-}" \
     bash "$REPO/control-plane/clog-deploy.sh" --archive "${1:-$ARCHIVE}" \
-    --user fixture-editor --password-stdin <<< 'disposable-password' 2>&1)"
+    --user fixture-editor --password-stdin "${@:2}" <<< 'disposable-password' 2>&1)"
   status=$?
   calls="$(grep '^+ ' <<< "$out")"
 }
@@ -106,6 +114,8 @@ assert_contains "$(cat "$DATA/clog.sqlite")" "user fixture-editor editor disposa
   "creates the first editor with the password from stdin"
 assert_file "$ENV_FILE" "CLOG_RELEASE_DIR=$TARGET" "selects the staged release"
 assert_eq "$(jq -r .directory "$RECORD")" "$TARGET" "records the deployed release"
+assert_eq "$(jq -c '[.version, .sha256]' "$RECORD")" "[\"1.2\",\"$SHA\"]" "records the release version and digest"
+assert_contains "$(cat "$WORK/api-calls")" "repos/hsimah/clog/releases/latest" "asks GitHub for the latest release"
 assert_contains "$calls" "--force-recreate --wait --wait-timeout 120 mushr" "first run refreshes Caddy once"
 
 deploy
@@ -196,28 +206,59 @@ assert_absent "$calls" "stage-release.sh" "missing release stages nothing"
 
 # ── first account needs credentials ──────────────────────────────────────────
 reset
-out="$(PATH="$MOCK_BIN:$PATH" DATA="$DATA" bash "$REPO/control-plane/clog-deploy.sh" \
+out="$(PATH="$MOCK_BIN:$PATH" DATA="$DATA" FIXTURE="$WORK" bash "$REPO/control-plane/clog-deploy.sh" \
   --archive "$ARCHIVE" < /dev/null 2>&1)"
 assert_fails "$?" "non-interactive fresh install without --password-stdin fails"
 assert_contains "$out" "run interactively" "explains how to create the first account"
-out="$(PATH="$MOCK_BIN:$PATH" DATA="$DATA" bash "$REPO/control-plane/clog-deploy.sh" \
+out="$(PATH="$MOCK_BIN:$PATH" DATA="$DATA" FIXTURE="$WORK" bash "$REPO/control-plane/clog-deploy.sh" \
   --archive "$ARCHIVE" --user fixture-editor --password-stdin <<< 'short' 2>&1)"
 assert_fails "$?" "short password is rejected"
 assert_absent "$out" "stage-release.sh" "bad credentials fail before staging"
 
-# ── plan and manifest ────────────────────────────────────────────────────────
+# ── rollback to a given version ──────────────────────────────────────────────
+existing
+release 1.1
+deploy "" 1.1
+assert_eq "$status" 0 "deploys a given version"
+assert_contains "$(cat "$WORK/api-calls")" "repos/hsimah/clog/releases/tags/1.1" "asks GitHub for that tag"
+assert_eq "$(jq -r .version "$RECORD")" 1.1 "records the given version"
+[[ -n "$(line_of 'clog-cli backup')" ]] && ok "rollback backs up first" || bad "rollback backs up first" "no backup call"
+
+# ── release refusals happen before any host change ───────────────────────────
+refused() { # label expected-message
+  assert_fails "$status" "$1"
+  assert_contains "$out" "$2" "explains: $1"
+  assert_absent "$calls" "stage-release.sh" "stages nothing: $1"
+}
+existing
+before="$(cat "$ENV_FILE")"
+release 1.3 ""
+deploy
+refused "release without a digest" "needs one clog-standalone.tar.gz asset"
+release 1.3 "sha256:$SHA" clog-other.tar.gz
+deploy
+refused "release without the standalone asset" "needs one clog-standalone.tar.gz asset"
+release '1.3/../x'
+deploy
+refused "unsafe release tag" "Invalid Clog release tag"
+release 1.2
+deploy "" '../1.0'
+refused "unsafe requested version" "Invalid Clog version"
+[[ ! -e "$WORK/api-calls" ]] && ok "unsafe version makes no request" || bad "unsafe version makes no request" "$(cat "$WORK/api-calls")"
+deploy "" 1.0 1.1
+refused "extra arguments" "Too many arguments"
+assert_file "$ENV_FILE" "$before" "refusals leave .env"
+
+# ── plan ─────────────────────────────────────────────────────────────────────
 PLAN_BIN="$WORK/plan-bin"
 mkdir -p "$PLAN_BIN"
-for c in docker curl systemctl nft sudo; do printf '#!/bin/sh\nexit 97\n' > "$PLAN_BIN/$c"; chmod +x "$PLAN_BIN/$c"; done
-out="$(PATH="$PLAN_BIN:$PATH" bash "${ROOT}/control-plane/clog-deploy.sh" --plan 2>&1)"
+for c in docker systemctl nft sudo; do printf '#!/bin/sh\nexit 97\n' > "$PLAN_BIN/$c"; chmod +x "$PLAN_BIN/$c"; done
+cp "$MOCK_BIN/curl" "$PLAN_BIN/"
+out="$(PATH="$PLAN_BIN:$PATH" FIXTURE="$WORK" bash "${ROOT}/control-plane/clog-deploy.sh" --plan 2>&1)"
 assert_eq "$?" 0 "plan succeeds without host tools"
-assert_contains "$out" "SHA-256: $(jq -r .sha256 "${ROOT}/hosts/viking/clog-release.json")" "plan shows the pinned checksum"
-
-jq '.url = "http://example.com/unpinned.tar.gz"' "${ROOT}/hosts/viking/clog-release.json" \
-  > "$REPO/hosts/viking/clog-release.json"
-out="$(bash "$REPO/control-plane/clog-deploy.sh" --plan 2>&1)"
-assert_fails "$?" "unpinned manifest URL is rejected"
-assert_contains "$out" "Invalid pinned Clog release manifest" "explains the manifest error"
+assert_contains "$out" "Deploy Clog 1.2 to Viking from https://github.com/hsimah/clog/releases/download/1.2/clog-standalone.tar.gz" \
+  "plan shows the resolved release"
+assert_contains "$out" "SHA-256: $SHA" "plan shows the release digest"
 
 # ── entry points ─────────────────────────────────────────────────────────────
 LC="$WORK/loft-ctl-root"

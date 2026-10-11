@@ -17,7 +17,7 @@ services: !override
     tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
     volumes:
       - ./nginx-unprivileged.conf:/etc/nginx/nginx.conf:ro
-      - /opt/pawst/prod/hblake:/srv/hblake:ro
+      - ./holding:/srv/holding:ro
       - /opt/pawst/prod/hsimah:/srv/hsimah:ro
     networks: [pawst-prod]
     healthcheck:

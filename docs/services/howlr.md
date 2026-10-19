@@ -9,7 +9,7 @@
 | Group | Players |
 |---|---|
 | Downstairs | Calavera |
-| Upstairs | Woodstock, Fjord (planned) |
+| Upstairs | Woodstock, Fjord |
 | All | all three (Fjord planned) |
 
 The kiosks' display-power daemon keys off Snapcast stream IDs in each host.conf; recheck them after changing groups. A new group that contains a kiosk needs its stream ID added to that kiosk's `I3_POWER_GROUPS`.
@@ -32,4 +32,5 @@ sudo docker logs howlr-snapclient --tail 50   # on a client
 Verify actual playback, not just the UI. Back up `/opt/howlr` before server upgrades.
 
 - **Connected but silent**: ALSA device, DAC power/mixer, MA queue, client logs.
+- **"You do not have permission to perform this action"** on a player or group: new players are not added to users' allowed players. Add them in Settings → Users.
 - **Missing player after recreation**: check `HOST_ID` against the UI; remove orphans only once the replacement works.

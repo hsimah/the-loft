@@ -1,0 +1,23 @@
+services:
+  snapclient:
+    # Locally built: ivdata has no bluealsa plugin. Tag tracks the Debian
+    # snapclient version in the image.
+    build:
+      context: .
+      dockerfile: Dockerfile.snapclient
+    image: howlr-snapclient:0.31.0
+    # No ALSA card is used; bluealsa is reached over the host's system bus.
+    devices: !reset []
+    volumes:
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
+    environment: !reset {}
+    # SNAPCLIENT_LATENCY (ms) is the speaker's extra delay; see the Fjord page.
+    command:
+      - --host
+      - ${SNAPSERVER_HOST}
+      - --hostID
+      - ${HOST_ID}
+      - --soundcard
+      - ${SOUND_DEVICE}
+      - --latency
+      - ${SNAPCLIENT_LATENCY:-0}

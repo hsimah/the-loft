@@ -6,7 +6,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 
 - [space-needle](hosts/space-needle.md) — primary server and storage
 - [viking](hosts/viking.md) — production web host (Pawst, Clog)
-- [fjord](hosts/fjord.md) — LAN-only dev/test
+- [fjord](hosts/fjord.md) — LAN-only dev/test and Bluetooth audio
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
 - [woodstock](hosts/woodstock.md) — Upstairs audio and touch dashboard
 

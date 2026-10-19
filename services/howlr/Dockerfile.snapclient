@@ -1,0 +1,17 @@
+# Snapclient that can play to a Bluetooth speaker through the host's bluealsa
+# daemon. Used by Fjord's override; the other clients still run ivdata.
+#
+# The bluealsa ALSA plugin talks to the host daemon over the system D-Bus, so
+# the codename must match the host's: a plugin from a different bluez-alsa
+# release may not speak the daemon's D-Bus API. bluez-alsa-utils is installed
+# only for /etc/alsa/conf.d/20-bluealsa.conf, which defines the `bluealsa` PCM.
+FROM debian:trixie-20260918-slim
+
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      snapclient libasound2-plugin-bluez bluez-alsa-utils \
+ && rm -rf /var/lib/apt/lists/*
+
+# Runs as root: bluealsa's D-Bus policy admits root and the audio group, and
+# the bus resolves groups from the host's /etc/group, not the container's.
+ENTRYPOINT ["snapclient", "--logsink", "stdout"]

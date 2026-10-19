@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# fjord host bootstrap — sourced by setup.sh (§11b)
+# Expects: REPO_DIR, HOST_NAME, info/warn/error functions available in caller
+#
+# Bluetooth speaker output for the Howlr snapclient: BlueZ plus the bluealsa
+# daemon, which the container reaches over the system D-Bus. Pairing is a
+# one-off operator step (docs/hosts/fjord.md); this keeps the speaker connected.
+
+info "Provisioning Bluetooth audio..."
+
+# bluez-firmware carries the Pi 3 B+'s BCM4345C0 patch file.
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+  bluez bluez-firmware bluez-alsa-utils rfkill > /dev/null
+
+# Raspberry Pi OS boots with Bluetooth soft-blocked, and `power on` then fails
+# with org.bluez.Error.Failed. systemd-rfkill keeps the unblock across reboots.
+rfkill unblock bluetooth
+
+# Fjord is a source only. The packaged unit also offers a2dp-sink, which would
+# let a phone use Fjord as a speaker. --keep-alive holds the A2DP transport
+# across pauses so playback resumes without a reconnect delay.
+install -d -m 755 /etc/systemd/system/bluealsa.service.d
+cat > /etc/systemd/system/bluealsa.service.d/loft.conf <<'EOF'
+[Service]
+ExecStart=
+ExecStart=/usr/bin/bluealsa -S -p a2dp-source --keep-alive=30
+EOF
+systemctl daemon-reload
+systemctl enable --now bluetooth.service > /dev/null 2>&1 || warn "bluetooth.service failed to start"
+systemctl enable bluealsa.service > /dev/null 2>&1
+systemctl restart bluealsa.service || warn "bluealsa failed; check: journalctl -u bluealsa"
+
+[[ -e /sys/class/bluetooth/hci0 ]] \
+  || warn "No Bluetooth adapter (hci0); check: dmesg | grep -i -e hci -e bluetooth"
+
+rm -f /etc/cron.d/loft-bt-speaker /etc/default/loft-bt-speaker
+if [[ -n "${BT_SPEAKER_MAC:-}" ]]; then
+  install -o root -g root -m 755 "${REPO_DIR}/control-plane/loft-bt-speaker.sh" /usr/local/bin/loft-bt-speaker
+  cat > /etc/default/loft-bt-speaker <<EOF
+export BT_SPEAKER_MAC="${BT_SPEAKER_MAC}"
+EOF
+  cat > /etc/cron.d/loft-bt-speaker <<'EOF'
+# Reconnect the Bluetooth speaker — installed by hosts/fjord/bootstrap
+* * * * * root . /etc/default/loft-bt-speaker && /usr/local/bin/loft-bt-speaker
+EOF
+  chmod 644 /etc/cron.d/loft-bt-speaker
+  info "Installed Bluetooth speaker reconnect (${BT_SPEAKER_MAC}, every minute)"
+else
+  warn "BT_SPEAKER_MAC is empty; pair the speaker, set it in host.conf and rerun setup"
+fi
+
+info "Bluetooth audio provisioning complete"

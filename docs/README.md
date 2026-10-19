@@ -31,5 +31,5 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [OneDrive → Hubbl migration](operations/onedrive-migration.md) — temporary; delete when done
 - [Upgrades and backups](operations/upgrades.md)
 - [setup.sh](scripts/setup.md), [loft-ctl](scripts/loft-ctl.md), [health helpers](scripts/common-sh.md)
-- [Release puller](scripts/deploy-pull.md), [GitHub App tokens](scripts/github-app-token.md)
+- [Release puller](scripts/deploy-pull.md), [GitHub App tokens](scripts/github-app-token.md), [image update check](scripts/image-updates.md)
 - [Open work](../plans/maintenance.md)

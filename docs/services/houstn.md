@@ -9,7 +9,7 @@
 - Homepage: [homepage-config](../../services/houstn/homepage-config), bind-mounted from the repo. Tabs `Loft` and `Briefing`; with tabs enabled every group needs a tab.
 - Glances: [glances.conf](../../services/houstn/glances.conf). The space-needle override adds `/mammoth` and the remote host mappings (Viking maps to its Tailscale IP).
 
-The Fleet row shows CPU, memory and deployed commit per host from Glances. The commit marker is written by Git hooks on checkout/merge, not by container deploys. Fjord is hidden while offline.
+The Fleet row shows CPU, memory and deployed commit per host from Glances. The commit marker is written by Git hooks on checkout/merge, not by container deploys.
 
 ## Operations
 

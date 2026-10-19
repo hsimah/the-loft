@@ -4,7 +4,7 @@ Upgrade one service group at a time. Pins live in Compose.
 
 ## Before
 
-1. Record the running image and active profiles. Check disk space and the app's supported upgrade path.
+1. Find candidates with [image-updates.sh](../scripts/image-updates.md). Record the running image and active profiles. Check disk space and the app's supported upgrade path.
 2. Stop only the group being backed up, copy its state to a unique path outside the data dir, and check the archive reads. Use the app's own dump for large databases.
 3. Pull (or build) the new image **before** taking the service down.
 

@@ -22,7 +22,7 @@ COMPOSE_PROFILES=client
 SNAPSERVER_HOST=192.168.86.28
 SOUND_DEVICE=bluealsa:DEV=<speaker MAC>,PROFILE=a2dp
 HOST_ID=fjord
-SNAPCLIENT_LATENCY=0
+SNAPCLIENT_LATENCY=220
 ```
 
 Pair once after the first setup run, with the speaker in pairing mode:
@@ -50,6 +50,6 @@ The speaker is within earshot of Woodstock, so Fjord's output has to line up wit
 1. Play a track with sharp transients (a click or metronome track) to a group containing Woodstock and Fjord.
 2. Stand about the same distance from both speakers. Sound travels about 3 ms per metre, so alignment is exact only where the two distances are equal.
 3. In Snapweb, adjust Fjord's latency slider live until the doubled attack disappears. If Fjord sounds late, increase the value. For a precise number, record both speakers on a phone and measure the offset in an audio editor.
-4. Copy the value into `SNAPCLIENT_LATENCY`, set Snapweb back to 0, and run `loft-ctl rebuild howlr`.
+4. Copy the value into `SNAPCLIENT_LATENCY`, set Snapweb back to 0, and run `loft-ctl rebuild howlr`. The NH-69 lines up with Woodstock at 220 ms.
 
 Check the value again after the speaker reconnects and after an hour of playback. A codec change or speaker-side clock drift shows up as a new offset. bluealsa on Debian negotiates SBC with most speakers; AAC is not built.

@@ -6,11 +6,19 @@
 
 [.env.example](../../services/howlr/.env.example). Server: `COMPOSE_PROFILES=server`; providers, users and groups live in `/opt/howlr` and are set in MA's UI (not in Git). Clients: `client`, `SNAPSERVER_HOST`, `SOUND_DEVICE`, stable `HOST_ID`; device details are on the host pages.
 
-| Group | Players |
-|---|---|
-| Downstairs | Calavera |
-| Upstairs | Woodstock, Fjord (planned) |
-| All | all three (Fjord planned) |
+| Group | Players | Stream ID |
+|---|---|---|
+| Downstairs | Calavera | `syncgroupbkmvcshl` |
+| Upstairs | Woodstock, Fjord | `syncgroup28jexljs` |
+| Sun Room | Woodstock | `syncgroupbtwnba74` |
+| Master Bedroom | Fjord | `syncgroupk9axnam5` |
+| All | Calavera, Woodstock, Fjord | `syncgroupzewbtz9n` |
+
+Stream IDs are Snapserver's `Music Assistant - <MA player ID without underscores>`. MA creates a group's stream on its first play; list them with:
+
+```bash
+curl -s https://snapweb.loft.hsimah.com/jsonrpc -d '{"id":1,"jsonrpc":"2.0","method":"Server.GetStatus"}' | jq -r '.result.server.streams[] | "\(.id)\t\(.status)"'
+```
 
 The kiosks' display-power daemon keys off Snapcast stream IDs in each host.conf; recheck them after changing groups. A new group that contains a kiosk needs its stream ID added to that kiosk's `I3_POWER_GROUPS`.
 
@@ -32,4 +40,5 @@ sudo docker logs howlr-snapclient --tail 50   # on a client
 Verify actual playback, not just the UI. Back up `/opt/howlr` before server upgrades.
 
 - **Connected but silent**: ALSA device, DAC power/mixer, MA queue, client logs.
+- **"You do not have permission to perform this action"** on a player or group: new players are not added to users' allowed players. Add them in Settings → Users.
 - **Missing player after recreation**: check `HOST_ID` against the UI; remove orphans only once the replacement works.

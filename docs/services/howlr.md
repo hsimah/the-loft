@@ -1,6 +1,6 @@
 # Howlr — whole-home audio
 
-[Compose](../../services/howlr/docker-compose.yml) profiles: `server` runs Music Assistant (`howlr`) on space-needle; `client` runs Snapclient (`howlr-snapclient`) on Calavera and Woodstock. Both use host networking. MA embeds Snapcast (1704/1705/1780) and serves its UI on 8095. Caddy routes `howlr.loft.hsimah.com` and `snapweb.loft.hsimah.com`.
+[Compose](../../services/howlr/docker-compose.yml) profiles: `server` runs Music Assistant (`howlr`) on space-needle; `client` runs Snapclient (`howlr-snapclient`) on Calavera, Woodstock and Fjord. Fjord builds its own image to play to a Bluetooth speaker; see [Fjord audio](../hosts/fjord.md#audio). Both use host networking. MA embeds Snapcast (1704/1705/1780) and serves its UI on 8095. Caddy routes `howlr.loft.hsimah.com` and `snapweb.loft.hsimah.com`.
 
 ## Configuration
 
@@ -9,10 +9,10 @@
 | Group | Players |
 |---|---|
 | Downstairs | Calavera |
-| Upstairs | Woodstock |
-| All | both |
+| Upstairs | Woodstock, Fjord (planned) |
+| All | all three (Fjord planned) |
 
-The kiosks' display-power daemon keys off Snapcast stream IDs in each host.conf; recheck them after changing groups.
+The kiosks' display-power daemon keys off Snapcast stream IDs in each host.conf; recheck them after changing groups. A new group that contains a kiosk needs its stream ID added to that kiosk's `I3_POWER_GROUPS`.
 
 ## Spotify
 

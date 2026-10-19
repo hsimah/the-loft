@@ -30,6 +30,12 @@ jobs:
             COMPOSE_PROFILES="${profile}" docker compose -f services/howlr/docker-compose.yml config --quiet
           done
 
+      - name: Build the Bluetooth snapclient image
+        run: |
+          docker build -q -f services/howlr/Dockerfile.snapclient -t howlr-snapclient:ci services/howlr
+          docker run --rm howlr-snapclient:ci --version
+          docker run --rm --entrypoint test howlr-snapclient:ci -f /etc/alsa/conf.d/20-bluealsa.conf
+
       - name: Validate sputnik compose profiles
         run: |
           for profile in engine chat agent engine,chat,agent; do

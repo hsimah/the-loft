@@ -16,7 +16,7 @@ sudo bash setup.sh
 | `CONFIG_DIRS` / `MEDIA_DIRS` | Creates dirs; resets top-level owner to littledog:pack-member, mode 755/775 |
 | `SERVICES` + `.env` | Validates and starts each service with host overrides; skips a service whose `.env` is missing |
 | Service `setup.sh` | Sourced after deploy (WordPress install; removes the retired Transmission cleanup cron) |
-| `hosts/<host>/bootstrap` | Host provisioning (Surface kiosks: i3, dashboard, power daemon, hardware fixes) |
+| `hosts/<host>/bootstrap` | Host provisioning (Surface kiosks: i3, dashboard, power daemon, hardware fixes; Fjord: Bluetooth audio) |
 | Wi-Fi fields | Installs the watchdog script, defaults file and cron |
 
 It also installs base packages, Docker (if missing), Git hooks, the `loft-proxy` network, Fastfetch with [laiko.txt](../../laiko.txt), and copies [daemon.json](../../daemon.json) — **which restarts Docker if it changed**. It overwrites adminhabl's `.bashrc`, `.inputrc` and `.tmux.conf` with includes of the repo's dotfiles, and rewrites SSH/sudoers config.

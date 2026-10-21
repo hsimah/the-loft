@@ -1,0 +1,16 @@
+[Unit]
+Description=Loft Howlr boot volume
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+# exec, not oneshot: retries until Snapserver answers without holding up boot.
+Type=exec
+EnvironmentFile=/etc/default/loft-snapclient-volume
+ExecStart=/usr/local/bin/loft-snapclient-volume
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

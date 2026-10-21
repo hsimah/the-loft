@@ -4,7 +4,9 @@
 
 ## Configuration
 
-[.env.example](../../services/howlr/.env.example). Server: `COMPOSE_PROFILES=server`; providers, users and groups live in `/opt/howlr` and are set in MA's UI (not in Git). Clients: `client`, `SNAPSERVER_HOST`, `SOUND_DEVICE`, stable `HOST_ID`; device details are on the host pages.
+[.env.example](../../services/howlr/.env.example). Server: `COMPOSE_PROFILES=server`; providers, users and groups live in `/opt/howlr` and are set in MA's UI (not in Git). Clients: `client`, `SNAPSERVER_HOST`, `SOUND_DEVICE`, stable `HOST_ID`, `SNAPCLIENT_VOLUME`; device details are on the host pages.
+
+On clients, `setup.sh` installs `loft-snapclient-volume.service` ([script](../../services/howlr/snapclient-volume.sh)). Once per boot it sets the client's Snapcast volume to `SNAPCLIENT_VOLUME` (default 75), retrying until Snapserver knows the client; MA owns the volume afterwards. It reads `.env` at run time, so edits apply on the next boot. Setup only enables it; to apply now: `sudo systemctl start loft-snapclient-volume`.
 
 | Group | Players | Stream ID |
 |---|---|---|
@@ -35,6 +37,7 @@ Two Spotify provider instances, one per person (same Premium Family plan), using
 loft-ctl rebuild howlr
 loft-ctl health howlr
 sudo docker logs howlr-snapclient --tail 50   # on a client
+journalctl -u loft-snapclient-volume -b       # boot volume, on a client
 ```
 
 Verify actual playback, not just the UI. Back up `/opt/howlr` before server upgrades.

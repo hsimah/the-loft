@@ -1,6 +1,6 @@
 # Runtime images are independent of the checksum-pinned application archive.
 x-php: &php
-  image: php:8.4.24-fpm-alpine
+  image: php:8.4.27-fpm-alpine
   user: "1003:1003"
   read_only: true
   cap_drop: [ALL]

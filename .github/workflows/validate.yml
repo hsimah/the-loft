@@ -70,7 +70,7 @@ jobs:
             -e CLOG_ORIGIN=https://clog.hsimah.com \
             -v "$PWD/services/clog/php-fpm.conf:/usr/local/etc/clog-fpm.conf:ro" \
             -v "$PWD/services/clog/php.ini:/usr/local/etc/php/conf.d/zz-clog.ini:ro" \
-            php:8.4.24-fpm-alpine php-fpm --test --fpm-config /usr/local/etc/clog-fpm.conf
+            php:8.4.27-fpm-alpine php-fpm --test --fpm-config /usr/local/etc/clog-fpm.conf
           for host in fjord viking; do
             docker run --rm --network none --read-only --user 1003:1003 \
               --cap-drop ALL --cap-add NET_BIND_SERVICE --security-opt no-new-privileges \

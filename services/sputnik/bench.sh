@@ -54,7 +54,7 @@ fi
 
 # ── Model sizing guidance ────────────────────────────────────────────────────
 # Based on available rather than total memory: this box also runs Plex, the
-# *arr stack, WordPress and Music Assistant, and the model must stay resident.
+# *arr stack, Immich and Music Assistant, and the model must stay resident.
 printf '\n=== sizing ===\n'
 if   [ "$mem_avail_gb" -ge 24 ]; then rec="qwen3:30b-a3b  (MoE, ~20 GB resident — best quality per token/sec on CPU)"
 elif [ "$mem_avail_gb" -ge 12 ]; then rec="qwen3:14b      (~10 GB resident — expect slow agent loops)"

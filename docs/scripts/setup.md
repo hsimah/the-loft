@@ -15,7 +15,7 @@ sudo bash setup.sh
 | SSH fields | Restricts SSH to adminhabl; optionally disables passwords |
 | `CONFIG_DIRS` / `MEDIA_DIRS` | Creates dirs; resets top-level owner to littledog:pack-member, mode 755/775 |
 | `SERVICES` + `.env` | Validates and starts each service with host overrides; skips a service whose `.env` is missing |
-| Service `setup.sh` | Sourced after deploy (WordPress install; removes the retired Transmission cleanup cron) |
+| Service `setup.sh` | Sourced after deploy (removes the retired Transmission cleanup cron) |
 | `hosts/<host>/bootstrap` | Host provisioning (Surface kiosks: i3, dashboard, power daemon, hardware fixes; Fjord: Bluetooth audio) |
 | Wi-Fi fields | Installs the watchdog script, defaults file and cron |
 

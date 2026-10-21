@@ -237,12 +237,6 @@
         server: my-docker
 
 - Web:
-    - Pupyrus:
-        icon: wordpress.svg
-        href: https://pupyrus.loft.hsimah.com
-        description: WordPress
-        container: pupyrus
-        server: my-docker
     - hbla.ke:
         icon: si-hugo
         href: https://hbla.ke

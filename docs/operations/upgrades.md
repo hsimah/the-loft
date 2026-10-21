@@ -25,7 +25,6 @@ Commit the pin, then `loft-ctl update <service>` (or `--no-pull` if already chec
 |---|---|
 | Howlr | `/opt/howlr`; providers, Upstairs/Downstairs/All playback, kiosk login, screen wake |
 | Pawpcorn | `/opt/pawpcorn/config`; libraries, direct play, hardware transcode |
-| Pupyrus | `/opt/pupyrus/html` + `/opt/pupyrus/db`; login, reads, writes |
 | Stellarr | `/opt/<product>`; client connections, imports, VPN egress |
 | Houstn | Beszel/Kuma data; upgrade hub before agents |
 | Sputnik | WebUI/n8n state + `N8N_ENCRYPTION_KEY`; a successful briefing run |

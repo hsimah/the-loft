@@ -34,8 +34,8 @@ is needed, provide the specific operator check rather than assuming remote acces
 
 ## Names
 
-Services use single-word dog/spitz or space/aerospace wordplay: howlr (audio), pupyrus (writing), mushr (routing). The owner's pomskies, Laiko and Belki, are named after space dogs. When asked for names, offer a few from each theme with brief explanations.
+Services use single-word dog/spitz or space/aerospace wordplay: howlr (audio), hubbl (photos), mushr (routing). The owner's pomskies, Laiko and Belki, are named after space dogs. When asked for names, offer a few from each theme with brief explanations.
 
 Host names come from something physically visible to the owner: space-needle from the landmark; viking/fjord from a vodka bottle. Ask what is visible when proposing a host name.
 
-Single-container services use the service name. A primary application keeps the name and helpers take prefixes (`pupyrus-db`). Bundles of independent products use product names (`radarr`, `beszel`, `ollama`); glue uses the bundle prefix (`stellarr-vpn`).
+Single-container services use the service name. A primary application keeps the name and helpers take prefixes (`hubbl-db`). Bundles of independent products use product names (`radarr`, `beszel`, `ollama`); glue uses the bundle prefix (`stellarr-vpn`).

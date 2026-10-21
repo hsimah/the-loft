@@ -59,11 +59,6 @@ lazylibrarian.{$LOFT_DOMAIN} {
 	reverse_proxy lazylibrarian:5299
 }
 
-pupyrus.{$LOFT_DOMAIN} {
-	import cloudflare_tls
-	reverse_proxy pupyrus:80
-}
-
 transmission.{$LOFT_DOMAIN} {
 	import cloudflare_tls
 	reverse_proxy host.docker.internal:9091
@@ -167,7 +162,7 @@ briefing.{$LOFT_DOMAIN} {
 
 {$LOFT_DOMAIN} {
 	import cloudflare_tls
-	reverse_proxy pupyrus:80
+	redir https://homepage.{$LOFT_DOMAIN}{uri}
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -204,10 +199,6 @@ http://audiobookshelf.space-needle:80 {
 
 http://lazylibrarian.space-needle:80 {
 	reverse_proxy lazylibrarian:5299
-}
-
-http://pupyrus.space-needle:80 {
-	reverse_proxy pupyrus:80
 }
 
 http://transmission.space-needle:80 {
@@ -253,7 +244,7 @@ http://n8n.space-needle:80 {
 }
 
 http://space-needle:80 {
-	reverse_proxy pupyrus:80
+	redir http://homepage.space-needle{uri}
 }
 
 http://*.space-needle:80 {

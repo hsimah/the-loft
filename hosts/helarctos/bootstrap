@@ -2,6 +2,34 @@
 # helarctos host bootstrap — sourced by setup.sh (§11b)
 # Expects: REPO_DIR, HOST_NAME, GPU_GTT_GIB, info/warn/error functions available in caller
 #
+# Debian 13's own kernel (6.12) and firmware predate this hardware: no driver
+# for the RTL8127 10GbE, no rtl8127a firmware, older Strix Halo amdgpu. Both
+# come from trixie-backports instead; apt then keeps them on the backports
+# line. The first run needs a reboot onto the new kernel.
+
+info "Installing the backports kernel and firmware..."
+
+. /etc/os-release
+if [[ "${VERSION_CODENAME:-}" == trixie ]]; then
+  cat > /etc/apt/sources.list.d/debian-backports.sources <<'EOF'
+Types: deb
+URIs: http://deb.debian.org/debian
+Suites: trixie-backports
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+  apt-get update -qq
+  DEBIAN_FRONTEND=noninteractive apt-get install -y -qq -t trixie-backports \
+    linux-image-amd64 firmware-amd-graphics firmware-realtek > /dev/null
+else
+  warn "Expected Debian 13 (trixie), found ${PRETTY_NAME:-unknown}; install a 6.18+ kernel and current linux-firmware by hand"
+fi
+
+# r8169 drives the RTL8127 from 6.16; 6.18 fixes a shutdown hang.
+if [[ "$(printf '%s\n' 6.18 "$(uname -r)" | sort -V | head -1)" != 6.18 ]]; then
+  warn "Running kernel $(uname -r) is older than 6.18; reboot onto the backports kernel"
+fi
+
 # Strix Halo's iGPU takes its memory from system RAM through GTT. The BIOS UMA
 # frame buffer stays at its minimum and these kernel parameters raise the GTT
 # ceiling instead. Both are set: newer kernels honour ttm.pages_limit and
@@ -30,8 +58,9 @@ fi
   || warn "No /dev/kfd or /dev/dri/renderD128; check: sudo dmesg | grep -i amdgpu"
 
 # The RTL8127 10GbE needs in-tree r8169 (6.16+, 6.18+ to avoid a shutdown
-# hang). The driver runs without this firmware, but uses it when present.
+# hang). The driver runs without this firmware, but uses it when present;
+# firmware-realtek from backports ships it.
 compgen -G '/lib/firmware/rtl_nic/rtl8127a-1.fw*' > /dev/null \
-  || warn "rtl_nic/rtl8127a-1.fw missing; update linux-firmware"
+  || warn "rtl_nic/rtl8127a-1.fw missing; install firmware-realtek from trixie-backports"
 
-info "iGPU provisioning complete"
+info "helarctos provisioning complete"

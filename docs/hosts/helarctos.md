@@ -1,6 +1,6 @@
 # helarctos
 
-Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB unified LPDDR5x, 2× 10GbE (RTL8127), Ubuntu 26.04 LTS. On-prem forge, CI runner and local inference for the agent pipeline. Named for the sun bear genus: black with a tan muzzle, like Laiko. **Proposed: not provisioned.** Plan and open work: [#155](https://github.com/hsimah/the-loft/issues/155).
+Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB unified LPDDR5x, 2× 10GbE (RTL8127), Debian 13 with the trixie-backports kernel and firmware. On-prem forge, CI runner and local inference for the agent pipeline. Named for the sun bear genus: black with a tan muzzle, like Laiko. **Proposed: not provisioned.** Plan and open work: [#155](https://github.com/hsimah/the-loft/issues/155).
 
 [host.conf](../../hosts/helarctos/host.conf) runs [Kennl](../services/kennl.md), Sputnik `gpu` ([llama-swap](../services/sputnik.md#gpu-engine-on-helarctos)), Snoot and Houstn `metrics`. Trusted LAN, wired; never on the tunnel.
 
@@ -14,7 +14,7 @@ Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB uni
 ## Before the first setup
 
 1. Update the BIOS/EC firmware. In the BIOS set the UMA frame buffer to its minimum, the performance power profile, and power-on after AC loss.
-2. Install Ubuntu 26.04 LTS Server on the x4 disk, with `adminhabl` as the only account. Confirm the kernel is 6.18 or newer (`uname -r`); older kernels lack the 10GbE driver or hang on shutdown.
+2. Install Debian 13 on the x4 disk with no desktop and `adminhabl` as the only account. The installer's 6.12 kernel has no driver for the 10GbE ports, so install over Wi-Fi, or from the offline DVD image and add the network afterwards.
 3. Reserve its LAN address on the router, then format and label the x1 disk (setup mounts it, never formats it):
 
    ```bash
@@ -22,7 +22,7 @@ Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB uni
    sudo mkfs.xfs -L den /dev/<x1 partition>
    ```
 
-4. Clone to `/srv/the-loft`, create each service's `.env` from its example, then `sudo bash setup.sh` and reboot so the GTT kernel parameters apply.
+4. Clone to `/srv/the-loft`, create each service's `.env` from its example, then `sudo bash setup.sh`. The [bootstrap](../../hosts/helarctos/bootstrap) installs the trixie-backports kernel and firmware and the GTT parameters. Reboot, then connect the 10GbE and confirm `uname -r` is 6.18 or newer; older kernels lack the driver or hang on shutdown.
 
 ## iGPU memory
 

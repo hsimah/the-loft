@@ -45,6 +45,21 @@ Read-only is deliberate: a local model reading an untrusted inbox is a prompt-in
 
 `qwen3:30b-a3b` on the i9-12900H: ~14.5 tok/s generation at 12 threads, ~20 GB resident, ~45 s to first token. The Modelfile uses 12 threads and 16k context; `OLLAMA_KEEP_ALIVE=-1` keeps it loaded. Re-measure with `bash services/sputnik/bench.sh sputnik-assistant`.
 
+## GPU engine on helarctos
+
+The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. **Proposed: not deployed.** Models are provisional until [#149](https://github.com/hsimah/the-loft/issues/149).
+
+- Models: [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), reloaded on save. Weights live in `/den/sputnik/models` (`/models` in the container).
+- Auth: every endpoint except `/health` requires `LLAMA_SWAP_API_KEY` as a bearer token, including the UI and logs. LAN only; no Caddy route and never on the tunnel.
+- Claude Code against a local model:
+
+  ```bash
+  ANTHROPIC_BASE_URL=http://helarctos:8080 ANTHROPIC_AUTH_TOKEN=<key> \
+    claude -p --model qwen3-coder-30b 'say ok'
+  ```
+
+Set `COMPOSE_PROFILES=gpu` in helarctos's `services/sputnik/.env`; the other profiles stay on space-needle.
+
 ## Troubleshooting
 
 - **Missing models**: `sudo docker exec ollama ollama list`; consumers must use `http://ollama:11434`.

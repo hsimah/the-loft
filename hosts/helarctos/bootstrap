@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# helarctos host bootstrap — sourced by setup.sh (§11b)
+# Expects: REPO_DIR, HOST_NAME, GPU_GTT_GIB, info/warn/error functions available in caller
+#
+# Strix Halo's iGPU takes its memory from system RAM through GTT. The BIOS UMA
+# frame buffer stays at its minimum and these kernel parameters raise the GTT
+# ceiling instead. Both are set: newer kernels honour ttm.pages_limit and
+# deprecate amdgpu.gttsize, and which one wins is kernel-dependent. Check
+# mem_info_gtt_total after the reboot (docs/hosts/helarctos.md).
+
+info "Configuring iGPU memory (GTT ${GPU_GTT_GIB} GiB)..."
+
+gtt_mib=$(( GPU_GTT_GIB * 1024 ))
+gtt_pages=$(( GPU_GTT_GIB * 1024 * 1024 / 4 ))  # 4 KiB pages
+gtt_args="amdgpu.gttsize=${gtt_mib} ttm.pages_limit=${gtt_pages}"
+
+install -d -m 755 /etc/default/grub.d
+grub_cfg=/etc/default/grub.d/90-loft-gtt.cfg
+want="GRUB_CMDLINE_LINUX_DEFAULT=\"\$GRUB_CMDLINE_LINUX_DEFAULT ${gtt_args}\""
+if [[ "$(cat "$grub_cfg" 2>/dev/null)" != "$want" ]]; then
+  printf '%s\n' "$want" > "$grub_cfg"
+  update-grub > /dev/null 2>&1 || warn "update-grub failed; check: sudo update-grub"
+  info "Wrote ${grub_cfg}"
+fi
+if ! grep -qw "ttm.pages_limit=${gtt_pages}" /proc/cmdline; then
+  warn "Kernel is not running with ${gtt_args}; reboot to apply"
+fi
+
+[[ -e /dev/kfd && -e /dev/dri/renderD128 ]] \
+  || warn "No /dev/kfd or /dev/dri/renderD128; check: sudo dmesg | grep -i amdgpu"
+
+# The RTL8127 10GbE needs in-tree r8169 (6.16+, 6.18+ to avoid a shutdown
+# hang). The driver runs without this firmware, but uses it when present.
+compgen -G '/lib/firmware/rtl_nic/rtl8127a-1.fw*' > /dev/null \
+  || warn "rtl_nic/rtl8127a-1.fw missing; update linux-firmware"
+
+info "iGPU provisioning complete"

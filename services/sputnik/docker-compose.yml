@@ -26,6 +26,36 @@ services:
     networks:
       - loft-proxy
 
+  # GPU engine on helarctos: llama-swap starting llama-server (Vulkan) per
+  # requested model. Serves OpenAI and Anthropic Messages APIs on :8080 to the
+  # LAN, gated by LLAMA_SWAP_API_KEY. Models: llama-swap.yaml.
+  llama-swap:
+    image: ghcr.io/mostlygeek/llama-swap:v265-vulkan-b11804
+    container_name: llama-swap
+    restart: unless-stopped
+    profiles:
+      - gpu
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Root inside the image, so it can open /dev/dri without the host's
+    # render GID; no capabilities are needed for that.
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      - LLAMA_SWAP_API_KEY=${LLAMA_SWAP_API_KEY}
+    volumes:
+      - ./llama-swap.yaml:/app/config.yaml:ro
+      - /den/sputnik/models:/models:ro
+    ports:
+      - "8080:8080"
+
   # Chat UI; application login is separate from Ollama access.
   open-webui:
     image: ghcr.io/open-webui/open-webui:0.11.0

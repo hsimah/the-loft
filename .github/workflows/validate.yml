@@ -38,7 +38,7 @@ jobs:
 
       - name: Validate sputnik compose profiles
         run: |
-          for profile in engine chat agent engine,chat,agent; do
+          for profile in engine chat agent gpu engine,chat,agent; do
             echo "Validating services/sputnik/docker-compose.yml (profile: ${profile})..."
             COMPOSE_PROFILES="${profile}" docker compose -f services/sputnik/docker-compose.yml config --quiet
           done

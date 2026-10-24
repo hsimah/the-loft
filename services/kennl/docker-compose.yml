@@ -121,6 +121,9 @@ services:
         max-file: "3"
     environment:
       - DOCKER_TLS_CERTDIR=/certs
+      # The server certificate names only `docker` and the container ID by
+      # default; the runner connects as `dind`. Regenerated on every start.
+      - DOCKER_TLS_SAN=DNS:dind
     # Job containers get Mushr's resolver for loft names. Docker would
     # otherwise drop this container's loopback resolver and fall back to
     # public DNS.

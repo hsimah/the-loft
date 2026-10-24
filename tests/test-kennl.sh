@@ -37,6 +37,8 @@ assert_eq "$(q "$c" '[.services.runner.volumes[] | select(.target | startswith("
   "the runner holds only the dind client certificate"
 assert_eq "$(q "$c" '.services.dind.environment.DOCKER_TLS_CERTDIR')" '"/certs"' \
   "kennl-dind serves its API over TLS only"
+assert_eq "$(q "$c" '.services.dind.environment.DOCKER_TLS_SAN')" '"DNS:dind"' \
+  "kennl-dind's certificate names the host the runner dials"
 assert_eq "$(q "$c" '[.services[] | select(.user != null) | .container_name] | sort')" '["forgejo","forgejo-runner"]' \
   "forgejo and the runner run as a non-root user"
 

@@ -9,7 +9,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [fjord](hosts/fjord.md) — LAN-only dev/test and Bluetooth audio
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
 - [woodstock](hosts/woodstock.md) — Upstairs audio and touch dashboard
-- [helarctos](hosts/helarctos.md) — forge, CI and GPU inference (proposed)
+- [helarctos](hosts/helarctos.md) — forge, CI and GPU inference
 
 ## Services
 
@@ -17,7 +17,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [Houstn](services/houstn.md) — dashboards and Glances
 - [Howlr](services/howlr.md) — Music Assistant and Snapcast
 - [Hubbl](services/hubbl.md) — Immich photo library
-- [Kennl](services/kennl.md) — Forgejo forge and CI runner (proposed)
+- [Kennl](services/kennl.md) — Forgejo forge and CI runner
 - [Mushr](services/mushr.md) — proxy, tunnel and LAN DNS
 - [Pawpcorn](services/pawpcorn.md) — Plex
 - [Pawst](services/pawst.md) — blog and hbla.ke holding page

@@ -47,7 +47,7 @@ Read-only is deliberate: a local model reading an untrusted inbox is a prompt-in
 
 ## GPU engine on helarctos
 
-The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. **Proposed: not deployed.** Models are provisional until [#149](https://github.com/hsimah/the-loft/issues/149).
+The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. Running; no model weights downloaded yet. Models are provisional until [#149](https://github.com/hsimah/the-loft/issues/149).
 
 - Models: [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), reloaded on save. Weights live in `/den/sputnik/models` (`/models` in the container).
 - Auth: every endpoint except `/health` requires `LLAMA_SWAP_API_KEY` as a bearer token, including the UI and logs. LAN only; no Caddy route and never on the tunnel.

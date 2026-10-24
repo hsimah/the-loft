@@ -44,7 +44,7 @@ Compose checks every variable in the file on both hosts, so each `.env` keeps al
    sudo docker compose -f services/kennl/docker-compose.yml up -d --no-deps --force-recreate runner
    ```
 
-5. Migrate a repository from GitHub (New Migration → GitHub), then add a push mirror back to it under Settings → Repository → Mirror settings. Push mirrors copy git refs only. Releases need their own upload step for Viking.
+5. Migrate a repository from GitHub (New Migration → GitHub, not a mirror, so issues come too). Turn off Actions (Settings → Units → Overview) until its workflows are ported; Forgejo otherwise runs `.github/workflows`. At cutover, add a push mirror back to GitHub under Settings → Repository → Mirror settings. Push mirrors copy git refs only. Releases need their own upload step for Viking.
 
 ## Upgrades
 

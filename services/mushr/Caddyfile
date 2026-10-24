@@ -94,6 +94,12 @@ uptime.{$LOFT_DOMAIN} {
 	reverse_proxy uptime:3001
 }
 
+# kennl — Forgejo on helarctos. HTTP only; git SSH goes straight to helarctos:2222.
+kennl.{$LOFT_DOMAIN} {
+	import cloudflare_tls
+	reverse_proxy 192.168.86.21:3000
+}
+
 # hubbl — Immich. The public name is deliberately first-level: Cloudflare's
 # free Universal SSL covers hsimah.com and *.hsimah.com but NOT a second level
 # like *.loft.hsimah.com, so a loft name cannot be served through the tunnel

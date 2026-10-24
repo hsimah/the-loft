@@ -1,6 +1,6 @@
 # helarctos
 
-Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB unified LPDDR5x, 2× 10GbE (RTL8127), Debian 13 with the trixie-backports kernel and firmware. On-prem forge, CI runner and local inference for the agent pipeline. Named for the sun bear genus: black with a tan muzzle, like Laiko. **Proposed: not provisioned.** Plan and open work: [#155](https://github.com/hsimah/the-loft/issues/155).
+Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB unified LPDDR5x, 2× 10GbE (RTL8127), Debian 13 with the trixie-backports kernel and firmware. On-prem forge, CI runner and local inference for the agent pipeline. Named for the sun bear genus: black with a tan muzzle, like Laiko. Debian, the backports kernel and GTT are verified live; services are being deployed. Plan and open work: [#155](https://github.com/hsimah/the-loft/issues/155).
 
 [host.conf](../../hosts/helarctos/host.conf) runs [Kennl](../services/kennl.md), Sputnik `gpu` ([llama-swap](../services/sputnik.md#gpu-engine-on-helarctos)), Snoot and Houstn `metrics`. Trusted LAN, wired; never on the tunnel.
 

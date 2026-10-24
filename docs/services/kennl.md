@@ -1,6 +1,6 @@
 # Kennl — forge and CI
 
-[Compose](../../services/kennl/docker-compose.yml) runs Forgejo (`forgejo`), its Postgres (`kennl-db`), the Actions runner (`forgejo-runner`) and the Docker daemon jobs run in (`kennl-dind`) on [helarctos](../hosts/helarctos.md). The name: the kennel where the pack's code lives. Running; the runner is not connected yet. Plan: [#150](https://github.com/hsimah/the-loft/issues/150), [#151](https://github.com/hsimah/the-loft/issues/151).
+[Compose](../../services/kennl/docker-compose.yml) runs Forgejo (`forgejo`), its Postgres (`kennl-db`), the Actions runner (`forgejo-runner`) and the Docker daemon jobs run in (`kennl-dind`) on [helarctos](../hosts/helarctos.md). The name: the kennel where the pack's code lives. Running, with the runner connected. Plan: [#150](https://github.com/hsimah/the-loft/issues/150), [#151](https://github.com/hsimah/the-loft/issues/151).
 
 Forgejo becomes the source of truth for repositories, issues and PRs. GitHub copies become read-only push mirrors.
 

@@ -25,8 +25,13 @@ cfg() { # service [profiles]; prints effective config JSON
 }
 q() { jq -c "$2" <<< "$1"; } # json filter
 
+# ── kennl: the forge and the runner are separate host profiles ──────────────
+assert_eq "$(q "$(cfg kennl forge)" '.services | keys')" '["db","forgejo"]' "the forge profile runs forgejo and its db"
+assert_eq "$(q "$(cfg kennl runner)" '.services | keys')" '["dind","runner"]' "the runner profile runs the runner and dind"
+
 # ── kennl: only kennl-dind touches a Docker daemon ───────────────────────────
-c="$(cfg kennl)"
+c="$(cfg kennl forge,runner)"
+assert_eq "$(q "$c" '[.services.forgejo.ports[].target]')" '[2222]' "forgejo publishes only git SSH; HTTP goes through Caddy"
 assert_eq "$(q "$c" '[.services[] | select(.privileged == true) | .container_name]')" '["kennl-dind"]' \
   "kennl-dind is the only privileged container"
 assert_eq "$(q "$c" '[.services[].volumes[]? | select(.source // "" | test("docker.sock"))] | length')" 0 \

@@ -94,10 +94,10 @@ uptime.{$LOFT_DOMAIN} {
 	reverse_proxy uptime:3001
 }
 
-# kennl — Forgejo on helarctos. HTTP only; git SSH goes straight to helarctos:2222.
+# kennl — Forgejo. HTTP only; git SSH goes straight to space-needle:2222.
 kennl.{$LOFT_DOMAIN} {
 	import cloudflare_tls
-	reverse_proxy 192.168.86.21:3000
+	reverse_proxy forgejo:3000
 }
 
 # hubbl — Immich. The public name is deliberately first-level: Cloudflare's

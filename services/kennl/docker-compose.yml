@@ -1,4 +1,8 @@
-# Kennl — Forgejo forge and Actions runner on helarctos.
+# Kennl — Forgejo forge and Actions runner.
+#
+# Profiles (COMPOSE_PROFILES in .env):
+#   forge  — forgejo + kennl-db, on space-needle with the fleet's storage
+#   runner — forgejo-runner + kennl-dind, on helarctos with the compute
 #
 # Forgejo is the source of truth; GitHub repositories become push mirrors.
 # The runner executes jobs inside kennl-dind, so no job ever reaches the host
@@ -6,6 +10,7 @@
 #   docs/services/kennl.md
 services:
   forgejo:
+    profiles: [forge]
     # 15.x is the LTS line. Schema migrations are one-way: dump the database
     # before changing this tag (docs/operations/upgrades.md).
     image: data.forgejo.org/forgejo/forgejo:15.0.10-rootless
@@ -25,8 +30,9 @@ services:
       - FORGEJO__database__PASSWD=${DB_PASSWORD?}
       - FORGEJO__server__DOMAIN=kennl.${LOFT_DOMAIN?}
       - FORGEJO__server__ROOT_URL=https://kennl.${LOFT_DOMAIN?}/
-      # Git over SSH goes straight to this host; Caddy only proxies HTTP.
-      - FORGEJO__server__SSH_DOMAIN=helarctos
+      # Git over SSH goes straight to this host's :2222; Caddy only proxies
+      # HTTP. The kennl name resolves to space-needle through Mushr.
+      - FORGEJO__server__SSH_DOMAIN=kennl.${LOFT_DOMAIN?}
       - FORGEJO__server__SSH_PORT=2222
       - FORGEJO__server__SSH_LISTEN_PORT=2222
       # Admin is created from the CLI; there is no install wizard or sign-up.
@@ -40,15 +46,18 @@ services:
       - /opt/kennl/forgejo/data:/var/lib/gitea
       - /opt/kennl/forgejo/config:/etc/gitea
       - /etc/localtime:/etc/localtime:ro
-    # HTTP for space-needle's Caddy (kennl.loft.hsimah.com); SSH for git.
+    # HTTP only through Caddy on loft-proxy (kennl.loft.hsimah.com); SSH for git.
     ports:
-      - "3000:3000"
       - "2222:2222"
+    networks:
+      - default
+      - loft-proxy
     depends_on:
       db:
         condition: service_healthy
 
   db:
+    profiles: [forge]
     image: postgres:18.6-alpine
     container_name: kennl-db
     restart: unless-stopped
@@ -74,6 +83,7 @@ services:
     stop_grace_period: 60s
 
   runner:
+    profiles: [runner]
     image: data.forgejo.org/forgejo/runner:13.2.0
     container_name: forgejo-runner
     restart: unless-stopped
@@ -108,6 +118,7 @@ services:
         condition: service_healthy
 
   dind:
+    profiles: [runner]
     # Privileged is the price of nested Docker. Jobs run unprivileged inside
     # it (runner.yml), and the TLS API keeps job containers off the daemon.
     image: docker:29.9.2-dind
@@ -143,3 +154,7 @@ volumes:
   dind-certs-client:
   # Image and build-layer cache for jobs; safe to delete when kennl-dind is stopped.
   dind-data:
+
+networks:
+  loft-proxy:
+    external: true

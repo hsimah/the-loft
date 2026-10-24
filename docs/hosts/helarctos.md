@@ -1,14 +1,14 @@
 # helarctos
 
-Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB unified LPDDR5x, 2× 10GbE (RTL8127), Debian 13 with the trixie-backports kernel and firmware. On-prem forge, CI runner and local inference for the agent pipeline. Named for the sun bear genus: black with a tan muzzle, like Laiko. Debian, the backports kernel and GTT are verified live; services are being deployed. Plan and open work: [#155](https://github.com/hsimah/the-loft/issues/155).
+Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB unified LPDDR5x, 2× 10GbE (RTL8127), Debian 13 with the trixie-backports kernel and firmware. CI runner and local inference for the agent pipeline. Named for the sun bear genus: black with a tan muzzle, like Laiko. Debian, the backports kernel and GTT are verified live; services are being deployed. Plan and open work: [#155](https://github.com/hsimah/the-loft/issues/155).
 
-[host.conf](../../hosts/helarctos/host.conf) runs [Kennl](../services/kennl.md), Sputnik `gpu` ([llama-swap](../services/sputnik.md#gpu-engine-on-helarctos)), Snoot and Houstn `metrics`. Trusted LAN, wired; never on the tunnel.
+[host.conf](../../hosts/helarctos/host.conf) runs the [Kennl](../services/kennl.md) runner (the forge is on space-needle), Sputnik `gpu` ([llama-swap](../services/sputnik.md#gpu-engine-on-helarctos)), Snoot and Houstn `metrics`. Trusted LAN; never on the tunnel.
 
 ## Storage
 
 | Device | Mount | Contents |
 |---|---|---|
-| M.2 PCIe 4.0 x4: Crucial P310 2 TB | `/` | OS, `/opt/kennl` (Forgejo, Postgres, runner), Docker and job caches, `/den/sputnik/models` (GGUF weights) |
+| M.2 PCIe 4.0 x4: Crucial P310 2 TB | `/` | OS, `/opt/kennl/runner`, Docker and job caches, `/den/sputnik/models` (GGUF weights) |
 | M.2 PCIe 4.0 x1 | empty | Planned: model weights, mounted at `/den` by label. Move `/den` aside before setup mounts it |
 
 ## Before the first setup
@@ -34,6 +34,4 @@ ethtool <iface> | grep -E 'Speed|Link detected'
 
 | Port | Service | Reached by |
 |---|---|---|
-| 3000 | Forgejo HTTP | space-needle's Caddy (`kennl.loft.hsimah.com`) |
-| 2222 | Forgejo git SSH | `ssh://git@helarctos:2222/...` |
 | 8080 | llama-swap | Agents and LAN clients, with the API key |

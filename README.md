@@ -11,7 +11,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | LAN-only dev/test + Bluetooth Snapcast client |
 | [calavera](docs/hosts/calavera.md) | Surface Pro 2 | Downstairs Snapcast client + touch dashboard |
 | [woodstock](docs/hosts/woodstock.md) | Surface Pro (1st gen) | Upstairs Snapcast client + touch dashboard |
-| [helarctos](docs/hosts/helarctos.md) | Minisforum MS-S1 MAX (Strix Halo, 128 GB) | Forge, CI runner and local inference for the agent pipeline |
+| [helarctos](docs/hosts/helarctos.md) | Minisforum MS-S1 MAX (Strix Halo, 128 GB) | CI runner and local inference for the agent pipeline |
 
 ## Services
 
@@ -21,7 +21,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [houstn](docs/services/houstn.md) | all (hub on space-needle) | Observability — Beszel, Uptime Kuma, Homepage, Glances |
 | [howlr](docs/services/howlr.md) | space-needle (server); calavera, woodstock, fjord (clients) | Music Assistant + Snapcast |
 | [hubbl](docs/services/hubbl.md) | space-needle | Immich photo library; the only space-needle service published on the tunnel |
-| [kennl](docs/services/kennl.md) | helarctos | Forgejo forge and Actions runner |
+| [kennl](docs/services/kennl.md) | space-needle (forge), helarctos (runner) | Forgejo forge and Actions runner |
 | [mushr](docs/services/mushr.md) | space-needle, viking, fjord | Caddy + Cloudflare Tunnel + LAN DNS |
 | [pawpcorn](docs/services/pawpcorn.md) | space-needle | Plex |
 | [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Blog `hsimah.com`; `hbla.ke` holding page |

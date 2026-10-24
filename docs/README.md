@@ -9,7 +9,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [fjord](hosts/fjord.md) — LAN-only dev/test and Bluetooth audio
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
 - [woodstock](hosts/woodstock.md) — Upstairs audio and touch dashboard
-- [helarctos](hosts/helarctos.md) — forge, CI and GPU inference
+- [helarctos](hosts/helarctos.md) — CI runner and GPU inference
 
 ## Services
 

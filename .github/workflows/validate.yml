@@ -43,6 +43,13 @@ jobs:
             COMPOSE_PROFILES="${profile}" docker compose -f services/sputnik/docker-compose.yml config --quiet
           done
 
+      - name: Validate kennl compose profiles
+        run: |
+          for profile in forge runner; do
+            echo "Validating services/kennl/docker-compose.yml (profile: ${profile})..."
+            COMPOSE_PROFILES="${profile}" docker compose -f services/kennl/docker-compose.yml config --quiet
+          done
+
       - name: Validate houstn compose profiles
         run: |
           for profile in hub metrics hub,metrics; do

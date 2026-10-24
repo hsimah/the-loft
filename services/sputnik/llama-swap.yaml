@@ -20,13 +20,17 @@ macros:
   # would hold a second copy in the same RAM; this build replaced --no-mmap
   # with --load-mode), flash attention, and the Jinja chat template that tool
   # calling needs. One slot with the whole context: the runner takes one job
-  # at a time (services/kennl/runner.yml).
+  # at a time (services/kennl/runner.yml). Thinking is capped per response:
+  # uncapped, Qwen3.5-122B spent a 4096-token reply thinking and never
+  # answered; the message makes it answer instead of being cut off.
   "server": >
     /app/llama-server
     --host 127.0.0.1 --port ${PORT}
     --n-gpu-layers all --load-mode dio --flash-attn on --jinja
     --ctx-size 131072 --parallel 1
     --cache-reuse 256
+    --reasoning-budget 2048
+    --reasoning-budget-message "Thinking budget reached. Give the answer now."
 
 models:
   # 125B, 6B active, ~86 GiB at UD-IQ4_XS: the largest that leaves room for

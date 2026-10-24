@@ -44,5 +44,5 @@ server:
     kennl:
       url: https://kennl.loft.hsimah.com/
       # From Site Administration → Actions → Runners → Create new runner.
-      uuid: 12153b86-51f0-4117-b32a-db1ddb6631a3
+      uuid: 5f75ce42-bc08-471d-b94d-018a9d47e405
       token_url: file:/tmp/runner-token

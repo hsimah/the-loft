@@ -41,6 +41,10 @@ services:
       - FORGEJO__service__REQUIRE_SIGNIN_VIEW=true
       - FORGEJO__repository__DEFAULT_PRIVATE=private
       - FORGEJO__actions__ENABLED=true
+      # Short `uses:` names resolve here. data.forgejo.org (the default)
+      # mirrors only common actions; imported GitHub workflows also use
+      # third-party ones such as shivammathur/setup-php.
+      - FORGEJO__actions__DEFAULT_ACTIONS_URL=https://github.com
       - FORGEJO__packages__ENABLED=true
     volumes:
       - /opt/kennl/forgejo/data:/var/lib/gitea

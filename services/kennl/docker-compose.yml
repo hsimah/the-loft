@@ -83,9 +83,15 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    # The image's entrypoint is dumb-init, so the binary is named here.
-    command: ["/bin/forgejo-runner", "daemon", "--config", "/etc/forgejo-runner/config.yml"]
+    # The image's entrypoint is dumb-init, so the binary is named here. The
+    # runner reads its token only from a file: copy it from .env into the
+    # container's /tmp, then drop it from the environment.
+    command:
+      - /bin/sh
+      - -c
+      - printf '%s' "$$RUNNER_TOKEN" > /tmp/runner-token && unset RUNNER_TOKEN && exec /bin/forgejo-runner daemon --config /etc/forgejo-runner/config.yml
     environment:
+      - RUNNER_TOKEN=${RUNNER_TOKEN?}
       - DOCKER_HOST=tcp://dind:2376
       - DOCKER_TLS_VERIFY=1
       - DOCKER_CERT_PATH=/certs/client

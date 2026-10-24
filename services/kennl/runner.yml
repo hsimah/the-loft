@@ -1,12 +1,12 @@
 # forgejo-runner 13.2.0 configuration. Keys come from `forgejo-runner
 # generate-config` for the pinned version; regenerate and diff on upgrades.
-# Registration state lives in /data/.runner (/opt/kennl/runner on the host).
+# The runner token is never tracked: it comes from RUNNER_TOKEN in
+# services/kennl/.env (docs/services/kennl.md#setup).
 log:
   level: info
   job_level: info
 
 runner:
-  file: .runner
   # Concurrent jobs. Agent jobs share llama-swap's slots; raise both together.
   capacity: 2
   timeout: 3h
@@ -38,3 +38,11 @@ container:
   docker_host: "-"
   force_pull: false
   force_rebuild: false
+
+server:
+  connections:
+    kennl:
+      url: https://kennl.loft.hsimah.com/
+      # From Site Administration → Actions → Runners → Create new runner.
+      uuid: 12153b86-51f0-4117-b32a-db1ddb6631a3
+      token_url: file:/tmp/runner-token

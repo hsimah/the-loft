@@ -44,6 +44,7 @@ runner="${ROOT}/services/kennl/runner.yml"
 assert_eq "$(sed -nE 's/^  privileged: (.*)$/\1/p' "$runner")" false "job containers are unprivileged"
 assert_eq "$(sed -nE 's/^  docker_host: (.*)$/\1/p' "$runner")" '"-"' "job containers get no Docker socket"
 assert_eq "$(sed -nE 's/^  valid_volumes: (.*)$/\1/p' "$runner")" '[]' "job containers may mount no volumes"
+assert_eq "$(grep -cE "^ +token:" "$runner")" 0 "the runner token is not tracked"
 
 # ── sputnik gpu: llama-swap is LAN-reachable, so it must demand a key ────────
 c="$(cfg sputnik gpu)"

@@ -1,6 +1,6 @@
 # Kennl — forge and CI
 
-[Compose](../../services/kennl/docker-compose.yml) runs Forgejo (`forgejo`), its Postgres (`kennl-db`), the Actions runner (`forgejo-runner`) and the Docker daemon jobs run in (`kennl-dind`) on [helarctos](../hosts/helarctos.md). The name: the kennel where the pack's code lives. Running; the runner is not registered yet. Plan: [#150](https://github.com/hsimah/the-loft/issues/150), [#151](https://github.com/hsimah/the-loft/issues/151).
+[Compose](../../services/kennl/docker-compose.yml) runs Forgejo (`forgejo`), its Postgres (`kennl-db`), the Actions runner (`forgejo-runner`) and the Docker daemon jobs run in (`kennl-dind`) on [helarctos](../hosts/helarctos.md). The name: the kennel where the pack's code lives. Running; the runner is not connected yet. Plan: [#150](https://github.com/hsimah/the-loft/issues/150), [#151](https://github.com/hsimah/the-loft/issues/151).
 
 Forgejo becomes the source of truth for repositories, issues and PRs. GitHub copies become read-only push mirrors.
 
@@ -29,19 +29,19 @@ Back up a `forgejo dump` plus `pg_dump`, together with `app.ini`. Once GitHub is
 ## Setup
 
 1. Copy [.env.example](../../services/kennl/.env.example). Generate `DB_PASSWORD` with `openssl rand -hex 32` **before** the first start.
-2. `sudo loft-ctl start kennl`. The runner restarts until it is registered (step 4).
+2. `sudo loft-ctl start kennl`. The runner restarts until it is connected (step 4).
 3. Create the admin:
 
    ```bash
    sudo docker exec -it forgejo forgejo admin user create --admin --username hsimah --email <email> --random-password
    ```
 
-4. Register the runner with a token from Site Administration → Actions → Runners:
+4. Connect the runner. Site Administration → Actions → Runners → Create new runner gives a UUID and a token. The UUID goes in `server.connections` in [runner.yml](../../services/kennl/runner.yml) (commit it). The token goes in `.env` as `RUNNER_TOKEN`. `forgejo-runner register` is deprecated and rejects this token. Then:
 
    ```bash
-   sudo docker compose -f services/kennl/docker-compose.yml run --rm --entrypoint /bin/forgejo-runner runner \
-     register --no-interactive --instance https://kennl.loft.hsimah.com --token <token> --name helarctos
-   sudo loft-ctl rebuild kennl
+   git pull
+   # runner.yml is a file bind mount: recreate, or the runner keeps the old file.
+   sudo docker compose -f services/kennl/docker-compose.yml up -d --no-deps --force-recreate runner
    ```
 
 5. Migrate a repository from GitHub (New Migration → GitHub), then add a push mirror back to it under Settings → Repository → Mirror settings. Push mirrors copy git refs only. Releases need their own upload step for Viking.

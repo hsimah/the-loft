@@ -3,7 +3,7 @@
 #
 # Model choice is open (#149); these entries are the evaluation set. Each is
 # too large to share the iGPU's GTT with another, so llama-swap runs one at a
-# time and swaps on demand (gpt-oss-120b: about 10 s warm, 25 s cold).
+# time and swaps on demand in 23–36 s (docs/services/sputnik.md).
 # Paths are inside the container: /models is /den/sputnik/models, filled by
 # services/sputnik/fetch-model.sh.
 healthCheckTimeout: 600

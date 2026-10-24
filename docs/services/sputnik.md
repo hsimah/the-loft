@@ -47,7 +47,13 @@ Read-only is deliberate: a local model reading an untrusted inbox is a prompt-in
 
 ## GPU engine on helarctos
 
-The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. The evaluation set for [#149](https://github.com/hsimah/the-loft/issues/149) is Qwen3.8-Flash-Next, gpt-oss-120b and Qwen3.5-122B-A10B. Each needs most of the GTT, so one is loaded at a time and a request for another swaps it. gpt-oss-120b loads in about 10 s warm and 25 s cold, and generates about 51 tok/s (measured on a short prompt). The runner takes one job at a time to match.
+The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. The evaluation set for [#149](https://github.com/hsimah/the-loft/issues/149) is Qwen3.8-Flash-Next, gpt-oss-120b and Qwen3.5-122B-A10B. Each needs most of the GTT, so one is loaded at a time and a request for another swaps it. The runner takes one job at a time to match. Measured from disk with a short prompt (2026-10-24):
+
+| Model | Swap and load | Generation |
+|---|---|---|
+| gpt-oss-120b (MXFP4) | 10 s warm, 23–25 s cold | 51 tok/s |
+| Qwen3.5-122B-A10B (UD-Q4_K_XL) | 36 s | 23 tok/s |
+| Qwen3.8-Flash-Next (UD-IQ4_XS) | 34 s | 26 tok/s; about half the reported speed, possibly the IQ quant on Vulkan |
 
 - Models: [llama-swap.yaml](../../services/sputnik/llama-swap.yaml). llama-swap watches it, but the file is a single bind mount: after a `git pull`, recreate the container (`sudo docker compose -f services/sputnik/docker-compose.yml up -d --force-recreate llama-swap`).
 - Weights: `/den/sputnik/models` (`/models` in the container). [fetch-model.sh](../../services/sputnik/fetch-model.sh) downloads them from Hugging Face, resumably and SHA-256 checked; rerun it after an interruption. Run it as adminhabl in tmux:

@@ -47,15 +47,23 @@ Read-only is deliberate: a local model reading an untrusted inbox is a prompt-in
 
 ## GPU engine on helarctos
 
-The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. Running; no model weights downloaded yet. Models are provisional until [#149](https://github.com/hsimah/the-loft/issues/149).
+The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. The evaluation set for [#149](https://github.com/hsimah/the-loft/issues/149) is Qwen3.8-Flash-Next, gpt-oss-120b and Qwen3.5-122B-A10B. Each needs most of the GTT, so one is loaded at a time and a request for another swaps it (unmeasured; expected under a minute). The runner takes one job at a time to match.
 
-- Models: [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), reloaded on save. Weights live in `/den/sputnik/models` (`/models` in the container).
+- Models: [llama-swap.yaml](../../services/sputnik/llama-swap.yaml). llama-swap watches it, but the file is a single bind mount: after a `git pull`, recreate the container (`sudo docker compose -f services/sputnik/docker-compose.yml up -d --force-recreate llama-swap`).
+- Weights: `/den/sputnik/models` (`/models` in the container). [fetch-model.sh](../../services/sputnik/fetch-model.sh) downloads them from Hugging Face, resumably and SHA-256 checked; rerun it after an interruption. Run it as adminhabl in tmux:
+
+  ```bash
+  services/sputnik/fetch-model.sh unsloth/Qwen3.8-Flash-Next-GGUF UD-IQ4_XS/ qwen3.8-flash-next
+  services/sputnik/fetch-model.sh ggml-org/gpt-oss-120b-GGUF gpt-oss-120b-MXFP4 gpt-oss-120b
+  services/sputnik/fetch-model.sh unsloth/Qwen3.5-122B-A10B-GGUF UD-Q4_K_XL/ qwen3.5-122b-a10b
+  ```
+
 - Auth: every endpoint except `/health` requires `LLAMA_SWAP_API_KEY` as a bearer token, including the UI and logs. LAN only; no Caddy route and never on the tunnel.
 - Claude Code against a local model:
 
   ```bash
   ANTHROPIC_BASE_URL=http://helarctos:8080 ANTHROPIC_AUTH_TOKEN=<key> \
-    claude -p --model qwen3-coder-30b 'say ok'
+    claude -p --model gpt-oss-120b 'say ok'
   ```
 
 Set `COMPOSE_PROFILES=gpu` in helarctos's `services/sputnik/.env`; the other profiles stay on space-needle.

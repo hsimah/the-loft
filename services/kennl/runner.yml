@@ -7,8 +7,10 @@ log:
   job_level: info
 
 runner:
-  # Concurrent jobs. Agent jobs share llama-swap's slots; raise both together.
-  capacity: 2
+  # One job at a time: overnight batch work favours reliability over speed,
+  # and two jobs on different models would swap llama-swap per request. Raise
+  # together with llama-swap's --parallel (services/sputnik/llama-swap.yaml).
+  capacity: 1
   timeout: 3h
   shutdown_timeout: 30m
   insecure: false

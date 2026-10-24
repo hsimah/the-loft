@@ -59,10 +59,10 @@ The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It star
   ```
 
 - Auth: every endpoint except `/health` requires `LLAMA_SWAP_API_KEY` as a bearer token, including the UI and logs. LAN only; no Caddy route and never on the tunnel.
-- Claude Code against a local model:
+- Claude Code against a local model. It assumes 200k for model IDs it doesn't know, so give it llama-swap's `--ctx-size`, or long sessions overflow before Claude Code compacts:
 
   ```bash
-  ANTHROPIC_BASE_URL=http://helarctos:8080 ANTHROPIC_AUTH_TOKEN=<key> \
+  ANTHROPIC_BASE_URL=http://helarctos:8080 ANTHROPIC_AUTH_TOKEN=<key> CLAUDE_CODE_MAX_CONTEXT_TOKENS=131072 \
     claude -p --model gpt-oss-120b 'say ok'
   ```
 

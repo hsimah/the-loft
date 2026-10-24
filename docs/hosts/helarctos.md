@@ -8,21 +8,16 @@ Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB uni
 
 | Device | Mount | Contents |
 |---|---|---|
-| M.2 PCIe 4.0 x4 | `/` | OS, `/opt/kennl` (Forgejo, Postgres, runner), Docker and job caches |
-| M.2 PCIe 4.0 x1 | `/den` (label `den`) | `/den/sputnik/models`: GGUF weights, read only at load time |
+| M.2 PCIe 4.0 x4: Crucial P310 2 TB | `/` | OS, `/opt/kennl` (Forgejo, Postgres, runner), Docker and job caches, `/den/sputnik/models` (GGUF weights) |
+| M.2 PCIe 4.0 x1 | empty | Planned: model weights, mounted at `/den` by label. Move `/den` aside before setup mounts it |
 
 ## Before the first setup
 
-1. Update the BIOS/EC firmware. In the BIOS set the UMA frame buffer to its minimum, the performance power profile, and power-on after AC loss.
-2. Install Debian 13 on the x4 disk with no desktop and `adminhabl` as the only account. The installer's 6.12 kernel has no driver for the 10GbE ports, so install over Wi-Fi, or from the offline DVD image and add the network afterwards.
-3. Reserve its LAN address on the router, then format and label the x1 disk (setup mounts it, never formats it):
-
-   ```bash
-   lsblk -o NAME,SIZE,MODEL
-   sudo mkfs.xfs -L den /dev/<x1 partition>
-   ```
-
-4. Clone to `/srv/the-loft`, create each service's `.env` from its example, then `sudo bash setup.sh`. The [bootstrap](../../hosts/helarctos/bootstrap) installs the trixie-backports kernel and firmware and the GTT parameters. Reboot, then connect the 10GbE and confirm `uname -r` is 6.18 or newer; older kernels lack the driver or hang on shutdown.
+1. Update the BIOS/EC firmware. In the BIOS set the UMA frame buffer to its 1 GB minimum (AMD CBS → NBIO Common Options → GFX Configuration), the performance power profile, and power-on after AC loss. A firmware update resets these.
+2. Install from the Debian 13 amd64 netinst image over Wi-Fi. The installer's 6.12 kernel has no driver for the 10GbE ports; the MT7925 Wi-Fi works and its firmware is on the image. Hostname `helarctos`. Leave the root password empty so `adminhabl` gets sudo. Use guided partitioning, entire disk, all files in one partition. For software, select only SSH server and standard system utilities.
+3. Clone to `/srv/the-loft` and run `sudo bash setup.sh` with no `.env` files yet. It skips the services. The [bootstrap](../../hosts/helarctos/bootstrap) installs the trixie-backports kernel and firmware and the GTT parameters. Reboot, then confirm `uname -r` is 6.18 or newer; older kernels lack the driver or hang on shutdown.
+4. Create each service's `.env` from its example (Sputnik `COMPOSE_PROFILES=gpu`), then rerun setup.
+5. Wired: add a DHCP stanza for the 10GbE port to `/etc/network/interfaces` and connect it. Move the router reservation from the Wi-Fi MAC to that port's MAC, keeping the address. Once SSH works over the wire, remove the Wi-Fi stanza and the `WIFI_*` fields from host.conf, then rerun setup.
 
 ## iGPU memory
 

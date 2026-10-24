@@ -1,8 +1,9 @@
-# llama-swap on helarctos (Sputnik gpu profile). Reloaded on change.
+# llama-swap on helarctos (Sputnik gpu profile). Recreate the container after
+# a git pull: this file is a single bind mount (docs/services/sputnik.md).
 #
 # Model choice is open (#149); these entries are the evaluation set. Each is
 # too large to share the iGPU's GTT with another, so llama-swap runs one at a
-# time and swaps on demand (expected well under a minute; unmeasured).
+# time and swaps on demand (gpt-oss-120b: about 10 s warm, 25 s cold).
 # Paths are inside the container: /models is /den/sputnik/models, filled by
 # services/sputnik/fetch-model.sh.
 healthCheckTimeout: 600

@@ -14,14 +14,16 @@ apiKeys:
   - "${env.LLAMA_SWAP_API_KEY}"
 
 macros:
-  # Strix Halo: all layers on the iGPU, weights read fully into GTT (mmap
-  # pages are slower on unified memory), flash attention, and the Jinja chat
-  # template that tool calling needs. One slot with the whole context: the
-  # runner takes one job at a time (services/kennl/runner.yml).
+  # Strix Halo: all layers on the iGPU, weights read fully into GTT with
+  # direct I/O (mmap pages are slower on unified memory, and the page cache
+  # would hold a second copy in the same RAM; this build replaced --no-mmap
+  # with --load-mode), flash attention, and the Jinja chat template that tool
+  # calling needs. One slot with the whole context: the runner takes one job
+  # at a time (services/kennl/runner.yml).
   "server": >
     /app/llama-server
     --host 127.0.0.1 --port ${PORT}
-    --n-gpu-layers 999 --no-mmap --flash-attn on --jinja
+    --n-gpu-layers all --load-mode dio --flash-attn on --jinja
     --ctx-size 131072 --parallel 1
     --cache-reuse 256
 

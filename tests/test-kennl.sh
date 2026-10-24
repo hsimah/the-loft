@@ -15,6 +15,8 @@ for s in kennl sputnik; do
   cp "${ROOT}/services/$s/docker-compose.yml" "$WORK/services/$s/"
   touch "$WORK/services/$s/.env"
 done
+# Kennl requires its variables to be set; the example sets them.
+cp "${ROOT}/services/kennl/.env.example" "$WORK/services/kennl/.env"
 
 cfg() { # service [profiles]; prints effective config JSON
   (cd "$WORK" && COMPOSE_PROFILES="${2:-}" docker compose -f "services/$1/docker-compose.yml" \

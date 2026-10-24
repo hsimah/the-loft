@@ -358,10 +358,17 @@ for service in "${SERVICES[@]}"; do
   # replace a service's env_file (e.g. the isolated Mushr roles).
   service_dir="${REPO_DIR}/services/${service}"
   # shellcheck disable=SC2086
-  docker compose ${compose_args} config --quiet || {
-    warn "${service}: invalid configuration or missing environment file; skipping"
+  if ! compose_err=$(docker compose ${compose_args} config --quiet 2>&1); then
+    warn "${service}: ${compose_err%%$'\n'*}; skipping (missing .env?)"
     continue
-  }
+  fi
+  # Profile-gated services select nothing until COMPOSE_PROFILES is set, and
+  # `up` then fails under set -e.
+  # shellcheck disable=SC2086
+  if [[ -z "$(docker compose ${compose_args} config --services 2>/dev/null)" ]]; then
+    warn "${service}: no profile selected; skipping (set COMPOSE_PROFILES in its .env)"
+    continue
+  fi
 
   # Build if the service has a Dockerfile
   if [[ -f "${service_dir}/Dockerfile" ]]; then

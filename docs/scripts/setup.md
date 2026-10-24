@@ -14,7 +14,7 @@ sudo bash setup.sh
 | Users | Creates `pack-member`/`littledog` as 1003 if absent; adds groups. On `PRODUCTION_ROLE=true`, removes littledog from Docker |
 | SSH fields | Restricts SSH to adminhabl; optionally disables passwords |
 | `CONFIG_DIRS` / `MEDIA_DIRS` | Creates dirs; resets top-level owner to littledog:pack-member, mode 755/775 |
-| `SERVICES` + `.env` | Validates and starts each service with host overrides; skips a service whose `.env` is missing |
+| `SERVICES` + `.env` | Validates and starts each service with host overrides; skips a service whose Compose config fails. A missing `.env` fails only where Compose reads it (`env_file`) or requires a variable (`${VAR?}`); otherwise the service starts with empty values |
 | Service `setup.sh` | Sourced after deploy (removes the retired Transmission cleanup cron) |
 | `hosts/<host>/bootstrap` | Host provisioning (Surface kiosks: i3, dashboard, power daemon, hardware fixes; Fjord: Bluetooth audio) |
 | Wi-Fi fields | Installs the watchdog script, defaults file and cron |

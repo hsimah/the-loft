@@ -1,0 +1,136 @@
+# Kennl — Forgejo forge and Actions runner on helarctos.
+#
+# Forgejo is the source of truth; GitHub repositories become push mirrors.
+# The runner executes jobs inside kennl-dind, so no job ever reaches the host
+# Docker daemon or the fleet's containers.
+#   docs/services/kennl.md
+services:
+  forgejo:
+    # 15.x is the LTS line. Schema migrations are one-way: dump the database
+    # before changing this tag (docs/operations/upgrades.md).
+    image: data.forgejo.org/forgejo/forgejo:15.0.10-rootless
+    container_name: forgejo
+    restart: unless-stopped
+    user: "1003:1003"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST=db:5432
+      - FORGEJO__database__NAME=${DB_NAME?}
+      - FORGEJO__database__USER=${DB_USER?}
+      - FORGEJO__database__PASSWD=${DB_PASSWORD?}
+      - FORGEJO__server__DOMAIN=kennl.${LOFT_DOMAIN?}
+      - FORGEJO__server__ROOT_URL=https://kennl.${LOFT_DOMAIN?}/
+      # Git over SSH goes straight to this host; Caddy only proxies HTTP.
+      - FORGEJO__server__SSH_DOMAIN=helarctos
+      - FORGEJO__server__SSH_PORT=2222
+      - FORGEJO__server__SSH_LISTEN_PORT=2222
+      # Admin is created from the CLI; there is no install wizard or sign-up.
+      - FORGEJO__security__INSTALL_LOCK=true
+      - FORGEJO__service__DISABLE_REGISTRATION=true
+      - FORGEJO__service__REQUIRE_SIGNIN_VIEW=true
+      - FORGEJO__repository__DEFAULT_PRIVATE=private
+      - FORGEJO__actions__ENABLED=true
+      - FORGEJO__packages__ENABLED=true
+    volumes:
+      - /opt/kennl/forgejo/data:/var/lib/gitea
+      - /opt/kennl/forgejo/config:/etc/gitea
+      - /etc/localtime:/etc/localtime:ro
+    # HTTP for space-needle's Caddy (kennl.loft.hsimah.com); SSH for git.
+    ports:
+      - "3000:3000"
+      - "2222:2222"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18.6-alpine
+    container_name: kennl-db
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    environment:
+      POSTGRES_USER: ${DB_USER?}
+      POSTGRES_PASSWORD: ${DB_PASSWORD?}
+      POSTGRES_DB: ${DB_NAME?}
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+    # Postgres 18 keeps PGDATA in a versioned subdirectory of this mount.
+    volumes:
+      - /opt/kennl/db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    shm_size: 128mb
+    stop_grace_period: 60s
+
+  runner:
+    image: data.forgejo.org/forgejo/runner:13.2.0
+    container_name: forgejo-runner
+    restart: unless-stopped
+    user: "1003:1003"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # The image's entrypoint is dumb-init, so the binary is named here.
+    command: ["/bin/forgejo-runner", "daemon", "--config", "/etc/forgejo-runner/config.yml"]
+    environment:
+      - DOCKER_HOST=tcp://dind:2376
+      - DOCKER_TLS_VERIFY=1
+      - DOCKER_CERT_PATH=/certs/client
+    volumes:
+      - /opt/kennl/runner:/data
+      - ./runner.yml:/etc/forgejo-runner/config.yml:ro
+      # Client certificate only; the CA key stays in kennl-dind.
+      - dind-certs-client:/certs/client:ro
+    # The runner and every job resolve kennl.loft.hsimah.com via Mushr.
+    dns:
+      - 192.168.86.28
+    depends_on:
+      dind:
+        condition: service_healthy
+
+  dind:
+    # Privileged is the price of nested Docker. Jobs run unprivileged inside
+    # it (runner.yml), and the TLS API keeps job containers off the daemon.
+    image: docker:29.9.2-dind
+    container_name: kennl-dind
+    restart: unless-stopped
+    privileged: true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    # Job containers get Mushr's resolver for loft names. Docker would
+    # otherwise drop this container's loopback resolver and fall back to
+    # public DNS.
+    command: ["--dns", "192.168.86.28"]
+    volumes:
+      - dind-certs-ca:/certs/ca
+      - dind-certs-client:/certs/client
+      - dind-data:/var/lib/docker
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dind-certs-ca:
+  dind-certs-client:
+  # Image and build-layer cache for jobs; safe to delete when kennl-dind is stopped.
+  dind-data:

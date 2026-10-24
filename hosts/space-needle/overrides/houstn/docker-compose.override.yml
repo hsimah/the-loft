@@ -7,6 +7,7 @@ services:
       - "viking:100.119.43.53"
       - "calavera:192.168.86.35"
       - "woodstock:192.168.86.37"
+      - "helarctos:192.168.86.21"
   glances:
     volumes:
       - /mammoth:/mammoth:ro

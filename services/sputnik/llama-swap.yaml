@@ -1,0 +1,32 @@
+# llama-swap on helarctos (Sputnik gpu profile). Reloaded on change.
+#
+# Model choice is open (#149); the entry below is provisional, sized to start
+# benchmarking. Paths are inside the container: /models is /den/sputnik/models.
+healthCheckTimeout: 600
+logLevel: info
+
+# Every endpoint except /health needs this key as Authorization: Bearer,
+# including /ui, /logs and /v1/messages (Claude Code: ANTHROPIC_AUTH_TOKEN).
+apiKeys:
+  - "${env.LLAMA_SWAP_API_KEY}"
+
+macros:
+  # Strix Halo: all layers on the iGPU, weights read fully into GTT (mmap
+  # pages are slower on unified memory), flash attention, and the Jinja chat
+  # template that tool calling needs.
+  "server": >
+    /app/llama-server
+    --host 127.0.0.1 --port ${PORT}
+    --n-gpu-layers 999 --no-mmap --flash-attn on --jinja
+
+models:
+  # Fast implementer/fixer candidate, ~17 GB at Q4. 128k context split over
+  # 2 slots (one per runner job) gives each 64k: Claude Code's system prompt
+  # plus a working set.
+  "qwen3-coder-30b":
+    cmd: >
+      ${server}
+      --model /models/qwen3-coder-30b-a3b/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
+      --ctx-size 131072 --parallel 2
+      --cache-reuse 256
+    ttl: 0

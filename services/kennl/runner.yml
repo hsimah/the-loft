@@ -1,0 +1,40 @@
+# forgejo-runner 13.2.0 configuration. Keys come from `forgejo-runner
+# generate-config` for the pinned version; regenerate and diff on upgrades.
+# Registration state lives in /data/.runner (/opt/kennl/runner on the host).
+log:
+  level: info
+  job_level: info
+
+runner:
+  file: .runner
+  # Concurrent jobs. Agent jobs share llama-swap's slots; raise both together.
+  capacity: 2
+  timeout: 3h
+  shutdown_timeout: 30m
+  insecure: false
+  fetch_timeout: 30s
+  fetch_interval: 2s
+  report_interval: 1s
+  # Ported GitHub workflows run unchanged on ubuntu-latest. Replace the image
+  # with kennl's own toolchain images once they are published to its registry.
+  labels:
+    - "ubuntu-latest:docker://node:22.21.1-bookworm"
+
+cache:
+  # Served by the runner; job containers reach it through kennl-dind's NAT.
+  enabled: true
+  dir: /data/cache
+
+container:
+  # Fresh network per job, inside kennl-dind; jobs never see the host daemon.
+  network: ""
+  enable_ipv6: false
+  privileged: false
+  options:
+  workdir_parent:
+  # No bind mounts or named volumes in job containers.
+  valid_volumes: []
+  # Never mount a Docker socket into job containers.
+  docker_host: "-"
+  force_pull: false
+  force_rebuild: false

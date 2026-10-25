@@ -1,0 +1,12 @@
+# space-needle: Caddy also joins plutus-proxy, the internal network that is
+# Plutus's only path to the LAN. setup.sh creates it with --internal, so
+# nothing on it has a route out (docs/services/plutus.md).
+services:
+  mushr:
+    networks:
+      - loft-proxy
+      - plutus-proxy
+
+networks:
+  plutus-proxy:
+    external: true

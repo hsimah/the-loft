@@ -23,6 +23,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [hubbl](docs/services/hubbl.md) | space-needle | Immich photo library; the only space-needle service published on the tunnel |
 | [kennl](docs/services/kennl.md) | space-needle (forge), helarctos (runner) | Forgejo forge and Actions runner |
 | [mercurius](docs/services/mercurius.md) | space-needle | Household wiki — SilverBullet |
+| [plutus](docs/services/plutus.md) | space-needle | Household vault — Paperless-ngx on an encrypted volume; not yet deployed |
 | [mushr](docs/services/mushr.md) | space-needle, viking, fjord | Caddy + Cloudflare Tunnel + LAN DNS |
 | [pawpcorn](docs/services/pawpcorn.md) | space-needle | Plex |
 | [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Blog `hsimah.com` |

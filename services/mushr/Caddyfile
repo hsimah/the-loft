@@ -138,6 +138,13 @@ mercurius.{$LOFT_DOMAIN} {
 	reverse_proxy mercurius:3000
 }
 
+# plutus — household vault (Paperless-ngx). Reached over the internal
+# plutus-proxy network (space-needle mushr override). Never on the tunnel.
+plutus.{$LOFT_DOMAIN} {
+	import cloudflare_tls
+	reverse_proxy plutus:8000
+}
+
 n8n.{$LOFT_DOMAIN} {
 	import cloudflare_tls
 	reverse_proxy n8n:5678

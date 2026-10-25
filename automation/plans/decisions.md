@@ -13,7 +13,7 @@ Register of open choices. When one is made, set Status to the decision and date,
 | D11 | Backup key custody | Password manager + printed sheet in the safe; both of you can restore | Open | [backups](backups.md) | Phase 1 |
 | D19 | Planning pages after the wiki is live | Stay in this repo | Open | [Mercurius](mercurius.md) | Phase 1 |
 | D4 | Vault areas | Shared to start; Paperless permissions can split later | Decided 2026-10-25: shared | [Plutus](plutus.md) | Phase 2 |
-| D5 | Vault encryption at rest | LUKS volume unlocked by hand after each boot. A keyfile on the root disk only protects a stolen data disk | Decided 2026-10-25: LUKS, manual unlock after each boot | [Plutus](plutus.md) | Phase 2 |
+| D5 | Vault encryption at rest | LUKS volume unlocked by hand after each boot. A keyfile on the root disk only protects a stolen data disk | Decided 2026-10-25: LUKS2 on a 250 GB NVMe LVM volume at `/plutus`, manual unlock after each boot | [Plutus](plutus.md) | Phase 2 |
 | D6 | First records in | Your call: tax and financial, medical, or IDs | Open | [Plutus](plutus.md) | Phase 2 |
 | D18 | GPU residency and night split | Keep the household set resident; prefer a coder that fits beside it; household batch 01:00–02:30 | Open; depends on [#149](https://github.com/hsimah/the-loft/issues/149) | [models](models.md#sharing-the-gpu) | Phase 3 |
 | D21 | Ollama on space-needle | Retire after Open WebUI (D0) and n8n use llama-swap | Done 2026-10-25 | [workflows](workflows.md) | Phase 3 |

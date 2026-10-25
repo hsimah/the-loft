@@ -336,6 +336,10 @@ fi
 # ─── 10b. Shared Docker networks ────────────────────────────────────────
 info "Ensuring shared Docker networks..."
 docker network create loft-proxy 2>/dev/null || true
+# Plutus's only path to the LAN, shared with Caddy; --internal: no route out.
+if [[ " ${SERVICES[*]} " == *" plutus "* ]]; then
+  docker network create --internal plutus-proxy 2>/dev/null || true
+fi
 
 # ─── 11. Deploy services ─────────────────────────────────────────────────────
 info "Deploying services..."
@@ -343,10 +347,19 @@ info "Deploying services..."
 # Source compose helper from control-plane
 source "${REPO_DIR}/control-plane/common.sh"
 
+declare -p SERVICE_REQUIRES_MOUNT &>/dev/null || declare -A SERVICE_REQUIRES_MOUNT=()
+
 for service in "${SERVICES[@]}"; do
   # Stateful Clog installation/migrations belong to its deploy command.
   if [[ "$service" == clog ]]; then
     info "Clog is managed by: loft-ctl deploy clog (run after host setup)"
+    continue
+  fi
+  # A service on an encrypted volume waits for an operator unlock; its binds
+  # would fail anyway, and `up` failing would end setup under set -e.
+  required_mount="${SERVICE_REQUIRES_MOUNT[$service]:-}"
+  if [[ -n "$required_mount" ]] && ! mountpoint -q "$required_mount"; then
+    warn "${service}: ${required_mount} is not mounted (locked?); skipping"
     continue
   fi
   compose_args=$(compose_args_for "$service") || {

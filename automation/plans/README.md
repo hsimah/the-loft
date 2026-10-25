@@ -11,7 +11,7 @@ These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/
 | 0 | Chat portal: Open WebUI on the GPU | Live | [workflows](workflows.md#chat) |
 | 1 | Agentic coding | In progress ([#155](https://github.com/hsimah/the-loft/issues/155)) | [coding-agents](coding-agents.md) |
 | 2a | Mercurius: household wiki (open brain) | Live; backups and Tailscale open | [Mercurius](mercurius.md) |
-| 2b | Plutus: vault for financial, medical, personal records | Next | [Plutus](plutus.md) |
+| 2b | Plutus: vault for financial, medical, personal records | Configured; not yet deployed | [Plutus](plutus.md) |
 | 3 | Janus: calendar, reminders and reports | Proposed | [Janus](janus.md) |
 | 4 | Ceres: recipes from email, photos and reels | Proposed | [Ceres](ceres.md) |
 | 5 | Custom AI workflows | n8n already runs (CPU) | [workflows](workflows.md) |

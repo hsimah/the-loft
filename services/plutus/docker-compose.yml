@@ -1,0 +1,147 @@
+# Plutus — household vault (Paperless-ngx).
+#
+# Adapted from upstream's v3.3.4 docker-compose.postgres-tika.yml to fleet
+# conventions. Everything lives on the LUKS volume mounted at /plutus, and no
+# bind creates its source: while the vault is locked Docker refuses to start
+# Plutus rather than initialise an empty archive on the unencrypted disk.
+# Unlock with control-plane/plutus-vault.sh.
+#
+# No route out. The internal default network joins the helpers; the internal
+# plutus-proxy network (created by setup.sh) is shared with Caddy only.
+#   docs/services/plutus.md
+services:
+  plutus:
+    # Schema migrations are one-way: export and dump before changing this tag.
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.3.4
+    container_name: plutus
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      PAPERLESS_URL: https://plutus.${LOFT_DOMAIN?}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY?}
+      PAPERLESS_TIME_ZONE: ${TZ:-America/Los_Angeles}
+      PAPERLESS_OCR_LANGUAGE: eng
+      # littledog:pack-member, which owns the app directories on the vault.
+      USERMAP_UID: 1003
+      USERMAP_GID: 1003
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBHOST: db
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBPASS: ${DB_PASSWORD?}
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_TIKA_ENABLED: 1
+      PAPERLESS_TIKA_ENDPOINT: http://tika:9998
+      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
+    volumes:
+      - type: bind
+        source: /plutus/data
+        target: /usr/src/paperless/data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /plutus/media
+        target: /usr/src/paperless/media
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /plutus/export
+        target: /usr/src/paperless/export
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /plutus/consume
+        target: /usr/src/paperless/consume
+        bind:
+          create_host_path: false
+    networks:
+      - default
+      - plutus-proxy
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      gotenberg:
+        condition: service_started
+      tika:
+        condition: service_started
+
+  db:
+    image: postgres:18.6
+    container_name: plutus-db
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      # Read only when initialising an empty /plutus/db.
+      POSTGRES_PASSWORD: ${DB_PASSWORD?}
+    volumes:
+      # Postgres 18 keeps its cluster in a versioned subdirectory of this path.
+      - type: bind
+        source: /plutus/db
+        target: /var/lib/postgresql
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperless -d paperless"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: valkey/valkey:9.1.2-alpine
+    container_name: plutus-redis
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - type: bind
+        source: /plutus/redis
+        target: /data
+        bind:
+          create_host_path: false
+
+  gotenberg:
+    image: gotenberg/gotenberg:8.37.0
+    container_name: plutus-gotenberg
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Upstream's flags: Chromium renders .eml files, and must not run their
+    # JavaScript or fetch remote content such as tracking pixels.
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-allow-list=^file:///tmp/.*"
+
+  tika:
+    image: apache/tika:3.3.1.0
+    container_name: plutus-tika
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  default:
+    internal: true
+  plutus-proxy:
+    external: true

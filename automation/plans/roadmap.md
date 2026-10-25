@@ -40,8 +40,9 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 [Plutus](plutus.md) · decisions D4, D5, D6.
 
-- [ ] Encrypted volume and its unlock procedure (runbook).
-- [ ] Compose group: Paperless-ngx, Postgres, Redis, Tika, Gotenberg on a vault-only network; Caddy leg; egress firewall (deny all for now).
+- [x] Encrypted volume and its unlock procedure ([runbook](../../docs/services/plutus.md)); not yet created on the host.
+- [x] Compose group: Paperless-ngx, Postgres, Valkey, Tika, Gotenberg on internal networks only; Caddy joins `plutus-proxy`.
+- [ ] Deploy: create the volume, start Plutus, accounts with two-factor, egress probe.
 - [ ] Phone and scanner upload path; consume folder.
 - [ ] Retarget the OneDrive puller to vault staging; triage.
 - [ ] Exporter + Postgres dump into the vault restic repository; restore test.

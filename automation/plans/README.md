@@ -12,8 +12,8 @@ These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/
 | 1 | Agentic coding | In progress ([#155](https://github.com/hsimah/the-loft/issues/155)) | [coding-agents](coding-agents.md) |
 | 2a | Mercurius: household wiki (open brain) | Next | [Mercurius](mercurius.md) |
 | 2b | Plutus: vault for financial, medical, personal records | Next | [Plutus](plutus.md) |
-| 3 | Calendar, reminders and reports | Proposed | [calendar](calendar.md) |
-| 4 | Recipes from email, photos and reels | Proposed | [recipes](recipes.md) |
+| 3 | Janus: calendar, reminders and reports | Proposed | [Janus](janus.md) |
+| 4 | Ceres: recipes from email, photos and reels | Proposed | [Ceres](ceres.md) |
 | 5 | Custom AI workflows | n8n already runs (CPU) | [workflows](workflows.md) |
 
 Cross-cutting: [shared services](shared-services.md) · [email intake](intake.md) · [off-site backups](backups.md) · [models and GPU sharing](models.md).
@@ -30,8 +30,8 @@ flowchart LR
   intake --> fetch[plutus-fetch]
   fetch --> vault[Plutus: Paperless-ngx]
   n8n --> wiki[Mercurius: SilverBullet + git]
-  n8n --> cal[Calendar: Radicale]
-  n8n --> recipes[Recipes: Mealie]
+  n8n --> cal[Janus: Radicale]
+  n8n --> recipes[Ceres: Mealie]
   vault -- dates, titles only --> cal
   cal & wiki --> report[Morning report]
   report --> ntfy[ntfy push] & page[Report page]

@@ -9,7 +9,7 @@
 - **Workflows as code**: export each workflow to `services/sputnik/workflows/<name>.json` with a `.md` beside it.
 - **Backups**: n8n data plus `N8N_ENCRYPTION_KEY` ([backups](backups.md), [#108](https://github.com/hsimah/the-loft/issues/108)).
 
-Planned workflows: the [intake](intake.md) router, wiki inbox filing, calendar extraction and [reports](calendar.md#reports), recipe imports.
+Planned workflows: the [intake](intake.md) router, wiki inbox filing, calendar extraction and [reports](janus.md#reports), recipe imports.
 
 ## Chat
 

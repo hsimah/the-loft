@@ -5,8 +5,8 @@ Mercurius, the open brain, comes first, so the rest of the work has somewhere to
 ```mermaid
 flowchart LR
   p0[0 Prep] --> p1[1 Mercurius] --> p2[2 Plutus basics] --> p3[3 Local AI]
-  p3 --> p4[4 Email intake] --> p5[5 Calendar and reports]
-  p3 --> p6[6 Recipes]
+  p3 --> p4[4 Email intake] --> p5[5 Janus]
+  p3 --> p6[6 Ceres]
   p4 -.-> p6
   p3 --> p7[7 AI upkeep]
   c149[#149 model choice] --> p3
@@ -20,7 +20,7 @@ Recipes can run in parallel with phases 4–5 once phase 3 is done; only their e
 Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 - [x] Open WebUI pointed at llama-swap ([chat](workflows.md#chat)).
-- [x] Name the wiki and vault: Mercurius and Plutus. Calendar and recipes still open.
+- [x] Names: Mercurius (wiki), Plutus (vault), Janus (calendar), Ceres (recipes).
 - [ ] Check Google Drive quota and create the rclone Drive client (`drive.file`).
 - [ ] Tailscale on both phones and laptops, and on space-needle.
 - [ ] Write the backup recovery sheet template.
@@ -70,22 +70,22 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 **Done when** a forwarded bill reaches the Paperless inbox, a forwarded note reaches the wiki `inbox/`, and mail from an unlisted sender is rejected and logged.
 
-## Phase 5 — Calendar and reports
+## Phase 5 — Janus
 
-[calendar](calendar.md) · decisions D13, D14.
+[Janus](janus.md) · decisions D13, D14.
 
-- [ ] Radicale profile; `household`, `proposed` and `tasks` collections; phone setup.
+- [ ] Janus: Radicale with the git hook and `janus-git`; users and rights; `household`, `proposed` and `tasks` collections; phone setup.
 - [ ] n8n extraction from `+cal` mail into `proposed`.
 - [ ] Vault date exporter (title + link).
 - [ ] Morning, weekly and monthly reports; ntfy push; on-demand webhook.
 
 **Done when** the October example report is produced from real data.
 
-## Phase 6 — Recipes
+## Phase 6 — Ceres
 
-[recipes](recipes.md) · decisions D15, D16, D17, D22.
+[Ceres](ceres.md) · decisions D15, D16, D17, D22.
 
-- [ ] Mealie profile, AI pointed at llama-swap.
+- [ ] Ceres: Mealie, AI pointed at llama-swap.
 - [ ] Media worker on helarctos; reel script.
 - [ ] n8n path for `+recipe` mail.
 

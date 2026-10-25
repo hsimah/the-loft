@@ -23,7 +23,7 @@ Suggested top level, refined once in use:
 - `home/`, `trips/`, `places/`, `projects/`, `lists/`, `people/` (non-sensitive only).
 - `meta/conventions.md` — how pages are named and linked. The agent reads it first.
 
-Dated items (the shelf repair, a trip) go in the [calendar](calendar.md); the wiki page holds the notes and links to the event.
+Dated items (the shelf repair, a trip) go in the [Janus](janus.md); the wiki page holds the notes and links to the event.
 
 ## LLM wiki agent
 

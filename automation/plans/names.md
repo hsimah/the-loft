@@ -1,33 +1,14 @@
 # Names (D1)
 
-Follows the [naming rules](../../CLAUDE.md#names): a primary application keeps the service name; helpers take it as a prefix.
-
-## Decided
+Decided 2026-10-25. Follows the [naming rules](../../CLAUDE.md#names): a primary application keeps the service name; helpers take it as a prefix. Each is a Roman god that is also, or sounds like, a body in the solar system.
 
 | Service | Name | Containers |
 |---|---|---|
-| Household wiki ([Mercurius](mercurius.md)) | `mercurius`: Roman god of commerce, eloquence and communication; the planet Mercury | `mercurius` (SilverBullet), `mercurius-git` |
+| Household wiki ([Mercurius](mercurius.md)) | `mercurius`: god of commerce, eloquence and communication; the planet Mercury | `mercurius` (SilverBullet), `mercurius-git` |
 | Vault ([Plutus](plutus.md)) | `plutus`: god of wealth and buried ore and gems. Sounds like Pluto but is unrelated | `plutus` (Paperless-ngx), `plutus-db`, `plutus-redis`, `plutus-tika`, `plutus-gotenberg`, `plutus-gpt`, `plutus-fetch` |
+| Calendar ([Janus](janus.md)) | `janus`: god of beginnings and doorways, who gives January its name; a moon of Saturn | `janus` (Radicale), `janus-git` |
+| Recipes ([Ceres](ceres.md)) | `ceres`: goddess of grain and harvest; a dwarf planet | `ceres` (Mealie), helpers for the reel pipeline as needed |
 
 **No name needed**: ntfy (Houstn `notify` profile), the media worker (Sputnik profile, `sputnik-worker`), the reports (n8n workflows in Sputnik).
 
-## Open
-
-Calendar and recipes could be profiles inside Mercurius (communication fits the calendar and its reports), or names of their own.
-
-Calendar and reports:
-
-- `walkies` — the dog's daily routine.
-- `capcom` — Mission Control's voice to the crew; the morning report.
-- `tminus` — the countdown to every date.
-
-Recipes:
-
-- `kibbl` — dog food.
-- `chowr` — chow, and the chow chow, a spitz breed.
-- `treatz` — what every pomsky works for.
-
-Intake addresses (`<name>@hsimah.com`, if Cloudflare routing is used):
-
-- `fetch` — the dog fetches the post.
-- `postie` — every dog's nemesis.
+Intake addresses, if Cloudflare routing is used ([intake](intake.md)): open.

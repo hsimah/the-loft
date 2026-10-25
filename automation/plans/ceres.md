@@ -1,4 +1,4 @@
-# Recipes
+# Ceres: recipes
 
 Emails, photos, links and video reels converted into editable, shareable recipes.
 
@@ -6,7 +6,7 @@ Emails, photos, links and video reels converted into editable, shareable recipes
 
 | Piece | Proposed | Notes |
 |---|---|---|
-| App | [Mealie](https://docs.mealie.io) (D15) | Polished web UI, households, share links, URL scraping. Its AI features take any OpenAI-compatible base URL ([AI providers](https://docs.mealie.io/documentation/getting-started/installation/ai-providers/)), so they point at llama-swap. Image import needs a vision model. OIDC available for later SSO |
+| App | [Mealie](https://docs.mealie.io) (D15), container `ceres` | Polished web UI, households, share links, URL scraping. Its AI features take any OpenAI-compatible base URL ([AI providers](https://docs.mealie.io/documentation/getting-started/installation/ai-providers/)), so they point at llama-swap. Image import needs a vision model. OIDC available for later SSO |
 | Alternative | [Tandoor](https://docs.tandoor.dev) 2.x | Stronger meal planning and shopping; AI import through LiteLLM. Heavier, and local-model setup is less documented |
 | Reel worker | Bash scripts on the [media worker](workflows.md#shell-steps) | yt-dlp, ffmpeg, whisper |
 | Access | LAN and Tailscale | Public sharing is D22 |

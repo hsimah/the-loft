@@ -13,7 +13,7 @@ A locked-down archive for financial, medical and personal records. Every documen
 
 Not Paperless-AI: unmaintained since March 2026, and Paperless's built-in AI covers it.
 
-Paperless 3.3's AI does not fill custom fields and takes no custom prompts. Due and expiry dates for the [calendar](calendar.md) therefore come from the linker job below, or from paperless-gpt if its pinned version supports custom fields.
+Paperless 3.3's AI does not fill custom fields and takes no custom prompts. Due and expiry dates for the [Janus](janus.md) therefore come from the linker job below, or from paperless-gpt if its pinned version supports custom fields.
 
 ## Isolation
 

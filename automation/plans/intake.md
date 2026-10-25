@@ -1,6 +1,6 @@
 # Email intake
 
-Curated mail only: you forward what should be filed; nothing arrives just because someone sent it. One intake mailbox feeds [Plutus](plutus.md), [Mercurius](mercurius.md), [calendar](calendar.md) and [recipes](recipes.md).
+Curated mail only: you forward what should be filed; nothing arrives just because someone sent it. One intake mailbox feeds [Plutus](plutus.md), [Mercurius](mercurius.md), [Janus](janus.md) and [Ceres](ceres.md).
 
 ## Mailbox (D12)
 

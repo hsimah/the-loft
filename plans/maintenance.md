@@ -11,7 +11,6 @@ Items needing live evidence or a decision. None of these are done unless stated.
 | Woodstock | Test Wi-Fi firmware recovery |
 | Audiobookshelf | Verify Android, a second phone and cross-device progress sync |
 | Stellarr | Hardlink-safe imports need a shared-parent mount migration |
-| Sputnik | Test the empty-inbox path in deployed n8n; add an explicit empty-mail branch if it stalls |
 | Identities | Record actual littledog UID/GID and Plex runtime identity; the Plex example uses 1004 while fresh setup uses 1003 |
 | Beszel | Confirm hub-side resolution and per-system tokens |
 | Exposure | Check live Cloudflare hostnames, Plex Remote Access/router state and granted Google scopes |

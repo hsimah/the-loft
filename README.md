@@ -26,7 +26,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [pawpcorn](docs/services/pawpcorn.md) | space-needle | Plex |
 | [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Blog `hsimah.com` |
 | [snoot](docs/services/snoot.md) | all | Beszel agent |
-| [sputnik](docs/services/sputnik.md) | space-needle; helarctos (`gpu`) | Ollama + Open WebUI + n8n; read-only Gmail/Calendar briefing; llama-swap on the iGPU |
+| [sputnik](docs/services/sputnik.md) | space-needle; helarctos (`gpu`) | Open WebUI + n8n on llama-swap models; llama-swap on the iGPU |
 | [stellarr](docs/services/stellarr.md) | space-needle | *arr stack, LazyLibrarian, Audiobookshelf; Transmission + slskd behind NordVPN |
 
 ## Layout

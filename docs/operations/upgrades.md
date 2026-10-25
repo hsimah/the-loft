@@ -27,7 +27,7 @@ Commit the pin, then `loft-ctl update <service>` (or `--no-pull` if already chec
 | Pawpcorn | `/opt/pawpcorn/config`; libraries, direct play, hardware transcode |
 | Stellarr | `/opt/<product>`; client connections, imports, VPN egress |
 | Houstn | Beszel/Kuma data; upgrade hub before agents |
-| Sputnik | WebUI/n8n state + `N8N_ENCRYPTION_KEY`; a successful briefing run |
+| Sputnik | WebUI/n8n state + `N8N_ENCRYPTION_KEY`; a chat reply from llama-swap |
 | Mushr | Caddy volumes + `.env`; DNS, TLS, routes, tunnel from outside |
 
 ## Rollback and pin exceptions

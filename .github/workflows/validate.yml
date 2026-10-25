@@ -38,7 +38,7 @@ jobs:
 
       - name: Validate sputnik compose profiles
         run: |
-          for profile in engine chat agent gpu engine,chat,agent; do
+          for profile in chat agent gpu chat,agent; do
             echo "Validating services/sputnik/docker-compose.yml (profile: ${profile})..."
             COMPOSE_PROFILES="${profile}" docker compose -f services/sputnik/docker-compose.yml config --quiet
           done
@@ -101,8 +101,6 @@ jobs:
           docker run --rm --network none \
             -e LOFT_DOMAIN=loft.example.com \
             -e CLOUDFLARE_API_TOKEN=0123456789abcdef0123456789abcdef01234567 \
-            -e BRIEFING_USER=ci \
-            -e 'BRIEFING_HASH=$2a$14$Zkx19XLiW6VYouLHR5NmfOFU0z2GTNmpkT/5qqR7hx4IjWJPDhjvG' \
             -v "$PWD/services/mushr/Caddyfile:/etc/caddy/Caddyfile:ro" \
             mushr-caddy:ci caddy validate --config /etc/caddy/Caddyfile
 

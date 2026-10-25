@@ -1,31 +1,4 @@
 services:
-  # Engine: unauthenticated; publish only on host loopback.
-  ollama:
-    image: ollama/ollama:0.32.5
-    container_name: ollama
-    restart: unless-stopped
-    profiles:
-      - engine
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    volumes:
-      - /mammoth/sputnik/models:/root/.ollama
-    ports:
-      - "127.0.0.1:11434:11434"
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-      # Keep weights resident to avoid repeated cold loads; costs RAM.
-      - OLLAMA_KEEP_ALIVE=-1
-      - OLLAMA_MAX_LOADED_MODELS=1
-      - OLLAMA_NUM_PARALLEL=1
-      - OLLAMA_FLASH_ATTENTION=1
-      - OLLAMA_CONTEXT_LENGTH=${OLLAMA_CONTEXT_LENGTH:-16384}
-    networks:
-      - loft-proxy
-
   # GPU engine on helarctos: llama-swap starting llama-server (Vulkan) per
   # requested model. Serves OpenAI and Anthropic Messages APIs on :8080 to the
   # LAN, gated by LLAMA_SWAP_API_KEY. Models: llama-swap.yaml.
@@ -56,18 +29,13 @@ services:
     ports:
       - "8080:8080"
 
-  # Chat UI; application login is separate from Ollama access.
+  # Chat UI; application login is separate from the llama-swap key.
   open-webui:
     image: ghcr.io/open-webui/open-webui:0.11.0
     container_name: open-webui
     restart: unless-stopped
     profiles:
       - chat
-    # Optional across profiles; retain start ordering when engine is enabled.
-    depends_on:
-      ollama:
-        condition: service_started
-        required: false
     logging:
       driver: json-file
       options:
@@ -75,8 +43,8 @@ services:
         max-file: "3"
     env_file: .env
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
-      # GPU models via llama-swap on helarctos (gpu profile); key is the same LLAMA_SWAP_API_KEY.
+      # Models come from llama-swap on helarctos (gpu profile); key is the same LLAMA_SWAP_API_KEY.
+      - ENABLE_OLLAMA_API=false
       - OPENAI_API_BASE_URL=http://helarctos:8080/v1
       - OPENAI_API_KEY=${LLAMA_SWAP_API_KEY:-}
       - WEBUI_AUTH=true
@@ -95,11 +63,6 @@ services:
     restart: unless-stopped
     profiles:
       - agent
-    # Optional across profiles; retain start ordering when engine is enabled.
-    depends_on:
-      ollama:
-        condition: service_started
-        required: false
     logging:
       driver: json-file
       options:
@@ -128,11 +91,8 @@ services:
       - N8N_RUNNERS_TASK_TIMEOUT=300
       - N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES=268435456
       - N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES=1000
-      # File nodes may publish here; keep credential-file protection enabled.
-      - N8N_RESTRICT_FILE_ACCESS_TO=/briefing
     volumes:
       - /opt/sputnik/n8n:/home/node
-      - /opt/sputnik/briefing:/briefing
     dns:
       - 192.168.86.28
     networks:

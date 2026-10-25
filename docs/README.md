@@ -22,7 +22,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [Pawpcorn](services/pawpcorn.md) — Plex
 - [Pawst](services/pawst.md) — blog
 - [Snoot](services/snoot.md) — Beszel agents
-- [Sputnik](services/sputnik.md) — local LLM and briefing
+- [Sputnik](services/sputnik.md) — Open WebUI, n8n and llama-swap
 - [Stellarr](services/stellarr.md) — media acquisition and audiobooks
 
 ## Runbooks and scripts

@@ -20,7 +20,6 @@ df -h /opt /mammoth
 | Names fail to resolve | `dig @192.168.86.28 radarr.space-needle +short` |
 | Permission denied | Compare the container's UID/GID with that bind mount; never recursively chown all data |
 | New static release missing | [Release puller](docs/scripts/deploy-pull.md) |
-| Briefing stale | [Sputnik](docs/services/sputnik.md) |
 | Wi-Fi/audio/display | The [host page](docs/README.md#hosts) |
 
 TLS test with the real hostname as both Host and SNI:

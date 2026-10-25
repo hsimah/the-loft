@@ -34,7 +34,7 @@ flowchart LR
   n8n --> recipes[Recipes: Mealie]
   vault -- dates, titles only --> cal
   cal & wiki --> report[Morning report]
-  report --> ntfy[ntfy push] & page[Briefing page]
+  report --> ntfy[ntfy push] & page[Report page]
   vault & wiki & recipes & n8n & report --> llm[llama-swap on helarctos]
   n8n --> worker[Media worker on helarctos]
   wiki --> forgejo[Forgejo history]

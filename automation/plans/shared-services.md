@@ -5,7 +5,7 @@ Pieces used by more than one use case. Build each once, in the first phase that 
 | Piece | Where | Used by | State |
 |---|---|---|---|
 | llama-swap ([models](models.md)) | helarctos, Sputnik `gpu` | Coding, chat, vault, wiki, calendar, recipes, n8n | Live: coding evaluation models, Open WebUI chat; household models not added |
-| n8n ([workflows](workflows.md)) | space-needle, Sputnik `agent` | Intake, calendar, reports, recipes, wiki inbox | Live on CPU Ollama (briefing) |
+| n8n ([workflows](workflows.md)) | space-needle, Sputnik `agent` | Intake, calendar, reports, recipes, wiki inbox | Live, no workflows yet |
 | Media worker ([workflows](workflows.md#shell-steps)) | helarctos, Sputnik profile | Recipe reels, voice notes | Proposed |
 | Intake mailbox ([intake](intake.md)) | Google account | Vault, wiki, calendar, recipes | Proposed |
 | ntfy | space-needle, as a Houstn `notify` profile | Vault review flags, reminders, reports, intake rejects; Uptime Kuma can use it too | Proposed |

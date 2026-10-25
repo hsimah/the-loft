@@ -25,7 +25,7 @@ The one case no repository test can see is publishing a hostname in the Cloudfla
 
 - [Caddyfile](../../services/mushr/Caddyfile): routes. Bridge services by container name; host-network and VPN ports via `host.docker.internal`.
 - [dnsmasq.conf](../../services/mushr/dnsmasq.conf): resolves `*.space-needle`, `*.fjord`, `*.loft.hsimah.com` and fleet hostnames locally; everything else (including the public Pawst domains) goes upstream. Router DHCP advertises it.
-- [.env.example](../../services/mushr/.env.example): `LOFT_DOMAIN`, Cloudflare DNS token (scope it to the certificate zones), tunnel token, briefing auth.
+- [.env.example](../../services/mushr/.env.example): `LOFT_DOMAIN`, Cloudflare DNS token (scope it to the certificate zones), tunnel token.
 - Public hostnames are set in Cloudflare's dashboard, not here, and must be first-level (above). Each host mirrors its intended list in `PUBLIC_HOSTNAMES` in `host.conf` so it can be tested.
 - A tunnel hostname pointing at an `https://` origin also needs **Origin Server Name** set to that hostname. cloudflared otherwise sends the origin's internal name (`mushr`) as SNI, Caddy has no certificate for it, and the handshake fails as a 502 with the Caddyfile looking perfect. The HTTP Host Header override is a different layer and does not substitute for it.
 - Caddy's admin API is `127.0.0.1:8880` inside the container; the host publishes only 80/443. The tunnel waits for Caddy's healthcheck.
@@ -48,16 +48,6 @@ sudo docker compose -f services/mushr/docker-compose.yml run --rm --no-deps \
   mushr caddy validate --config /etc/caddy/Caddyfile
 sudo docker compose -f services/mushr/docker-compose.yml up -d --no-deps --force-recreate mushr
 ```
-
-## Briefing mount and password
-
-Sputnik's renderer and JSON are sibling read-only mounts at `/srv/briefing` and `/srv/briefing-data`, joined by `handle_path /data/*`. Keep them as siblings: a child mount under a read-only parent fails if the mountpoint doesn't exist.
-
-```bash
-sudo docker exec -it mushr caddy hash-password
-```
-
-Store the hash single-quoted in `.env` (`BRIEFING_HASH='$2a$...'`). Homepage's briefing widget needs the matching plaintext in Houstn's `.env`.
 
 ## Troubleshooting
 

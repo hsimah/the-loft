@@ -11,6 +11,15 @@
 
 Planned workflows: the [intake](intake.md) router, wiki inbox filing, calendar extraction and [reports](calendar.md#reports), recipe imports.
 
+## Moving n8n to llama-swap
+
+Phase 3, once D18 settles which models stay resident. No Compose change: n8n already resolves `helarctos` through Mushr DNS.
+
+1. Add an OpenAI credential in n8n: key `LLAMA_SWAP_API_KEY`, Base URL `http://helarctos:8080/v1`.
+2. The [briefing](../../services/sputnik/workflows/briefing.md) uses `sputnik-assistant`, an Ollama model built from [Modelfile.assistant](../../services/sputnik/Modelfile.assistant); llama-swap has no equivalent. Replace the Ollama Chat Model node with an OpenAI Chat Model node, copy the Modelfile's `SYSTEM` prompt into the LLM Chain's system message, and set temperature 0.3 and top_p 0.9 in the node options.
+3. Pick a resident model so the 6-hourly run never swaps out a coding job's model.
+4. Export to `briefing.json`, update `briefing.md`, and run its post-change checks (normal mail, empty inbox, phishing). Then retire Ollama and the Modelfile (D21).
+
 ## Chat
 
 Done (D0, 2026-10-25): Open WebUI at `https://sputnik.loft.hsimah.com` uses llama-swap; current state is on the [Sputnik page](../../docs/services/sputnik.md#chat-on-the-gpu). Remaining:

@@ -17,8 +17,8 @@ Paperless 3.3's AI does not fill custom fields and takes no custom prompts. Due 
 
 ## Isolation
 
-- **Separate everything.** Own Compose group, database, storage and Docker network. Nothing flows from the vault into the wiki.
-- **Encrypted at rest** (D5). Originals, archive, export and Postgres all live on the encrypted volume. Postgres holds the OCR text, so it can't stay on the unencrypted root disk like other services' `/opt` state.
+- **Separate everything.** Own Compose group, database, storage and Docker network. Nothing flows from the vault into the wiki. One shared household archive (D4); Paperless permissions can split it later.
+- **Encrypted at rest** (D5): a LUKS volume you unlock by hand after each boot; Plutus stays down until then. Originals, archive, export and Postgres all live on the encrypted volume. Postgres holds the OCR text, so it can't stay on the unencrypted root disk like other services' `/opt` state.
 - **No internet.** Egress only to `helarctos:8080`, one direction: the vault calls the model, never the reverse. Enforce it with an nftables rule on the vault bridge, like [kennl's](../../hosts/helarctos/kennl-egress.nft); this is a first case for [#104](https://github.com/hsimah/the-loft/issues/104)/[#106](https://github.com/hsimah/the-loft/issues/106). The mail fetcher is the one exception, in its own container.
 - **No side doors.** Only the Paperless UI is routed through Caddy, LAN and Tailscale only. Never on the tunnel.
 - **AI suggests, you approve.** Suggestions and review tags, never silent overwrites.
@@ -58,7 +58,6 @@ Paperless's `document_exporter` output plus a Postgres dump, into an encrypted r
 
 ## Open questions
 
-- D4: separate private areas for each of you, or everything shared?
 - D6: what goes in first: tax and financial, medical, or IDs and certificates?
 - D7: re-check interval: 3, 6 or 9 months?
 - D8: who reviews flagged documents, and how are you notified?

@@ -38,7 +38,7 @@ Radicale's rights file enforces this, so the review queue doesn't depend on a pr
 
 | Source | Path |
 |---|---|
-| Work and personal Google Calendar | Read by n8n's existing read-only credential; merged into reports, not copied |
+| Work and personal Google Calendar | Read by an n8n Google credential with read-only scopes ([Sputnik](../../docs/services/sputnik.md#google-oauth)); merged into reports, not copied |
 | Filed emails | `+cal` [intake](intake.md) → model extracts date and title → `proposed` |
 | Paper invoices, vaccination and ID expiry | [Plutus](plutus.md) custom fields (due, expiry) → exporter → `household`, with reminders before the date |
 | Manual | Any CalDAV client, or a note in the wiki `inbox/` |

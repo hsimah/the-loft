@@ -6,10 +6,10 @@ A shared, easy-to-edit space for plans, trips, places, projects, lists and notes
 
 | Piece | Proposed | Notes |
 |---|---|---|
-| Editor | [SilverBullet](https://silverbullet.md) (D2), container `mercurius` | Web app and offline PWA over a folder of markdown files; wiki links, backlinks, queries. 2.11.x as of October 2026 (unverified) |
+| Editor | [SilverBullet](https://silverbullet.md), container `mercurius` (D2, decided) | Web app and offline PWA over a folder of markdown files; wiki links, backlinks, queries. 2.11.x as of October 2026 (unverified) |
 | Files | `/mammoth/mercurius/space` on space-needle | Plain `.md` plus attachments; the editor owns nothing else |
 | History | `mercurius-git` sidecar commits the space every few minutes and pushes to a private repo on [Forgejo](../../docs/services/kennl.md) (D3) | Forgejo is history, not backup; see [backups](backups.md) |
-| Desktop alternative | Obsidian on a clone of the same repo | Optional; same files |
+| Desktop | Obsidian on a clone of the same repo, if wanted | Optional; same files |
 | Access | Caddy LAN route on `*.loft.hsimah.com`; off-LAN through Tailscale (D9) | Never on the tunnel |
 | AI upkeep | LLM wiki agent, later ([phase 7](roadmap.md#phase-7--ai-upkeep)) | See below |
 
@@ -35,5 +35,4 @@ The "LLM wiki" pattern ([example](https://github.com/enduserlab/llm-wiki)), poin
 
 ## Open questions
 
-- D2: is a web/PWA editor what you'd actually use on the phone, or Obsidian?
 - D19: once the wiki is live, do these planning pages move into it? Recommendation: no, they describe fleet config and belong next to it.

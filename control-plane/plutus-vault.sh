@@ -20,8 +20,9 @@ set -euo pipefail
 : "${PLUTUS_OWNER:=littledog:pack-member}"
 : "${PLUTUS_REQUIRE_ROOT:=1}"
 
-# Paperless runs as PLUTUS_OWNER (USERMAP_UID/GID); Postgres and Valkey chown
-# their own directories on first start, so those are only created.
+# Paperless runs as PLUTUS_OWNER (USERMAP_UID/GID). Postgres and Valkey are
+# only given a directory: Postgres 18 chowns just its PGDATA subdirectory
+# (18/docker, mode 700), so the parent must stay traversable (755).
 APP_DIRS=(data media consume export)
 SERVICE_DIRS=(db redis)
 
@@ -58,7 +59,7 @@ unlock() {
     install -d -o "${PLUTUS_OWNER%%:*}" -g "${PLUTUS_OWNER##*:}" -m 750 "${PLUTUS_MOUNT}/${d}"
   done
   for d in "${SERVICE_DIRS[@]}"; do
-    [[ -d "${PLUTUS_MOUNT}/${d}" ]] || install -d -m 700 "${PLUTUS_MOUNT}/${d}"
+    [[ -d "${PLUTUS_MOUNT}/${d}" ]] || install -d -m 755 "${PLUTUS_MOUNT}/${d}"
   done
   echo "Vault unlocked at ${PLUTUS_MOUNT}. Start Plutus: loft-ctl start plutus"
 }

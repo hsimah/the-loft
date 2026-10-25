@@ -52,6 +52,7 @@ assert_contains "$calls" "mount /dev/mapper/plutus" "mounts the mapped device"
 for d in data media consume export db redis; do
   [[ -d "$WORK/fresh/plutus/$d" ]] && ok "creates $d inside the vault" || bad "creates $d inside the vault" "missing"
 done
+assert_eq "$(stat -c %a "$WORK/fresh/plutus/db")" 755 "Postgres can traverse the db directory"
 
 # ── already unlocked → no second open or mount ───────────────────────────────
 mkdir -p "$WORK/again/state"

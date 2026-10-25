@@ -33,7 +33,7 @@ Run from `/srv/the-loft`, one at a time:
 1. `sudo lvcreate -L 250G -n plutus ubuntu-vg`
 2. `sudo cryptsetup luksFormat --type luks2 /dev/ubuntu-vg/plutus`. Use a long passphrase and store it in the password manager.
 3. `sudo cryptsetup luksAddKey /dev/ubuntu-vg/plutus`: a second, recovery passphrase (`openssl rand -base64 30`) for the printed recovery sheet in the safe ([backups plan](../../automation/plans/backups.md#how-private-is-too-private-d11)).
-4. `sudo cryptsetup luksHeaderBackup /dev/ubuntu-vg/plutus --header-backup-file plutus-luks-header.img`. A damaged header makes the volume unrecoverable even with the passphrase. Move the file to the USB stick in the safe, then delete it from the host: with any passphrase it opens the vault.
+4. `sudo cryptsetup luksHeaderBackup /dev/ubuntu-vg/plutus --header-backup-file /root/plutus-luks-header.img`. A damaged header makes the volume unrecoverable even with the passphrase. Copy it to the USB stick in the safe, then `sudo shred -u` it on the host: with either passphrase it opens the vault.
 5. `sudo cryptsetup open /dev/ubuntu-vg/plutus plutus`, then `sudo mkfs.xfs -L plutus /dev/mapper/plutus`.
 6. `sudo control-plane/plutus-vault.sh unlock` mounts it and creates the directories.
 
@@ -60,4 +60,5 @@ Paperless and Postgres migrate one way. Run `document_exporter` and `pg_dump` fi
 - **`bind source path does not exist: /plutus/...`**: the vault is locked. Unlock it, then start Plutus.
 - **`plutus-vault.sh` says another device is mounted**: something else is on `/plutus`; unmount it. The script never creates directories there.
 - **502 from Caddy**: Plutus is stopped, or Mushr was not recreated after `plutus-proxy` was created (`sudo docker inspect mushr` should list both networks).
+- **`plutus-db` logs `cannot create directory '/var/lib/postgresql'`**: `/plutus/db` is not traversable; it must be `755` (Postgres 18 only chowns its `18/docker` subdirectory).
 - **Database authentication fails at start**: `DB_PASSWORD` changed after the cluster was initialised. Fix it with `ALTER ROLE` inside `plutus-db`.

@@ -131,6 +131,13 @@ sputnik.{$LOFT_DOMAIN} {
 	reverse_proxy open-webui:8080
 }
 
+# mercurius — household wiki (SilverBullet). HTTPS only: its offline PWA needs
+# a secure origin, and each space is bound to this hostname. Never on the tunnel.
+mercurius.{$LOFT_DOMAIN} {
+	import cloudflare_tls
+	reverse_proxy mercurius:3000
+}
+
 n8n.{$LOFT_DOMAIN} {
 	import cloudflare_tls
 	reverse_proxy n8n:5678

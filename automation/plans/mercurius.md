@@ -1,19 +1,12 @@
 # Mercurius: household wiki
 
-A shared, easy-to-edit space for plans, trips, places, projects, lists and notes. Plain markdown files with full history, editable by both of you from phone and laptop. Nothing from [Plutus](plutus.md) goes in here. Priority one in the [roadmap](roadmap.md#phase-1--mercurius).
+SilverBullet in multi-space mode, configured in the repo and not yet deployed: [service page](../../docs/services/mercurius.md). One account each, a `household` space, and SilverBullet's own git revisions synced to a private Forgejo repo (D2, D3). Nothing from [Plutus](plutus.md) goes in here. This page holds the remaining work; see the [roadmap](roadmap.md#phase-1--mercurius).
 
-## Stack
+## Remaining
 
-| Piece | Proposed | Notes |
-|---|---|---|
-| Editor | [SilverBullet](https://silverbullet.md), container `mercurius` (D2, decided) | Web app and offline PWA over a folder of markdown files; wiki links, backlinks, queries. 2.11.x as of October 2026 (unverified) |
-| Files | `/mammoth/mercurius/space` on space-needle | Plain `.md` plus attachments; the editor owns nothing else |
-| History | `mercurius-git` sidecar commits the space every few minutes and pushes to a private repo on [Forgejo](../../docs/services/kennl.md) (D3) | Forgejo is history, not backup; see [backups](backups.md) |
-| Desktop | Obsidian on a clone of the same repo, if wanted | Optional; same files |
-| Access | Caddy LAN route on `*.loft.hsimah.com`; off-LAN through Tailscale (D9) | Never on the tunnel |
-| AI upkeep | LLM wiki agent, later ([phase 7](roadmap.md#phase-7--ai-upkeep)) | See below |
-
-SilverBullet authenticates a single user (`SB_USER`); verify on the pinned version. Either share one household login, or turn its auth off and put two users on Caddy `basic_auth` (LAN/Tailscale only).
+- Off-LAN access through Tailscale (D9).
+- Encrypted off-site backup of `/mammoth/mercurius` ([backups](backups.md)).
+- Obsidian on a clone of the Forgejo repo, if wanted. Edits made that way reach SilverBullet through its git sync, which fetches and merges; it is built as a backup, not for collaboration, so expect the odd conflict to resolve in the wiki.
 
 ## Layout
 
@@ -23,14 +16,15 @@ Suggested top level, refined once in use:
 - `home/`, `trips/`, `places/`, `projects/`, `lists/`, `people/` (non-sensitive only).
 - `meta/conventions.md` — how pages are named and linked. The agent reads it first.
 
-Dated items (the shelf repair, a trip) go in the [Janus](janus.md); the wiki page holds the notes and links to the event.
+Dated items (the shelf repair, a trip) go in [Janus](janus.md); the wiki page holds the notes and links to the event.
 
 ## LLM wiki agent
 
 The "LLM wiki" pattern ([example](https://github.com/enduserlab/llm-wiki)), pointed at the local models: turn dropped-in notes, links and emails into tidy pages with summaries and links between them.
 
 - Runs overnight through the [#152](https://github.com/hsimah/the-loft/issues/152) harness (`agent-run.sh`, Claude Code against llama-swap), as a Forgejo job on the wiki repo. Same sandbox and egress rules as coding jobs.
-- Works on a branch and opens a PR: AI suggests, you approve. Live edits land on `main` through the sidecar; the agent mostly adds pages, so conflicts should be rare.
+- Works on a branch and opens a PR: AI suggests, you approve. A merged PR reaches the wiki through SilverBullet's git sync; the agent mostly adds pages, so conflicts should be rare.
+- SilverBullet records changes it didn't make itself as **External**, so agent edits stay distinguishable in page history.
 - Local models only. Household content never goes to Claude ([coding-agents](coding-agents.md#rules-shared-with-household-work)).
 
 ## Open questions

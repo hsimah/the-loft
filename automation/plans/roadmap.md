@@ -29,10 +29,10 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 [Mercurius](mercurius.md) · decisions D2, D3, D19.
 
-- [ ] Compose bundle with the `wiki` profile: SilverBullet plus the git sidecar; host.conf dirs and health URLs; Caddy LAN route; dnsmasq.
-- [ ] Private wiki repo on Forgejo; deploy key for the sidecar.
+- [x] Compose, host.conf dirs and health URL, Caddy LAN route (the loft wildcard already resolves).
+- [ ] Deploy; accounts and the `household` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
 - [ ] restic job for the wiki (the shared backup script lands here).
-- [ ] Service page in `docs/services/`, README rows.
+- [x] Service page in `docs/services/`, README rows.
 
 **Done when** both of you edit from phone and laptop, on and off the LAN; edits appear in Forgejo; a wiki snapshot restores from Drive.
 

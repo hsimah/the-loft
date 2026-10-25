@@ -1,0 +1,46 @@
+# Mercurius — household wiki (SilverBullet).
+#
+# Multi-space mode: accounts, spaces, revisions and git sync are configured in
+# SilverBullet's dashboard, not here. /data holds the server config (accounts,
+# deploy keys) and the spaces; each space is a folder of plain markdown with
+# its own git history, synced to a private Forgejo repository.
+#   docs/services/mercurius.md
+services:
+  mercurius:
+    # -slim has no Chromium, so the Runtime API (/.runtime) is unavailable.
+    image: ghcr.io/silverbulletmd/silverbullet:2.12.1-slim
+    container_name: mercurius
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - TZ=${TZ:-America/Los_Angeles}
+      - SB_NAME=Mercurius
+      # Server-wide kill switch for /.shell, whatever a space's settings say.
+      - SB_SHELL_BACKEND=off
+    # The entrypoint starts as root, adds a passwd entry for the owner of /data
+    # (ssh for git sync refuses an unknown UID) and drops to that user.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /mammoth/mercurius:/data
+    # Git sync reaches Forgejo by its loft name over SSH (space-needle:2222).
+    dns:
+      - 192.168.86.28
+    networks:
+      - loft-proxy
+
+networks:
+  loft-proxy:
+    external: true

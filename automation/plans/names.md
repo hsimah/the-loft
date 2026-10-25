@@ -4,7 +4,7 @@ Decided 2026-10-25. Follows the [naming rules](../../CLAUDE.md#names): a primary
 
 | Service | Name | Containers |
 |---|---|---|
-| Household wiki ([Mercurius](mercurius.md)) | `mercurius`: god of commerce, eloquence and communication; the planet Mercury | `mercurius` (SilverBullet), `mercurius-git` |
+| Household wiki ([Mercurius](mercurius.md)) | `mercurius`: god of commerce, eloquence and communication; the planet Mercury | `mercurius` (SilverBullet) |
 | Vault ([Plutus](plutus.md)) | `plutus`: god of wealth and buried ore and gems. Sounds like Pluto but is unrelated | `plutus` (Paperless-ngx), `plutus-db`, `plutus-redis`, `plutus-tika`, `plutus-gotenberg`, `plutus-gpt`, `plutus-fetch` |
 | Calendar ([Janus](janus.md)) | `janus`: god of beginnings and doorways, who gives January its name; a moon of Saturn | `janus` (Radicale), `janus-git` |
 | Recipes ([Ceres](ceres.md)) | `ceres`: goddess of grain and harvest; a dwarf planet | `ceres` (Mealie), helpers for the reel pipeline as needed |

@@ -7,7 +7,7 @@ Register of open choices. When one is made, set Status to the decision and date,
 | D0 | Chat portal | Open WebUI on llama-swap now, ahead of phase 3 | Done 2026-10-25 | [workflows](workflows.md#chat) | Now |
 | D1 | Service names | Pick from the proposals | Decided 2026-10-25: Mercurius (wiki), Plutus (vault), Janus (calendar), Ceres (recipes) | [names](names.md) | Phase 1 |
 | D2 | Wiki editor | SilverBullet; Obsidian optional on the same repo | Decided 2026-10-25: SilverBullet | [Mercurius](mercurius.md) | Phase 1 |
-| D3 | Wiki history | Sidecar autocommit to a private Forgejo repo | Open | [Mercurius](mercurius.md) | Phase 1 |
+| D3 | Wiki history | Sidecar autocommit to a private Forgejo repo | Decided 2026-10-25: SilverBullet's built-in revisions and git sync (deploy key); no sidecar | [Mercurius](mercurius.md) | Phase 1 |
 | D9 | Off-LAN access | Tailscale on phones and laptops; nothing on the tunnel | Open | [shared-services](shared-services.md) | Phase 1 |
 | D10 | Off-site backup tool | restic through rclone to Google Drive | Open | [backups](backups.md) | Phase 1 |
 | D11 | Backup key custody | Password manager + printed sheet in the safe; both of you can restore | Open | [backups](backups.md) | Phase 1 |

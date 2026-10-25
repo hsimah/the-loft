@@ -18,6 +18,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [Howlr](services/howlr.md) — Music Assistant and Snapcast
 - [Hubbl](services/hubbl.md) — Immich photo library
 - [Kennl](services/kennl.md) — Forgejo forge and CI runner
+- [Mercurius](services/mercurius.md) — household wiki
 - [Mushr](services/mushr.md) — proxy, tunnel and LAN DNS
 - [Pawpcorn](services/pawpcorn.md) — Plex
 - [Pawst](services/pawst.md) — blog

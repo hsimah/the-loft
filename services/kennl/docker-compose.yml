@@ -145,6 +145,10 @@ services:
     # otherwise drop this container's loopback resolver and fall back to
     # public DNS.
     command: ["--dns", "192.168.86.28"]
+    # And for dind's own image pulls. Docker would otherwise forward them to
+    # the host's resolver, which the egress firewall blocks.
+    dns:
+      - 192.168.86.28
     networks:
       - jobs
     volumes:

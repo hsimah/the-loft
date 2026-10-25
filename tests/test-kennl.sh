@@ -59,6 +59,8 @@ assert_eq "$(q "$c" '[.services[].networks | keys[]] | unique')" '["jobs"]' \
   "the runner and kennl-dind sit only on the jobs network"
 bridge="$(q "$c" '.networks.jobs.driver_opts["com.docker.network.bridge.name"]')"
 assert_eq "$bridge" '"kennl-jobs"' "the jobs network has a fixed bridge name"
+assert_eq "$(q "$c" '[.services[].dns] | unique')" '[["192.168.86.28"]]' \
+  "the runner and kennl-dind resolve through Mushr, which the firewall allows"
 nft="${ROOT}/hosts/helarctos/kennl-egress.nft"
 assert_eq "$(grep -c "iifname ${bridge} jump egress" "$nft")" 1 "the egress firewall filters that bridge"
 assert_eq "$(grep -cE "^\s*flush ruleset" "$nft")" 0 "the egress firewall leaves Docker's rules alone"

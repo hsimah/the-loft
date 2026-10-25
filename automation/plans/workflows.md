@@ -5,7 +5,7 @@
 ## Plan
 
 - **Keep n8n on space-needle** as the orchestrator. Its state and credentials live with the fleet's storage; helarctos stays compute-only.
-- **Model calls go to llama-swap** through an OpenAI credential (`llama-swap`, base `http://helarctos:8080/v1`). Ollama is retired (D21).
+- **Model calls go to llama-swap** through an OpenAI credential (`helarctos llama-swap`, base `http://helarctos:8080/v1`). Ollama is retired (D21).
 - **Workflows as code**: export each workflow to `services/sputnik/workflows/<name>.json` with a `.md` beside it.
 - **Backups**: n8n data plus `N8N_ENCRYPTION_KEY` ([backups](backups.md), [#108](https://github.com/hsimah/the-loft/issues/108)).
 

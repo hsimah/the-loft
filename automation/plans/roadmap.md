@@ -17,8 +17,9 @@ Recipes can run in parallel with phases 4–5 once phase 3 is done; only their e
 
 ## Phase 0 — Prep
 
-Decisions D1, D9, D10, D11 ([decisions](decisions.md)).
+Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
+- [ ] **Now:** Open WebUI pointed at llama-swap ([chat](workflows.md#chat)).
 - [ ] Pick names.
 - [ ] Check Google Drive quota and create the rclone Drive client (`drive.file`).
 - [ ] Tailscale on both phones and laptops, and on space-needle.
@@ -54,7 +55,7 @@ Decisions D1, D9, D10, D11 ([decisions](decisions.md)).
 - [ ] Household models on llama-swap (OCR, small instruct, embeddings, whisper) with resident groups; batch slot agreed with the runner.
 - [ ] Vault egress: allow helarctos `:8080` only; probe that nothing else leaves.
 - [ ] Paperless AI suggestions and index; paperless-gpt OCR on the internal network.
-- [ ] n8n and Open WebUI repointed at llama-swap; Ollama retired.
+- [ ] n8n repointed at llama-swap; Ollama retired (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.
 
 **Done when** a new scan gets vision-model OCR and suggestions, and the egress probe passes.
@@ -101,5 +102,6 @@ Decisions D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Next actions
 
-1. Answer D1, D2, D9, D10 and D11.
-2. Then the phase 1 Compose bundle can be drafted here for review.
+1. Point Open WebUI at llama-swap (D0).
+2. Answer D1, D2, D9, D10 and D11.
+3. Then the phase 1 Compose bundle can be drafted here for review.

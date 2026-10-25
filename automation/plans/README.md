@@ -8,6 +8,7 @@ These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/
 
 | # | Use case | State | Page |
 |---|---|---|---|
+| 0 | Chat portal: Open WebUI on the GPU | Now (D0) | [workflows](workflows.md#chat) |
 | 1 | Agentic coding | In progress ([#155](https://github.com/hsimah/the-loft/issues/155)) | [coding-agents](coding-agents.md) |
 | 2a | Open brain: household wiki | Next | [open-brain](open-brain.md) |
 | 2b | Vault: financial, medical, personal records | Next | [vault](vault.md) |

@@ -1,6 +1,6 @@
 # Mercurius — household wiki
 
-[Compose](../../services/mercurius/docker-compose.yml) runs [SilverBullet](https://docs.silverbullet.md) (`mercurius`) on space-needle: plans, trips, places, projects and lists as plain markdown, editable from phone and laptop. Named for the Roman god of communication and the planet Mercury. Nothing from Plutus (the vault) goes in here. Plan and later work: [automation plans](../../automation/plans/mercurius.md). Not yet deployed.
+[Compose](../../services/mercurius/docker-compose.yml) runs [SilverBullet](https://docs.silverbullet.md) (`mercurius`) on space-needle: plans, trips, places, projects and lists as plain markdown, editable from phone and laptop. Named for the Roman god of communication and the planet Mercury. Nothing from Plutus (the vault) goes in here. Plan and later work: [automation plans](../../automation/plans/mercurius.md). Deployed on space-needle 2026-10-25, syncing to Forgejo.
 
 | Host path | Contents |
 |---|---|
@@ -20,7 +20,7 @@ SilverBullet runs as the folder's owner (littledog, from setup). Each space is a
 2. Open `https://mercurius.loft.hsimah.com`. The setup wizard creates the first admin account, then the first space: name it `household`, bound to `mercurius.loft.hsimah.com` at `/`.
 3. In the dashboard, create the second account and add it to `household` with `write`. Set each account's full name and email; commits are attributed to them.
 4. In Forgejo, create a private, empty repository `hsimah/mercurius`.
-5. In the space's settings → **Connect repository**: URL `ssh://git@kennl.loft.hsimah.com:2222/hsimah/mercurius.git`, **Deploy key for this space**, generate it, and add the public key under the Forgejo repository → Settings → Deploy keys **with write access**. Then **Check connection** and **Enable sync**.
+5. At `https://mercurius.loft.hsimah.com/.dashboard/household/git` → **Connect repository**: URL `ssh://git@kennl.loft.hsimah.com:2222/hsimah/mercurius.git`, **Deploy key for this space**, generate it, and add the public key under the Forgejo repository → Settings → Deploy keys **with write access**. Then **Check connection** and **Enable sync**.
 6. Check `loft-ctl health mercurius`, then confirm a page edit appears as a commit in Forgejo within a minute.
 
 ## Backups

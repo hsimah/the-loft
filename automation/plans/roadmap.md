@@ -30,7 +30,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 [Mercurius](mercurius.md) · decisions D2, D3, D19.
 
 - [x] Compose, host.conf dirs and health URL, Caddy LAN route (the loft wildcard already resolves).
-- [ ] Deploy; accounts and the `household` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
+- [x] Deploy; accounts and the `household` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
 - [ ] restic job for the wiki (the shared backup script lands here).
 - [x] Service page in `docs/services/`, README rows.
 

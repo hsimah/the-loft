@@ -17,11 +17,10 @@ services: !override
     tmpfs: ["/tmp:uid=1003,gid=1003,mode=1770"]
     volumes:
       - ./nginx-unprivileged.conf:/etc/nginx/nginx.conf:ro
-      - ./holding:/srv/holding:ro
       - /opt/pawst/prod/hsimah:/srv/hsimah:ro
     networks: [pawst-prod]
     healthcheck:
-      test: [CMD-SHELL, "wget -q -O /dev/null --header='Host: hbla.ke' http://127.0.0.1:8080/index.html && wget -q -O /dev/null --header='Host: hsimah.com' http://127.0.0.1:8080/index.html"]
+      test: [CMD-SHELL, "wget -q -O /dev/null --header='Host: hsimah.com' http://127.0.0.1:8080/index.html"]
       interval: 30s
       timeout: 5s
       retries: 3

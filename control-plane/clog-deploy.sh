@@ -272,7 +272,6 @@ prepare_proxy() {
   [[ "$previous" == "$PROXY_DIGEST" ]] || recreate=(--force-recreate)
   compose mushr up -d --no-deps "${recreate[@]}" --wait --wait-timeout 120 mushr
   probe hsimah.com / > /dev/null
-  probe hbla.ke / > /dev/null
 }
 
 BACKUP=""
@@ -354,7 +353,6 @@ health="$(probe clog.hsimah.com /healthz)"
 jq -e '. == {"ok": true}' <<< "$health" > /dev/null 2>&1 || die "Unexpected Clog health response"
 probe clog.hsimah.com /auth/login > /dev/null
 probe hsimah.com / > /dev/null
-probe hbla.ke / > /dev/null
 atomic_write "$RECORD" "$(jq --arg dir "$TARGET" --arg proxy "$PROXY_DIGEST" \
   --argjson backup "$(null_if_empty "$BACKUP")" --arg at "$(date -u +%Y-%m-%dT%H:%M:%S.%6N+00:00)" \
   '. + {directory: $dir, proxy_sha256: $proxy, backup: $backup, deployed_at: $at}' <<< "$RELEASE")"

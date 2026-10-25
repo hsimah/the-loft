@@ -64,10 +64,6 @@ deploy pupyrus
 assert_fails "$status" "rejects an unknown site"
 assert_missing "$WORK/curl-calls" "unknown site makes no requests"
 
-deploy hblake
-assert_fails "$status" "rejects hblake: hbla.ke is a holding page, not a release"
-assert_missing "$WORK/curl-calls" "hblake makes no requests"
-
 deploy hsimah one two
 assert_fails "$status" "rejects extra arguments"
 

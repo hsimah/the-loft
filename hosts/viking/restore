@@ -64,7 +64,7 @@ if [[ "$MODE" == --apply ]]; then
       -f "${REPO_DIR}/hosts/viking/overrides/${service}/docker-compose.override.yml" \
       up -d --wait "$service"
   done
-  for domain in hbla.ke hsimah.com; do
+  for domain in hsimah.com; do
     curl --noproxy '*' --fail --silent --show-error --max-time 10 \
       -H "Host: ${domain}" http://127.0.0.1:8080/index.html >/dev/null
   done

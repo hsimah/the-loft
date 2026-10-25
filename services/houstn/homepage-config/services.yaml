@@ -253,12 +253,6 @@
         server: my-docker
 
 - Web:
-    - hbla.ke:
-        icon: si-hugo
-        href: https://hbla.ke
-        description: Technical blog
-        container: pawst
-        server: my-docker
     - hsimah.com:
         icon: si-hugo
         href: https://hsimah.com

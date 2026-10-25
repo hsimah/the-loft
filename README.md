@@ -24,7 +24,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [kennl](docs/services/kennl.md) | space-needle (forge), helarctos (runner) | Forgejo forge and Actions runner |
 | [mushr](docs/services/mushr.md) | space-needle, viking, fjord | Caddy + Cloudflare Tunnel + LAN DNS |
 | [pawpcorn](docs/services/pawpcorn.md) | space-needle | Plex |
-| [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Blog `hsimah.com`; `hbla.ke` holding page |
+| [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Blog `hsimah.com` |
 | [snoot](docs/services/snoot.md) | all | Beszel agent |
 | [sputnik](docs/services/sputnik.md) | space-needle; helarctos (`gpu`) | Ollama + Open WebUI + n8n; read-only Gmail/Calendar briefing; llama-swap on the iGPU |
 | [stellarr](docs/services/stellarr.md) | space-needle | *arr stack, LazyLibrarian, Audiobookshelf; Transmission + slskd behind NordVPN |

@@ -13,7 +13,6 @@ usage() {
 Usage: pawst-deploy.sh [--no-verify] hsimah [tag]
 
 Deploy the blog's latest GitHub release, or the given tag, to Viking prod.
-hbla.ke is a holding page shipped in services/pawst/holding, not a release.
   --no-verify  skip the local site check (restore runs it with Pawst stopped)
 EOF
 }

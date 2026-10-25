@@ -20,7 +20,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [Kennl](services/kennl.md) — Forgejo forge and CI runner
 - [Mushr](services/mushr.md) — proxy, tunnel and LAN DNS
 - [Pawpcorn](services/pawpcorn.md) — Plex
-- [Pawst](services/pawst.md) — blog and hbla.ke holding page
+- [Pawst](services/pawst.md) — blog
 - [Snoot](services/snoot.md) — Beszel agents
 - [Sputnik](services/sputnik.md) — local LLM and briefing
 - [Stellarr](services/stellarr.md) — media acquisition and audiobooks

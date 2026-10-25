@@ -1,6 +1,6 @@
 # Plutus — household vault
 
-[Compose](../../services/plutus/docker-compose.yml) runs [Paperless-ngx](https://docs.paperless-ngx.com) (`plutus`) on space-needle for financial, medical and personal records, with Postgres (`plutus-db`), Valkey (`plutus-redis`), Gotenberg and Tika (`plutus-gotenberg`, `plutus-tika`) for email and office files. Named for the god of wealth and buried ore and gems. Standard OCR only; AI comes later ([plan](../../automation/plans/plutus.md)). Not yet deployed.
+[Compose](../../services/plutus/docker-compose.yml) runs [Paperless-ngx](https://docs.paperless-ngx.com) (`plutus`) on space-needle for financial, medical and personal records, with Postgres (`plutus-db`), Valkey (`plutus-redis`), Gotenberg and Tika (`plutus-gotenberg`, `plutus-tika`) for email and office files. Named for the god of wealth and buried ore and gems. Standard OCR only; AI comes later ([plan](../../automation/plans/plutus.md)). Deployed on space-needle 2026-10-25; egress probe confirmed no route out.
 
 | Path | Contents |
 |---|---|
@@ -44,8 +44,8 @@ Grow it later while it is online: `lvextend`, `cryptsetup resize plutus`, then `
 1. Copy [.env.example](../../services/plutus/.env.example) and generate `DB_PASSWORD` and `PAPERLESS_SECRET_KEY` with `openssl rand -hex 32` **before** the first start.
 2. `sudo bash setup.sh` creates the `plutus-proxy` network. Then `loft-ctl start mushr` recreates Caddy on it.
 3. With the vault unlocked: `loft-ctl start plutus`, then `loft-ctl health plutus`.
-4. Open `https://plutus.loft.hsimah.com` and create the first account, which becomes the superuser. Create the second account under Users & Groups, then turn on two-factor authentication for both.
-5. Confirm there is no way out: `sudo docker exec plutus curl -sS -m 5 https://example.com` must fail.
+4. Open `https://plutus.loft.hsimah.com` and create the first account, which becomes the superuser. Create the second account under Settings → Users & Groups as a superuser too: owners otherwise hide documents from each other, and either superuser can reset the other's password or two-factor. Turn on two-factor for both.
+5. Confirm there is no way out: `sudo docker exec plutus curl -sS -m 5 https://1.1.1.1` must fail to connect (exit 7), not just fail DNS.
 
 ## Backups
 
@@ -61,4 +61,5 @@ Paperless and Postgres migrate one way. Run `document_exporter` and `pg_dump` fi
 - **`plutus-vault.sh` says another device is mounted**: something else is on `/plutus`; unmount it. The script never creates directories there.
 - **502 from Caddy**: Plutus is stopped, or Mushr was not recreated after `plutus-proxy` was created (`sudo docker inspect mushr` should list both networks).
 - **`plutus-db` logs `cannot create directory '/var/lib/postgresql'`**: `/plutus/db` is not traversable; it must be `755` (Postgres 18 only chowns its `18/docker` subdirectory).
+- **Two-factor activation returns `{"success":false}`**: the code didn't match the secret. Paperless makes a new secret each time the dialog opens; delete the authenticator entry, open the dialog once, scan, and enter the code at once.
 - **Database authentication fails at start**: `DB_PASSWORD` changed after the cluster was initialised. Fix it with `ALTER ROLE` inside `plutus-db`.

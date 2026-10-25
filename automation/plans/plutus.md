@@ -1,6 +1,6 @@
 # Plutus: vault for sensitive records
 
-A locked-down archive for financial, medical and personal records. Every document is searchable by content; the original scan is kept forever so its text can be re-read as models improve. Phase 2 (Paperless with standard OCR on an encrypted volume, no route out) is in the repo, not yet deployed: [service page](../../docs/services/plutus.md). This page holds the AI, intake and backup work still to come.
+A locked-down archive for financial, medical and personal records. Every document is searchable by content; the original scan is kept forever so its text can be re-read as models improve. Phase 2 (Paperless with standard OCR on an encrypted volume, no route out) is live since 2026-10-25: [service page](../../docs/services/plutus.md). This page holds the AI, intake and backup work still to come.
 
 ## Stack
 

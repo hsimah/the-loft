@@ -1,6 +1,6 @@
 # space-needle
 
-Minisforum MS-01, x86_64, Ubuntu 24.04, wired LAN `192.168.86.28`. Primary server. [host.conf](../../hosts/space-needle/host.conf) owns services, storage directories and health URLs. Runs Howlr `server`, Houstn `hub,metrics`, Sputnik `chat,agent`, Mushr, Pawpcorn, Stellarr, Hubbl, Kennl `forge`, Mercurius and Snoot. Plutus is configured but not yet deployed; it runs only while its encrypted volume is unlocked.
+Minisforum MS-01, x86_64, Ubuntu 24.04, wired LAN `192.168.86.28`. Primary server. [host.conf](../../hosts/space-needle/host.conf) owns services, storage directories and health URLs. Runs Howlr `server`, Houstn `hub,metrics`, Sputnik `chat,agent`, Mushr, Pawpcorn, Stellarr, Hubbl, Kennl `forge`, Mercurius, Plutus and Snoot. Plutus runs only while its encrypted volume is unlocked: after a reboot, see [Plutus](../services/plutus.md#after-every-reboot).
 
 ## Storage and networking
 

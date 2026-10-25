@@ -18,7 +18,8 @@ services:
         max-file: "3"
     environment:
       - TZ=${TZ:-America/Los_Angeles}
-      - SB_NAME=Mercurius
+      # Never set legacy SB_* variables (SB_NAME, SB_USER, SB_URL_PREFIX…):
+      # any of them boots SilverBullet in single-space mode, with no accounts.
       # Server-wide kill switch for /.shell, whatever a space's settings say.
       - SB_SHELL_BACKEND=off
     # The entrypoint starts as root, adds a passwd entry for the owner of /data

@@ -35,4 +35,5 @@ Pin the `-slim` version tag. After an upgrade, reload the browser twice so the s
 
 - **Git sync fails to connect**: the container resolves `kennl.loft.hsimah.com` through Mushr's DNS (`dns:` in Compose). Check the deploy key has write access, and that `ssh` works as littledog's UID: it refuses users without a passwd entry, which the entrypoint creates.
 - **Space not found or redirects to the dashboard**: the space is bound to a different hostname than the one in the browser.
+- **Logs say `boot mode: single-space`**: a legacy `SB_*` variable is set, or `/mammoth/mercurius` held files before the first boot. Multi-space setup only runs on an empty data folder with no legacy variables.
 - **Conflicts**: the space's **Git: Review conflicts**. Edit pages through the wiki, not in Forgejo's web editor.

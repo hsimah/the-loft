@@ -24,7 +24,13 @@ Back up a `forgejo dump` plus `pg_dump`, together with `app.ini`. Once GitHub is
 - Jobs run unprivileged inside `kennl-dind`, on a fresh network per job, with no volumes and no Docker socket ([runner.yml](../../services/kennl/runner.yml)).
 - The runner reaches `kennl-dind` over TLS and holds only the client certificate. Job containers cannot reach that API.
 - `kennl-dind` is privileged. A container escape from a job reaches helarctos, so the boundary is unprivileged jobs plus a protected default branch, not the dind container.
-- The runner and jobs reach Forgejo by its public name, through Mushr's DNS (`192.168.86.28`) and Caddy. Egress filtering is open work in #151.
+- The runner and jobs reach Forgejo by its public name, through Mushr's DNS (`192.168.86.28`) and Caddy.
+- **Egress:** the runner and `kennl-dind` sit alone on the `kennl-jobs` bridge. helarctos's [firewall](../../hosts/helarctos/kennl-egress.nft), installed by its bootstrap, lets that bridge reach Mushr DNS, space-needle `:443`, llama-swap `:8080` and the internet on ports 80 and 443. It blocks the rest of the LAN, Tailscale and helarctos itself. Space-needle `:443` is every Caddy site, not only Forgejo; a per-hostname allowlist through a proxy is open work in #151.
+- Check from a container on dind's network, which leaves the same way jobs do:
+
+  ```bash
+  sudo docker exec kennl-dind docker run --rm alpine:3.22 sh -c 'nc -zw3 192.168.86.21 8080 && echo llama-swap ok; nc -zw3 192.168.86.28 22 || echo space-needle ssh blocked'
+  ```
 
 ## Setup
 

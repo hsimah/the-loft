@@ -117,6 +117,8 @@ services:
     # The runner and every job resolve kennl.loft.hsimah.com via Mushr.
     dns:
       - 192.168.86.28
+    networks:
+      - jobs
     depends_on:
       dind:
         condition: service_healthy
@@ -143,6 +145,8 @@ services:
     # otherwise drop this container's loopback resolver and fall back to
     # public DNS.
     command: ["--dns", "192.168.86.28"]
+    networks:
+      - jobs
     volumes:
       - dind-certs-ca:/certs/ca
       - dind-certs-client:/certs/client
@@ -162,3 +166,8 @@ volumes:
 networks:
   loft-proxy:
     external: true
+  # Runner and kennl-dind only. helarctos's firewall matches this bridge name
+  # (hosts/helarctos/kennl-egress.nft).
+  jobs:
+    driver_opts:
+      com.docker.network.bridge.name: kennl-jobs

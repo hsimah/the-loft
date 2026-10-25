@@ -156,6 +156,11 @@ jobs:
           sudo unshare --net nft --check --file /etc/loft/firewall.nft
           systemd-analyze verify hosts/viking/hardening/loft-firewall.service
 
+      - name: Validate helarctos Kennl egress firewall in an isolated network namespace
+        run: |
+          sudo unshare --net nft --check --file hosts/helarctos/kennl-egress.nft
+          systemd-analyze verify hosts/helarctos/loft-kennl-egress.service
+
       - name: Health, deployment and platform regression tests and documentation links
         run: |
           bash tests/run.sh

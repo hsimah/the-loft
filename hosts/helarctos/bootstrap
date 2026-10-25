@@ -63,4 +63,22 @@ fi
 compgen -G '/lib/firmware/rtl_nic/rtl8127a-1.fw*' > /dev/null \
   || warn "rtl_nic/rtl8127a-1.fw missing; install firmware-realtek from trixie-backports"
 
+# Kennl jobs run model-written code, so they may not reach the LAN. The table
+# is ours alone; the distro nftables service stays disabled, because its
+# config flushes Docker's rules.
+
+info "Installing the Kennl job egress firewall..."
+
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nftables > /dev/null
+install -d -m 755 /etc/loft
+install -m 644 "${REPO_DIR}/hosts/helarctos/kennl-egress.nft" /etc/loft/kennl-egress.nft
+install -m 644 "${REPO_DIR}/hosts/helarctos/loft-kennl-egress.service" /etc/systemd/system/
+systemctl daemon-reload
+if nft --check --file /etc/loft/kennl-egress.nft; then
+  systemctl enable loft-kennl-egress > /dev/null 2>&1
+  systemctl restart loft-kennl-egress || warn "loft-kennl-egress failed; check: sudo journalctl -u loft-kennl-egress"
+else
+  warn "kennl-egress.nft does not parse; jobs are unfiltered"
+fi
+
 info "helarctos provisioning complete"

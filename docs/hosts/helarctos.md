@@ -35,3 +35,5 @@ ethtool <iface> | grep -E 'Speed|Link detected'
 | Port | Service | Reached by |
 |---|---|---|
 | 8080 | llama-swap | Agents and LAN clients, with the API key |
+
+The bootstrap also installs `loft-kennl-egress.service`. It filters only the Kennl job bridge ([runner isolation](../services/kennl.md#runner-isolation)).

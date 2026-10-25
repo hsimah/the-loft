@@ -1,0 +1,63 @@
+# Kennl job egress on helarctos. Installed to /etc/loft/ by the bootstrap and
+# loaded by loft-kennl-egress.service.
+#
+# Covers only the `kennl-jobs` bridge (runner and kennl-dind; jobs leave
+# through dind's NAT). Jobs may reach Forgejo, Mushr DNS, llama-swap and the
+# internet over HTTP(S), and nothing else on the LAN, Tailscale or this host.
+# Runs after Docker's chains: an accept here cannot override Docker's drops,
+# and a drop here is final. Never `flush ruleset` or enable the distro
+# nftables service; both would remove Docker's rules.
+#   docs/services/kennl.md#runner-isolation
+
+destroy table inet loft_kennl
+
+table inet loft_kennl {
+    chain egress {
+        meta nfproto ipv6 counter drop
+
+        # Mushr DNS, and Forgejo through space-needle's Caddy.
+        ip daddr 192.168.86.28 meta l4proto { tcp, udp } th dport 53 accept
+        ip daddr 192.168.86.28 tcp dport 443 accept
+
+        # llama-swap's published port. Docker DNATs it to the container, so
+        # match the address the job dialled.
+        ct original ip daddr 192.168.86.21 meta l4proto tcp ct original proto-dst 8080 accept
+
+        # No other private, shared, link-local or multicast destinations.
+        ip daddr {
+            0.0.0.0/8,
+            10.0.0.0/8,
+            100.64.0.0/10,
+            127.0.0.0/8,
+            169.254.0.0/16,
+            172.16.0.0/12,
+            192.168.0.0/16,
+            198.18.0.0/15,
+            224.0.0.0/4,
+            240.0.0.0/4
+        } counter drop
+
+        # Package registries, GitHub and Anthropic.
+        tcp dport { 80, 443 } accept
+        counter drop
+    }
+
+    chain forward {
+        type filter hook forward priority 10; policy accept;
+
+        ct state established,related accept
+        # Runner ↔ dind, and jobs → the runner's cache server.
+        iifname "kennl-jobs" oifname "kennl-jobs" accept
+        iifname "kennl-jobs" jump egress
+    }
+
+    chain input {
+        type filter hook input priority 10; policy accept;
+
+        # Nothing on helarctos itself, apart from llama-swap if Docker's
+        # userland proxy answers instead of DNAT.
+        iifname "kennl-jobs" ct state established,related accept
+        iifname "kennl-jobs" tcp dport 8080 accept
+        iifname "kennl-jobs" counter drop
+    }
+}

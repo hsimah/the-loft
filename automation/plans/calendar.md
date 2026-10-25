@@ -25,7 +25,7 @@ Calendars in Radicale:
 |---|---|
 | Work and personal Google Calendar | Read by n8n's existing read-only credential; merged into reports, not copied |
 | Filed emails | `+cal` [intake](intake.md) → model extracts date and title → `proposed` |
-| Paper invoices, vaccination and ID expiry | [Vault](vault.md) custom fields (due, expiry) → exporter → `household`, with reminders before the date |
+| Paper invoices, vaccination and ID expiry | [Plutus](plutus.md) custom fields (due, expiry) → exporter → `household`, with reminders before the date |
 | Manual | Any CalDAV client, or a note in the wiki `inbox/` |
 
 **Vault dates leak by default** (D14): an event title is visible to every calendar client and to n8n. The exporter runs in the vault group and writes only a generic title ("Council rates: Carlisle") plus a link to the Paperless document. Amounts and account numbers stay in the vault.

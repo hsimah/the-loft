@@ -1,14 +1,14 @@
-# Open brain: household wiki
+# Mercurius: household wiki
 
-A shared, easy-to-edit space for plans, trips, places, projects, lists and notes. Plain markdown files with full history, editable by both of you from phone and laptop. Nothing from the [vault](vault.md) goes in here. Priority one in the [roadmap](roadmap.md#phase-1--open-brain).
+A shared, easy-to-edit space for plans, trips, places, projects, lists and notes. Plain markdown files with full history, editable by both of you from phone and laptop. Nothing from [Plutus](plutus.md) goes in here. Priority one in the [roadmap](roadmap.md#phase-1--mercurius).
 
 ## Stack
 
 | Piece | Proposed | Notes |
 |---|---|---|
-| Editor | [SilverBullet](https://silverbullet.md) (D2) | Web app and offline PWA over a folder of markdown files; wiki links, backlinks, queries. 2.11.x as of October 2026 (unverified) |
-| Files | `/mammoth/<name>/space` on space-needle | Plain `.md` plus attachments; the editor owns nothing else |
-| History | Sidecar commits the space every few minutes and pushes to a private repo on [Forgejo](../../docs/services/kennl.md) (D3) | Forgejo is history, not backup; see [backups](backups.md) |
+| Editor | [SilverBullet](https://silverbullet.md) (D2), container `mercurius` | Web app and offline PWA over a folder of markdown files; wiki links, backlinks, queries. 2.11.x as of October 2026 (unverified) |
+| Files | `/mammoth/mercurius/space` on space-needle | Plain `.md` plus attachments; the editor owns nothing else |
+| History | `mercurius-git` sidecar commits the space every few minutes and pushes to a private repo on [Forgejo](../../docs/services/kennl.md) (D3) | Forgejo is history, not backup; see [backups](backups.md) |
 | Desktop alternative | Obsidian on a clone of the same repo | Optional; same files |
 | Access | Caddy LAN route on `*.loft.hsimah.com`; off-LAN through Tailscale (D9) | Never on the tunnel |
 | AI upkeep | LLM wiki agent, later ([phase 7](roadmap.md#phase-7--ai-upkeep)) | See below |

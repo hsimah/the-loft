@@ -1,10 +1,10 @@
 # Roadmap
 
-The open brain comes first, so the rest of the work has somewhere to keep its notes. The vault follows straight away: digitising can start with plain OCR, and the AI can re-read everything later because originals are kept. Each phase ends at a usable state with a tested backup.
+Mercurius, the open brain, comes first, so the rest of the work has somewhere to keep its notes. Plutus, the vault, follows straight away: digitising can start with plain OCR, and the AI can re-read everything later because originals are kept. Each phase ends at a usable state with a tested backup.
 
 ```mermaid
 flowchart LR
-  p0[0 Prep] --> p1[1 Open brain] --> p2[2 Vault basics] --> p3[3 Local AI]
+  p0[0 Prep] --> p1[1 Mercurius] --> p2[2 Plutus basics] --> p3[3 Local AI]
   p3 --> p4[4 Email intake] --> p5[5 Calendar and reports]
   p3 --> p6[6 Recipes]
   p4 -.-> p6
@@ -20,14 +20,14 @@ Recipes can run in parallel with phases 4–5 once phase 3 is done; only their e
 Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 - [x] Open WebUI pointed at llama-swap ([chat](workflows.md#chat)).
-- [ ] Pick names.
+- [x] Name the wiki and vault: Mercurius and Plutus. Calendar and recipes still open.
 - [ ] Check Google Drive quota and create the rclone Drive client (`drive.file`).
 - [ ] Tailscale on both phones and laptops, and on space-needle.
 - [ ] Write the backup recovery sheet template.
 
-## Phase 1 — Open brain
+## Phase 1 — Mercurius
 
-[open-brain](open-brain.md) · decisions D2, D3, D19.
+[Mercurius](mercurius.md) · decisions D2, D3, D19.
 
 - [ ] Compose bundle with the `wiki` profile: SilverBullet plus the git sidecar; host.conf dirs and health URLs; Caddy LAN route; dnsmasq.
 - [ ] Private wiki repo on Forgejo; deploy key for the sidecar.
@@ -36,9 +36,9 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 **Done when** both of you edit from phone and laptop, on and off the LAN; edits appear in Forgejo; a wiki snapshot restores from Drive.
 
-## Phase 2 — Vault basics
+## Phase 2 — Plutus basics
 
-[vault](vault.md) · decisions D4, D5, D6.
+[Plutus](plutus.md) · decisions D4, D5, D6.
 
 - [ ] Encrypted volume and its unlock procedure (runbook).
 - [ ] Compose group: Paperless-ngx, Postgres, Redis, Tika, Gotenberg on a vault-only network; Caddy leg; egress firewall (deny all for now).
@@ -66,7 +66,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 - [ ] Intake account, labels, filters, app password; forwarding rules in the main Gmail.
 - [ ] Shared sender-check helper (bash).
-- [ ] Vault fetcher container; n8n router for `wiki`, `cal`, `recipe`.
+- [ ] `plutus-fetch` container; n8n router for `wiki`, `cal`, `recipe`.
 
 **Done when** a forwarded bill reaches the Paperless inbox, a forwarded note reaches the wiki `inbox/`, and mail from an unlisted sender is rejected and logged.
 
@@ -93,7 +93,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Phase 7 — AI upkeep
 
-[vault](vault.md#scanning-ocr-and-re-checking) · [open-brain](open-brain.md#llm-wiki-agent) · decision D7.
+[Plutus](plutus.md#scanning-ocr-and-re-checking) · [Mercurius](mercurius.md#llm-wiki-agent) · decision D7.
 
 - [ ] OCR history table, re-check job, `ocr-review` flags.
 - [ ] Vault linker job (summaries, tags, due and expiry dates).

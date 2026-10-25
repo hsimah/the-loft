@@ -1,4 +1,4 @@
-# Vault: sensitive records
+# Plutus: vault for sensitive records
 
 A locked-down archive for financial, medical and personal records. Every document is searchable by content; the original scan is kept forever so its text can be re-read as models improve. This is the "Documents (proposed)" row in [maintenance](../../plans/maintenance.md), fed partly from the rest of OneDrive.
 
@@ -9,7 +9,7 @@ A locked-down archive for financial, medical and personal records. Every documen
 | Archive | [Paperless-ngx](https://docs.paperless-ngx.com) 3.x | Keeps the original next to its text. 3.0 (July 2026) added opt-in AI: suggested title, tags, correspondent, type, dates; document chat; similar documents. `PAPERLESS_AI_LLM_BACKEND=openai-like` points it at llama-swap ([setup guide](https://wz-it.com/en/blog/paperless-ngx-ai-setup/)) |
 | Helpers | Postgres, Redis, Tika, Gotenberg | Tika and Gotenberg let it consume `.eml` and office files from [intake](intake.md) |
 | AI OCR | [paperless-gpt](https://github.com/icereed/paperless-gpt) | Vision-model OCR for messy scans via an OpenAI-compatible base URL; tag-triggered. **No login of its own**: anyone who reaches it can rewrite documents, so it stays on the vault's internal network with no Caddy route |
-| Mail fetcher | Small IMAP fetch container | Phase 4; see [intake](intake.md#vault-fetcher) |
+| Mail fetcher | `plutus-fetch`, a small IMAP fetch container | Phase 4; see [intake](intake.md#vault-fetcher) |
 
 Not Paperless-AI: unmaintained since March 2026, and Paperless's built-in AI covers it.
 

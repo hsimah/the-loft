@@ -20,8 +20,8 @@ Pieces used by more than one use case. Build each once, in the first phase that 
 
 | Zone | Contents | Rules |
 |---|---|---|
-| Open household | Wiki, calendar, recipes, n8n, ntfy | LAN and Tailscale. May reach llama-swap and the internet as each app needs |
-| Vault | Paperless and helpers, vault fetcher | Own network and encrypted volume. Egress only to llama-swap (fetcher: Gmail IMAP). Writes outward only through the calendar exporter |
+| Open household | Mercurius (wiki), calendar, recipes, n8n, ntfy | LAN and Tailscale. May reach llama-swap and the internet as each app needs |
+| Vault | Plutus: Paperless, helpers and `plutus-fetch` | Own network and encrypted volume. Egress only to llama-swap (fetcher: Gmail IMAP). Writes outward only through the calendar exporter |
 | Compute | helarctos | Stateless for household work; no inbound path to space-needle data |
 
 Today every space-needle bridge app shares `loft-proxy`. The vault should not join it: give Caddy a leg on a vault-only network instead ([#104](https://github.com/hsimah/the-loft/issues/104)).

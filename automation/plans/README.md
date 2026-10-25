@@ -2,7 +2,7 @@
 
 Planning notes for the household AI services: apps and data on [space-needle](../../docs/hosts/space-needle.md), inference on [helarctos](../../docs/hosts/helarctos.md). **Everything here is proposed** unless a line says otherwise. Once something is built, its current state moves to `docs/services/<name>.md` and the plan page shrinks to the remaining work; delete a page when nothing is left.
 
-These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/EbMpmFyehGEkf5CyRf4reR) doc; its content is in [vault](vault.md), [open brain](open-brain.md) and [models](models.md).
+These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/EbMpmFyehGEkf5CyRf4reR) doc; its content is in [Plutus](plutus.md), [Mercurius](mercurius.md) and [models](models.md).
 
 ## Use cases
 
@@ -10,8 +10,8 @@ These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/
 |---|---|---|---|
 | 0 | Chat portal: Open WebUI on the GPU | Live | [workflows](workflows.md#chat) |
 | 1 | Agentic coding | In progress ([#155](https://github.com/hsimah/the-loft/issues/155)) | [coding-agents](coding-agents.md) |
-| 2a | Open brain: household wiki | Next | [open-brain](open-brain.md) |
-| 2b | Vault: financial, medical, personal records | Next | [vault](vault.md) |
+| 2a | Mercurius: household wiki (open brain) | Next | [Mercurius](mercurius.md) |
+| 2b | Plutus: vault for financial, medical, personal records | Next | [Plutus](plutus.md) |
 | 3 | Calendar, reminders and reports | Proposed | [calendar](calendar.md) |
 | 4 | Recipes from email, photos and reels | Proposed | [recipes](recipes.md) |
 | 5 | Custom AI workflows | n8n already runs (CPU) | [workflows](workflows.md) |
@@ -27,9 +27,9 @@ flowchart LR
   mail[Curated email] --> intake[Intake mailbox]
   phone[Phone: scans, photos, links] --> vault & recipes & wiki
   intake --> n8n[n8n router]
-  intake --> fetch[Vault fetcher]
-  fetch --> vault[Vault: Paperless-ngx]
-  n8n --> wiki[Open brain: SilverBullet + git]
+  intake --> fetch[plutus-fetch]
+  fetch --> vault[Plutus: Paperless-ngx]
+  n8n --> wiki[Mercurius: SilverBullet + git]
   n8n --> cal[Calendar: Radicale]
   n8n --> recipes[Recipes: Mealie]
   vault -- dates, titles only --> cal

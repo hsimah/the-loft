@@ -1,6 +1,6 @@
 # Email intake
 
-Curated mail only: you forward what should be filed; nothing arrives just because someone sent it. One intake mailbox feeds the [vault](vault.md), [open brain](open-brain.md), [calendar](calendar.md) and [recipes](recipes.md).
+Curated mail only: you forward what should be filed; nothing arrives just because someone sent it. One intake mailbox feeds [Plutus](plutus.md), [Mercurius](mercurius.md), [calendar](calendar.md) and [recipes](recipes.md).
 
 ## Mailbox (D12)
 
@@ -41,4 +41,4 @@ Reads `wiki`, `cal` and `recipe` ([workflows](workflows.md)): IMAP trigger, send
 
 ### Vault fetcher
 
-Reads `vault` only. A small container in the vault group with egress only to `imap.gmail.com:993`. It writes each `.eml` into Paperless's consume folder, so Paperless itself stays offline and n8n never sees vault mail. Shares the sender check with n8n as a bash helper.
+Reads `vault` only. `plutus-fetch`, a small container in the Plutus group, with egress only to `imap.gmail.com:993`. It writes each `.eml` into Paperless's consume folder, so Paperless itself stays offline and n8n never sees vault mail. Shares the sender check with n8n as a bash helper.

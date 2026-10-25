@@ -57,6 +57,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [ ] Household models on llama-swap (OCR, small instruct, embeddings, whisper) with resident groups; batch slot agreed with the runner.
 - [ ] Vault egress: allow helarctos `:8080` only; probe that nothing else leaves.
 - [ ] Paperless AI suggestions and index; paperless-gpt OCR on the internal network.
+- [ ] Mercurius attachment OCR job ([plan](mercurius.md#ocr-for-attachments)).
 - [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.
 

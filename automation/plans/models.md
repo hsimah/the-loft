@@ -8,7 +8,7 @@ Candidates from the second-brain proposal; none are downloaded or measured yet.
 
 | Job | Model (open weights) | Approx. memory | Used by |
 |---|---|---|---|
-| OCR | PaddleOCR-VL-1.6 or GLM-OCR | < 5 GB | Vault, recipe photos |
+| OCR | PaddleOCR-VL-1.6 or GLM-OCR | < 5 GB | Vault, wiki attachments, recipe photos |
 | Second opinion: disagreements, handwriting | Qwen3.8-27B (vision) | ~20 GB | Vault re-check, overnight only |
 | Summaries, tags, links, routing, reports | Qwen3.6-35B-A3B, or the Qwen3.8 35B-A3B in [#149](https://github.com/hsimah/the-loft/issues/149) | ~22 GB | All |
 | Embeddings | embeddinggemma | < 1 GB | Paperless search, later wiki search |

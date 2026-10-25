@@ -6,6 +6,7 @@ SilverBullet in multi-space mode, live since 2026-10-25: [service page](../../do
 
 - Off-LAN access through Tailscale (D9).
 - Encrypted off-site backup of `/mammoth/mercurius` ([backups](backups.md)).
+- OCR for attachments (phase 3, below).
 - Obsidian on a clone of the Forgejo repo, if wanted. Edits made that way reach SilverBullet through its git sync, which fetches and merges; it is built as a backup, not for collaboration, so expect the odd conflict to resolve in the wiki.
 
 ## Layout
@@ -17,6 +18,15 @@ Suggested top level, refined once in use:
 - `meta/conventions.md` — how pages are named and linked. The agent reads it first.
 
 Dated items (the shelf repair, a trip) go in [Janus](janus.md); the wiki page holds the notes and links to the event.
+
+## OCR for attachments
+
+Phase 3. Scans, photos, PDFs and screenshots dropped into the wiki become searchable: SilverBullet indexes markdown, not the text inside an image or PDF.
+
+- **Same model, separate pipeline.** The household OCR model on llama-swap ([models](models.md#household-roster)) serves both this and [Plutus](plutus.md), but nothing is shared beyond that: Plutus OCRs inside its own zone, and this job never touches the vault.
+- **How:** a nightly bash job finds attachments with no OCR page, sends each to the OCR model, and writes a page beside it with the text, plus frontmatter naming the source file, model and date. It writes through SilverBullet's HTTP API with a dashboard-issued token, so edits are indexed and committed like any other.
+- **Keeps the originals,** so attachments can be re-read when the model improves; the vault's re-check idea applies here too, on a longer interval.
+- **Placement:** a small container in the Mercurius group, or the Sputnik media worker ([workflows](workflows.md#shell-steps)), decided with D17.
 
 ## LLM wiki agent
 

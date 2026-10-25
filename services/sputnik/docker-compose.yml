@@ -76,6 +76,9 @@ services:
     env_file: .env
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
+      # GPU models via llama-swap on helarctos (gpu profile); key is the same LLAMA_SWAP_API_KEY.
+      - OPENAI_API_BASE_URL=http://helarctos:8080/v1
+      - OPENAI_API_KEY=${LLAMA_SWAP_API_KEY:-}
       - WEBUI_AUTH=true
       - WEBUI_URL=https://sputnik.${LOFT_DOMAIN}
     volumes:

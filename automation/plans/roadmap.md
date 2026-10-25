@@ -19,7 +19,7 @@ Recipes can run in parallel with phases 4–5 once phase 3 is done; only their e
 
 Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
-- [ ] **Now:** Open WebUI pointed at llama-swap ([chat](workflows.md#chat)).
+- [x] Open WebUI pointed at llama-swap ([chat](workflows.md#chat)).
 - [ ] Pick names.
 - [ ] Check Google Drive quota and create the rclone Drive client (`drive.file`).
 - [ ] Tailscale on both phones and laptops, and on space-needle.
@@ -102,6 +102,5 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Next actions
 
-1. Point Open WebUI at llama-swap (D0).
-2. Answer D1, D2, D9, D10 and D11.
-3. Then the phase 1 Compose bundle can be drafted here for review.
+1. Answer D1, D2, D9, D10 and D11.
+2. Then the phase 1 Compose bundle can be drafted here for review.

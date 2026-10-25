@@ -4,7 +4,7 @@ Register of open choices. When one is made, set Status to the decision and date,
 
 | ID | Decision | Recommendation | Status | Page | Needed by |
 |---|---|---|---|---|---|
-| D0 | Chat portal | Open WebUI on llama-swap now, ahead of phase 3 | Decided 2026-10-25 | [workflows](workflows.md#chat) | Now |
+| D0 | Chat portal | Open WebUI on llama-swap now, ahead of phase 3 | Done 2026-10-25 | [workflows](workflows.md#chat) | Now |
 | D1 | Service names | Pick from the proposals | Open | [names](names.md) | Phase 1 |
 | D2 | Wiki editor | SilverBullet; Obsidian optional on the same repo | Open | [open-brain](open-brain.md) | Phase 1 |
 | D3 | Wiki history | Sidecar autocommit to a private Forgejo repo | Open | [open-brain](open-brain.md) | Phase 1 |

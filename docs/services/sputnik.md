@@ -1,6 +1,6 @@
 # Sputnik — local assistant
 
-[Compose](../../services/sputnik/docker-compose.yml) runs Ollama (`engine`), Open WebUI (`chat`) and n8n (`agent`) on space-needle, CPU-only. The [briefing workflow](../../services/sputnik/workflows/briefing.md) summarizes Gmail/Calendar into a LAN page.
+[Compose](../../services/sputnik/docker-compose.yml) runs Ollama (`engine`), Open WebUI (`chat`) and n8n (`agent`) on space-needle, CPU-only, and llama-swap (`gpu`) on helarctos. Open WebUI offers both: Ollama, and llama-swap as an OpenAI connection ([chat](#chat-on-the-gpu)). The [briefing workflow](../../services/sputnik/workflows/briefing.md) summarizes Gmail/Calendar into a LAN page and still uses Ollama.
 
 | Host path | Contents |
 |---|---|
@@ -73,6 +73,14 @@ The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It star
   ```
 
 Set `COMPOSE_PROFILES=gpu` in helarctos's `services/sputnik/.env`; the other profiles stay on space-needle.
+
+## Chat on the GPU
+
+Open WebUI reaches llama-swap at `http://helarctos:8080/v1`, keyed with `LLAMA_SWAP_API_KEY`; space-needle's `.env` needs the same value as helarctos's. The model list comes from llama-swap, so a model added to [llama-swap.yaml](../../services/sputnik/llama-swap.yaml) appears without changes here.
+
+- The Compose variables only seed a fresh install. Open WebUI stores connections in its database after the first start, and the database wins: change connections in Admin → Settings → Connections.
+- A request for a model that isn't loaded waits for the swap (10–36 s), and competes with Kennl runner jobs for the one loaded model.
+- The Ollama connection stays until n8n moves too; then Ollama can be retired ([plan](../../automation/plans/workflows.md)).
 
 ## Troubleshooting
 

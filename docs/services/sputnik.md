@@ -59,7 +59,7 @@ Set `COMPOSE_PROFILES=gpu` in helarctos's `services/sputnik/.env`; the other pro
 
 ## OCR models
 
-`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for [Plutus](plutus.md) and [Mercurius](mercurius.md), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `ocr` group, so they stay loaded beside whichever large model is running and a request for one never swaps the other out. Both are configured and not yet downloaded or measured; the entries and `--ctx-size 16384` are starting values.
+`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for [Plutus](plutus.md) and [Mercurius](mercurius.md), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `ocr` group, so they stay loaded beside whichever large model is running and a request for one never swaps the other out. Both are downloaded and answer on helarctos; neither is benchmarked yet, and the entries and `--ctx-size 16384` are starting values.
 
 Each model is a language GGUF plus a separate `--mmproj` vision projector, so each is fetched in two calls, into one directory:
 
@@ -69,11 +69,16 @@ services/sputnik/fetch-model.sh ggml-org/GLM-OCR-GGUF mmproj-GLM-OCR-Q8_0 glm-oc
 services/sputnik/fetch-model.sh PaddlePaddle/PaddleOCR-VL-1.5-GGUF PaddleOCR-VL-1.5 paddleocr-vl-1.5
 ```
 
-The last call matches both the model and its `PaddleOCR-VL-1.5-mmproj.gguf` projector. Then recreate the container (above) and try each against the same scan:
+The last call matches both the model and its `PaddleOCR-VL-1.5-mmproj.gguf` projector. Then recreate the container (above). Each model expects a fixed task prompt, not a free-form instruction: `Text Recognition:` for `glm-ocr`, `OCR:` for `paddleocr-vl`. Both are built for a two-stage pipeline (layout analysis, then recognition of each region), so a whole page sent straight in is a rougher test than what paperless-gpt will do. Try each against the same page image (render a PDF page first, for example with `pdftoppm -png -r 150 -f 1 -l 1 -singlefile`):
 
 ```bash
-curl -s http://localhost:8080/v1/chat/completions -H "Authorization: Bearer $LLAMA_SWAP_API_KEY" -H 'Content-Type: application/json' \
-  -d "{\"model\":\"glm-ocr\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Read all the text on this page.\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image/png;base64,$(base64 -w0 page.png)\"}}]}]}"
+model=glm-ocr prompt='Text Recognition:'     # or: model=paddleocr-vl prompt='OCR:'
+base64 -w0 page.png > /tmp/page.b64
+jq -n --arg m "$model" --arg p "$prompt" --rawfile img /tmp/page.b64 \
+  '{model:$m,messages:[{role:"user",content:[{type:"text",text:$p},{type:"image_url",image_url:{url:("data:image/png;base64,"+$img)}}]}]}' > /tmp/ocr-req.json
+time curl -fsS -H "Authorization: Bearer $LLAMA_SWAP_API_KEY" -H 'Content-Type: application/json' \
+  -d @/tmp/ocr-req.json http://localhost:8080/v1/chat/completions | jq -r '.choices[0].message.content, .usage'
+rm -f /tmp/page.b64 /tmp/ocr-req.json
 ```
 
 ## Chat on the GPU

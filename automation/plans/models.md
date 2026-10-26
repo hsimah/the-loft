@@ -17,6 +17,8 @@ Candidates from the second-brain proposal; none are downloaded or measured yet. 
 
 Avoid models with research-only licences, such as Nanonets-OCR2-3B. Small OCR models (~1B) now top OmniDocBench ([overview](https://blog.roboflow.com/best-open-source-ocr-models/)), cheap enough to re-read the whole archive.
 
+**First OCR test** (one page: a notice about a bill, with a small payment slip; whole page sent straight in, each model's own task prompt; not a benchmark, and unlike a real bill, which is mostly fields and tables): GLM-OCR took 3.0 s and read the body text accurately but omitted two separate regions, the letterhead and the payment slip (reference, biller code, total), without any signal. PaddleOCR-VL took 7.7 s and covered the whole page, but misread words and, in one run, a dollar amount (`$7,300.14` as `97,300.14`); its output varied between runs. Both are designed for layout analysis followed by per-region recognition, which this test skipped. Open: sampling at temperature 0, a larger sample of real documents (full bills, receipts, tables, handwriting, phone photos) scored per field, whether a layout stage is worth adding, and a general vision model as the whole-page reader.
+
 ## Serving
 
 - llama-swap stays the single gateway ([llama-swap.yaml](../../services/sputnik/llama-swap.yaml)). Batch jobs never load models themselves.

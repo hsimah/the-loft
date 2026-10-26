@@ -36,12 +36,12 @@ Constraints:
   sudo docker exec open-webui env | grep -i LOCAL_WEB_FETCH    # expect no output
   sudo docker exec open-webui python -c "
   from open_webui.retrieval.web.utils import validate_url
-  for u in ['http://helarctos:8080', 'https://kennl.loft.hsimah.com', 'http://192.168.86.1', 'https://example.com']:
+  for u in ['http://192.168.86.21:8080', 'https://kennl.loft.hsimah.com', 'http://192.168.86.1', 'https://example.com']:
       try: print(u, validate_url(u))
       except Exception as e: print(u, 'BLOCKED')"
   ```
 
-  The first three must print `BLOCKED` and the last `True`. Then repeat once through the chat's own URL fetch, since that is the path a model uses. The fetcher still shares `loft-proxy` with Caddy, so a container escape is not covered; the setting limits what a fetched URL can reach, not the container's network.
+  The first three must print `BLOCKED` and the last `True`; the log names the blocked address. Probe helarctos by IP (`192.168.86.21`): a dotless name such as `helarctos` is rejected as a malformed URL before the address check runs. Then repeat once through the chat's own URL fetch, since that is the path a model uses. The fetcher still shares `loft-proxy` with Caddy, so a container escape is not covered; the setting limits what a fetched URL can reach, not the container's network.
 - **Tools are code.** Open WebUI tools run Python inside the container: write and review our own, install no community tools.
 - **Queries leave the LAN.** SearXNG forwards them to upstream engines from the home IP; paid APIs log them.
 

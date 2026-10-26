@@ -31,7 +31,7 @@ services:
 
   # Chat UI; application login is separate from the llama-swap key.
   open-webui:
-    image: ghcr.io/open-webui/open-webui:0.11.0
+    image: ghcr.io/open-webui/open-webui:0.12.4
     container_name: open-webui
     restart: unless-stopped
     profiles:
@@ -58,7 +58,7 @@ services:
 
   # Workflow runner; back up its data AND N8N_ENCRYPTION_KEY.
   n8n:
-    image: n8nio/n8n:2.32.7
+    image: n8nio/n8n:2.44.7
     container_name: n8n
     restart: unless-stopped
     profiles:

@@ -57,6 +57,25 @@ The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It star
 
 Set `COMPOSE_PROFILES=gpu` in helarctos's `services/sputnik/.env`; the other profiles stay on space-needle.
 
+## OCR models
+
+`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for [Plutus](plutus.md) and [Mercurius](mercurius.md), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `ocr` group, so they stay loaded beside whichever large model is running and a request for one never swaps the other out. Both are configured and not yet downloaded or measured; the entries and `--ctx-size 16384` are starting values.
+
+Each model is a language GGUF plus a separate `--mmproj` vision projector, so each is fetched in two calls, into one directory:
+
+```bash
+services/sputnik/fetch-model.sh ggml-org/GLM-OCR-GGUF GLM-OCR-Q8_0 glm-ocr
+services/sputnik/fetch-model.sh ggml-org/GLM-OCR-GGUF mmproj-GLM-OCR-Q8_0 glm-ocr
+services/sputnik/fetch-model.sh PaddlePaddle/PaddleOCR-VL-1.5-GGUF PaddleOCR-VL-1.5 paddleocr-vl-1.5
+```
+
+The last call matches both the model and its `PaddleOCR-VL-1.5-mmproj.gguf` projector. Then recreate the container (above) and try each against the same scan:
+
+```bash
+curl -s http://localhost:8080/v1/chat/completions -H "Authorization: Bearer $LLAMA_SWAP_API_KEY" -H 'Content-Type: application/json' \
+  -d "{\"model\":\"glm-ocr\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Read all the text on this page.\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image/png;base64,$(base64 -w0 page.png)\"}}]}]}"
+```
+
 ## Chat on the GPU
 
 Open WebUI reaches llama-swap at `http://helarctos:8080/v1`, keyed with `LLAMA_SWAP_API_KEY`; space-needle's `.env` needs the same value as helarctos's. The model list comes from llama-swap, so a model added to [llama-swap.yaml](../../services/sputnik/llama-swap.yaml) appears without changes here.

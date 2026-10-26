@@ -1,9 +1,11 @@
 # llama-swap on helarctos (Sputnik gpu profile). Recreate the container after
 # a git pull: this file is a single bind mount (docs/services/sputnik.md).
 #
-# Model choice is open (#149); these entries are the evaluation set. Each is
-# too large to share the iGPU's GTT with another, so llama-swap runs one at a
-# time and swaps on demand in 23–36 s (docs/services/sputnik.md).
+# Model choice is open (#149); the large entries are the evaluation set. Each
+# is too large to share the iGPU's GTT with another, so llama-swap runs one at
+# a time and swaps on demand in 23–36 s (docs/services/sputnik.md). The small
+# OCR models are a second, persistent group: they stay loaded beside whichever
+# large model is running (see routing, below).
 # Paths are inside the container: /models is /den/sputnik/models, filled by
 # services/sputnik/fetch-model.sh.
 healthCheckTimeout: 600
@@ -32,6 +34,13 @@ macros:
     --reasoning-budget 2048
     --reasoning-budget-message "Thinking budget reached. Give the answer now."
 
+  # Small OCR models: same GPU settings, a short context, no reasoning budget.
+  "ocr-server": >
+    /app/llama-server
+    --host 127.0.0.1 --port ${PORT}
+    --n-gpu-layers all --load-mode dio --flash-attn on --jinja
+    --ctx-size 16384 --parallel 1
+
 models:
   # 125B, 6B active, ~86 GiB at UD-IQ4_XS: the largest that leaves room for
   # the KV cache (UD-Q4_K_XL is 102 GiB). Qwen Community License: personal,
@@ -55,3 +64,47 @@ models:
       ${server}
       --model /models/qwen3.5-122b-a10b/Qwen3.5-122B-A10B-UD-Q4_K_XL-00001-of-00003.gguf
     ttl: 0
+
+  # OCR for Plutus and Mercurius (docs/services/sputnik.md#ocr-models). Small
+  # vision models: the language model plus a separate vision projector
+  # (--mmproj). One slot; a scanned page is a few thousand tokens in and out.
+  # Starting values, to be measured on real scans.
+  # ~0.9 GB + 0.5 GB projector at Q8_0. MIT.
+  "glm-ocr":
+    cmd: >
+      ${ocr-server}
+      --model /models/glm-ocr/GLM-OCR-Q8_0.gguf
+      --mmproj /models/glm-ocr/mmproj-GLM-OCR-Q8_0.gguf
+    ttl: 0
+
+  # ~0.9 GB + 0.9 GB projector. Apache 2.0. Official 1.5 conversion; 1.6 has
+  # community GGUFs only.
+  "paddleocr-vl":
+    cmd: >
+      ${ocr-server}
+      --model /models/paddleocr-vl-1.5/PaddleOCR-VL-1.5.gguf
+      --mmproj /models/paddleocr-vl-1.5/PaddleOCR-VL-1.5-mmproj.gguf
+    ttl: 0
+
+# Which models may run together. The large models swap among themselves and
+# unload any other non-persistent group; the OCR models never swap out, and
+# loading one leaves the large model alone.
+routing:
+  router:
+    use: group
+    settings:
+      groups:
+        "large":
+          swap: true
+          exclusive: true
+          members:
+            - "qwen3.8-flash-next"
+            - "gpt-oss-120b"
+            - "qwen3.5-122b"
+        "ocr":
+          swap: false
+          exclusive: false
+          persistent: true
+          members:
+            - "glm-ocr"
+            - "paddleocr-vl"

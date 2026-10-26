@@ -30,7 +30,18 @@ Not scheduled. Open WebUI has no search backend, so chat models cannot reach the
 Constraints:
 
 - **Web and private data never meet.** A model or chat with web tools gets no wiki or calendar tools, memories or knowledge bases, and vice versa. Fetched pages can carry prompt injection; arbitrary URL fetches and rendered markdown images are exfiltration channels.
-- **No LAN fetches.** Open WebUI's fetcher sits on `loft-proxy` with LAN DNS. Keep local-address fetching off (`ENABLE_RAG_LOCAL_WEB_FETCH`, default false; unverified on 0.11) and probe that it cannot reach `helarctos:8080`, `*.loft` services or the router.
+- **No LAN fetches.** Open WebUI's fetcher sits on `loft-proxy` with LAN DNS. Keep local-address fetching off: `ENABLE_LOCAL_WEB_FETCH` (the old name `ENABLE_RAG_LOCAL_WEB_FETCH` is a deprecated alias), default false in 0.12.4 (read in the source). While off, every address a fetched hostname resolves to must be globally routable, which rejects LAN, Tailscale and loopback addresses; redirects are checked the same way. Do not set either variable in Sputnik's `.env`. Confirm on the running container, then probe the real targets:
+
+  ```bash
+  sudo docker exec open-webui env | grep -i LOCAL_WEB_FETCH    # expect no output
+  sudo docker exec open-webui python -c "
+  from open_webui.retrieval.web.utils import validate_url
+  for u in ['http://helarctos:8080', 'https://kennl.loft.hsimah.com', 'http://192.168.86.1', 'https://example.com']:
+      try: print(u, validate_url(u))
+      except Exception as e: print(u, 'BLOCKED')"
+  ```
+
+  The first three must print `BLOCKED` and the last `True`. Then repeat once through the chat's own URL fetch, since that is the path a model uses. The fetcher still shares `loft-proxy` with Caddy, so a container escape is not covered; the setting limits what a fetched URL can reach, not the container's network.
 - **Tools are code.** Open WebUI tools run Python inside the container: write and review our own, install no community tools.
 - **Queries leave the LAN.** SearXNG forwards them to upstream engines from the home IP; paid APIs log them.
 

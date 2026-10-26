@@ -56,7 +56,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 [models](models.md) · [workflows](workflows.md) · decisions D8, D18, D21. Needs #149's choice for D18.
 
-- [ ] Download the OCR model (PaddleOCR-VL-1.6 or GLM-OCR; check the licence and test both on your own scans) and serve it on llama-swap on helarctos ([models](models.md#household-roster)). First, ahead of the rest of the set.
+- [ ] Download the OCR models and compare them on your own scans: GLM-OCR and PaddleOCR-VL-1.5 are configured in llama-swap (persistent `ocr` group), not yet fetched or measured ([commands](../../docs/services/sputnik.md#ocr-models)). First, ahead of the rest of the set.
 - [ ] Household models on llama-swap (OCR, small instruct, embeddings, whisper) with resident groups; batch slot agreed with the runner.
 - [ ] Vault egress: allow helarctos `:8080` only; probe that nothing else leaves.
 - [ ] Paperless AI suggestions and index; paperless-gpt OCR on the internal network.

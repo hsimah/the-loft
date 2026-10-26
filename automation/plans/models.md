@@ -4,11 +4,11 @@ The apps and all data live on space-needle; helarctos is only the model engine, 
 
 ## Household roster
 
-Candidates from the second-brain proposal; none are downloaded or measured yet.
+Candidates from the second-brain proposal; none are downloaded or measured yet. PaddleOCR-VL-1.6 has community GGUFs only, so the official 1.5 is the one configured.
 
 | Job | Model (open weights) | Approx. memory | Used by |
 |---|---|---|---|
-| OCR | PaddleOCR-VL-1.6 or GLM-OCR | < 5 GB | Vault, wiki attachments, recipe photos |
+| OCR | GLM-OCR (MIT) or PaddleOCR-VL-1.5 (Apache 2.0); both in [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), [fetch commands](../../docs/services/sputnik.md#ocr-models) | ~2 GB each | Vault, wiki attachments, recipe photos |
 | Second opinion: disagreements, handwriting | Qwen3.8-27B (vision) | ~20 GB | Vault re-check, overnight only |
 | Summaries, tags, links, routing, reports | Qwen3.6-35B-A3B, or the Qwen3.8 35B-A3B in [#149](https://github.com/hsimah/the-loft/issues/149) | ~22 GB | All |
 | Embeddings | embeddinggemma | < 1 GB | Paperless search, later wiki search |
@@ -20,7 +20,7 @@ Avoid models with research-only licences, such as Nanonets-OCR2-3B. Small OCR mo
 ## Serving
 
 - llama-swap stays the single gateway ([llama-swap.yaml](../../services/sputnik/llama-swap.yaml)). Batch jobs never load models themselves.
-- Keep the small household set resident beside one large model with llama-swap's groups; check the syntax on the pinned version.
+- The small household set stays resident beside one large model through llama-swap's router groups (`persistent`, `exclusive: false`); the OCR group is configured on the pinned v265 syntax, and the rest of the set joins it.
 - Vulkan is in use today. ROCm reportedly does over twice Vulkan's prompt processing on Strix Halo ([discussion](https://github.com/ggml-org/llama.cpp/discussions/27154)), which suits image-heavy OCR. Benchmark both on real documents; the comparison is already open in #149.
 - whisper.cpp's server behind llama-swap for `/v1/audio/transcriptions`; verify on the pinned version.
 

@@ -26,4 +26,5 @@ Register of open choices. When one is made, set Status to the decision and date,
 | D17 | Shell steps for workflows | `webhook` + bash media worker on helarctos | Open | [workflows](workflows.md#shell-steps) | Phase 6 |
 | D22 | Public recipe sharing | Not yet; export instead | Open | [Ceres](ceres.md) | Phase 6 |
 | D7 | OCR re-check interval | 6 months, then tune from flag rates | Open | [Plutus](plutus.md) | Phase 7 |
+| D23 | Web search backend | SearXNG as a Sputnik profile on space-needle; a paid API (Brave, Tavily) if upstream engines rate-limit it | Open | [workflows](workflows.md#web-search-and-research) | Later |
 | D20 | Single sign-on | Later, after the apps exist; Pocket ID as candidate | Open | [shared-services](shared-services.md) | Later |

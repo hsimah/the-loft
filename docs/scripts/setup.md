@@ -18,6 +18,7 @@ sudo bash setup.sh
 | Service `setup.sh` | Sourced after deploy (removes the retired Transmission cleanup cron) |
 | `hosts/<host>/bootstrap` | Host provisioning (Surface kiosks: i3, dashboard, power daemon, hardware fixes; Fjord: Bluetooth audio) |
 | Wi-Fi fields | Installs the watchdog script, defaults file and cron |
+| `BACKUP_*` | With `BACKUP_ENABLED=true`: installs restic and rclone, `loft-backup`, and the nightly and weekly systemd timers ([backups](../operations/backups.md)) |
 
 It also installs base packages, Docker (if missing), Git hooks, the `loft-proxy` network, Fastfetch with [laiko.txt](../../laiko.txt), and copies [daemon.json](../../daemon.json) — **which restarts Docker if it changed**. It overwrites adminhabl's `.bashrc`, `.inputrc` and `.tmux.conf` with includes of the repo's dotfiles, and rewrites SSH/sudoers config.
 

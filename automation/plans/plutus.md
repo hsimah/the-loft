@@ -54,7 +54,7 @@ Batch work follows the [GPU sharing rules](models.md#sharing-the-gpu).
 
 ## Backups
 
-Paperless's `document_exporter` output plus a Postgres dump, into an encrypted restic repository of its own. See [backups](backups.md).
+Built: `document_exporter` output plus a Postgres dump, in an encrypted restic repository of its own ([runbook](../../docs/operations/backups.md)). See [backups](backups.md).
 
 ## Open questions
 

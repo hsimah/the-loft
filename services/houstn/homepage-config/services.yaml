@@ -243,6 +243,14 @@
           type: uptimekuma
           url: http://uptime:3001
           slug: "{{HOMEPAGE_VAR_UPTIME_KUMA_SLUG}}"
+    - Backups:
+        icon: mdi-backup-restore
+        href: https://uptime.loft.hsimah.com/status/{{HOMEPAGE_VAR_BACKUP_KUMA_SLUG}}
+        description: Off-site backups
+        widget:
+          type: uptimekuma
+          url: http://uptime:3001
+          slug: "{{HOMEPAGE_VAR_BACKUP_KUMA_SLUG}}"
 
 - Infrastructure:
     - Mushr:

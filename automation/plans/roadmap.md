@@ -23,7 +23,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] Names: Mercurius (wiki), Plutus (vault), Janus (calendar), Ceres (recipes).
 - [ ] Check Google Drive quota and create the rclone Drive client (`drive.file`).
 - [ ] Tailscale on both phones and laptops, and on space-needle.
-- [ ] Write the backup recovery sheet template.
+- [x] Write the backup recovery sheet template ([runbook](../../docs/operations/backups.md#recovery-sheet)); print it, fill it in and file it.
 
 ## Phase 1 — Mercurius
 
@@ -31,7 +31,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 - [x] Compose, host.conf dirs and health URL, Caddy LAN route (the loft wildcard already resolves).
 - [x] Deploy; accounts and the `household` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
-- [ ] restic job for the wiki (the shared backup script lands here).
+- [ ] restic job for the wiki: built ([loft-backup](../../docs/operations/backups.md)), not yet run against Drive.
 - [x] Service page in `docs/services/`, README rows.
 
 **Done when** both of you edit from phone and laptop, on and off the LAN; edits appear in Forgejo; a wiki snapshot restores from Drive.
@@ -46,7 +46,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [ ] Move the LUKS header backup to the USB stick in the safe; recovery sheet filed.
 - [ ] Phone and scanner upload path; consume folder.
 - [ ] Retarget the OneDrive puller to vault staging; triage.
-- [ ] Exporter + Postgres dump into the vault restic repository; restore test.
+- [ ] Exporter + Postgres dump into the vault restic repository: built, not yet run; restore test.
 
 **Done when** the first record category is scanned and searchable, and a vault restore from Drive works with only the recovery sheet.
 
@@ -105,5 +105,5 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Next actions
 
-1. Answer D1, D2, D9, D10 and D11.
-2. Then the phase 1 Compose bundle can be drafted here for review.
+1. Create the Drive client and passwords, run the first backup, then the restore test ([runbook](../../docs/operations/backups.md#setup-once)).
+2. Answer D9 (Tailscale) and D19.

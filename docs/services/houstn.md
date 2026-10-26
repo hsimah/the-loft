@@ -7,6 +7,7 @@
 - [.env.example](../../services/houstn/.env.example): profiles and `HOMEPAGE_VAR_*` widget credentials.
 - Beszel: `/opt/houstn/beszel/data`. Uptime Kuma: `/opt/houstn/uptime/data` (held on 1.x).
 - Homepage: [homepage-config](../../services/houstn/homepage-config), bind-mounted from the repo.
+- Backups tile: an Uptime Kuma status page of push monitors that `loft-backup` reports to; its slug is `HOMEPAGE_VAR_BACKUP_KUMA_SLUG` ([backups](../operations/backups.md#alerts)).
 - Glances: [glances.conf](../../services/houstn/glances.conf). The space-needle override adds `/mammoth` and the remote host mappings (Viking maps to its Tailscale IP).
 
 The Fleet row shows CPU, memory and deployed commit per host from Glances. The commit marker is written by Git hooks on checkout/merge, not by container deploys.

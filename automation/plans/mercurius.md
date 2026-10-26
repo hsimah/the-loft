@@ -5,7 +5,7 @@ SilverBullet in multi-space mode, live since 2026-10-25: [service page](../../do
 ## Remaining
 
 - Off-LAN access through Tailscale (D9).
-- Encrypted off-site backup of `/mammoth/mercurius` ([backups](backups.md)).
+- Encrypted off-site backup of `/mammoth/mercurius`: built, not yet run ([runbook](../../docs/operations/backups.md)).
 - OCR for attachments (phase 3, below).
 - Obsidian on a clone of the Forgejo repo, if wanted. Edits made that way reach SilverBullet through its git sync, which fetches and merges; it is built as a backup, not for collaboration, so expect the odd conflict to resolve in the wiki.
 

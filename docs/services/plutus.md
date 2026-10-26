@@ -32,7 +32,7 @@ Run from `/srv/the-loft`, one at a time:
 
 1. `sudo lvcreate -L 250G -n plutus ubuntu-vg`
 2. `sudo cryptsetup luksFormat --type luks2 /dev/ubuntu-vg/plutus`. Use a long passphrase and store it in the password manager.
-3. `sudo cryptsetup luksAddKey /dev/ubuntu-vg/plutus`: a second, recovery passphrase (`openssl rand -base64 30`) for the printed recovery sheet in the safe ([backups plan](../../automation/plans/backups.md#how-private-is-too-private-d11)).
+3. `sudo cryptsetup luksAddKey /dev/ubuntu-vg/plutus`: a second, recovery passphrase (`openssl rand -base64 30`) for the printed recovery sheet in the safe ([backups plan](../../automation/plans/backups.md#key-custody-d11)).
 4. `sudo cryptsetup luksHeaderBackup /dev/ubuntu-vg/plutus --header-backup-file /root/plutus-luks-header.img`. A damaged header makes the volume unrecoverable even with the passphrase. Copy it to the USB stick in the safe, then `sudo shred -u` it on the host: with either passphrase it opens the vault.
 5. `sudo cryptsetup open /dev/ubuntu-vg/plutus plutus`, then `sudo mkfs.xfs -L plutus /dev/mapper/plutus`.
 6. `sudo control-plane/plutus-vault.sh unlock` mounts it and creates the directories.
@@ -49,7 +49,7 @@ Grow it later while it is online: `lvextend`, `cryptsetup resize plutus`, then `
 
 ## Backups
 
-**None yet.** The vault is one copy on one disk. Keep paper originals until the encrypted off-site backup exists ([plan](../../automation/plans/backups.md)). That backup will be `document_exporter` output plus a Postgres dump, not a copy of `/plutus` taken while it is running.
+Nightly to Google Drive: `document_exporter` output plus a Postgres dump, staged inside `/plutus/backup` and uploaded to the vault restic repository, not a copy of `/plutus` taken while it runs. The job skips while the vault is locked. Setup, restore and the recovery sheet: [backups](../operations/backups.md). Configured, not yet run against Drive: keep paper originals until a restore from Drive has been tested.
 
 ## Upgrades
 

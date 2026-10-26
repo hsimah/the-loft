@@ -23,7 +23,7 @@ layout:
     columns: 3
   Monitoring:
     style: row
-    columns: 2
+    columns: 3
   Infrastructure:
     style: row
     columns: 3

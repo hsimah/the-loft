@@ -25,7 +25,7 @@ SilverBullet runs as the folder's owner (littledog, from setup). Each space is a
 
 ## Backups
 
-Forgejo holds the space's history, on the same host; that is not a backup. Off-site encrypted backups are planned ([backups](../../automation/plans/backups.md)). Until then, `/mammoth/mercurius` and Forgejo are both lost with space-needle.
+Forgejo holds the space's history on the same host, which is not a backup. `/mammoth/mercurius` goes nightly to the open restic repository on Google Drive ([backups](../operations/backups.md)). Configured, not yet run against Drive: until then both it and Forgejo are lost with space-needle.
 
 ## Upgrades
 

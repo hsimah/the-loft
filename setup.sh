@@ -61,6 +61,9 @@ PACKAGES=(git curl ca-certificates jq rsync skopeo kitty-terminfo tmux ncurses-t
 [[ "$STORAGE_FS" == "xfs" ]] && PACKAGES+=(xfsprogs)
 # rclone speaks the OneDrive Graph API; rsync cannot reach OneDrive at all.
 [[ "${ONEDRIVE_PULL_ENABLED:-false}" == "true" ]] && PACKAGES+=(rclone)
+# Off-site backups: restic encrypts, rclone reaches Google Drive. restic must be
+# 0.16 or newer (`forget --keep-yearly unlimited`).
+[[ "${BACKUP_ENABLED:-false}" == "true" ]] && PACKAGES+=(restic rclone)
 apt-get update -qq
 apt-get install -y -qq "${PACKAGES[@]}" > /dev/null
 
@@ -483,6 +486,64 @@ EOF
   info "Installed OneDrive migration cron: ${ONEDRIVE_PULL_REMOTE} -> ${ONEDRIVE_PULL_DEST} (every ${ONEDRIVE_PULL_MINUTES} min)"
 else
   info "OneDrive migration cron not enabled on this host"
+fi
+
+# Off-site backups — nightly restic run and a weekly prune/check, as systemd
+# timers. Removed first so BACKUP_ENABLED="false" really stops them.
+#   docs/operations/backups.md
+systemctl disable --now loft-backup.timer loft-backup-check.timer > /dev/null 2>&1 || true
+rm -f /etc/systemd/system/loft-backup.{service,timer} \
+  /etc/systemd/system/loft-backup-check.{service,timer} /etc/default/loft-backup
+if [[ "${BACKUP_ENABLED:-false}" == "true" ]]; then
+  if [[ -z "${BACKUP_REMOTE:-}" ]]; then
+    error "BACKUP_ENABLED is true but BACKUP_REMOTE is unset"
+    exit 1
+  fi
+  install -o root -g root -m 755 \
+    "${REPO_DIR}/control-plane/loft-backup.sh" /usr/local/bin/loft-backup
+  install -d -m 700 /etc/loft/restic
+  install -o root -g root -m 600 /dev/null /etc/default/loft-backup
+  cat > /etc/default/loft-backup <<EOF
+BACKUP_REMOTE="${BACKUP_REMOTE}"
+BACKUP_JOBS="${BACKUP_JOBS[*]}"
+BACKUP_NTFY_URL="${BACKUP_NTFY_URL:-}"
+EOF
+  install_backup_timer() { # unit-name subcommand description OnCalendar
+    cat > "/etc/systemd/system/$1.service" <<UNIT
+[Unit]
+Description=Loft off-site backup ($3)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/default/loft-backup
+ExecStart=/usr/local/bin/loft-backup $2
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=6h
+UNIT
+    cat > "/etc/systemd/system/$1.timer" <<UNIT
+[Unit]
+Description=Loft off-site backup ($3) timer
+
+[Timer]
+OnCalendar=$4
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+  }
+  install_backup_timer loft-backup backup nightly "*-*-* ${BACKUP_TIME:-03:30}:00"
+  install_backup_timer loft-backup-check check "weekly check" "${BACKUP_CHECK_CALENDAR:-Sun 05:00}"
+  systemctl daemon-reload
+  systemctl enable --now loft-backup.timer loft-backup-check.timer > /dev/null
+  info "Installed backup timers: ${BACKUP_JOBS[*]} to ${BACKUP_REMOTE} (nightly ${BACKUP_TIME:-03:30}, check ${BACKUP_CHECK_CALENDAR:-Sun 05:00})"
+else
+  systemctl daemon-reload
+  info "Off-site backups not enabled on this host"
 fi
 
 # ─── 13. Verification summary ─────────────────────────────────────────────────

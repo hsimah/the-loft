@@ -258,9 +258,9 @@ run_check push-checkfail
 run_case push-checkfail "check" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_RESTIC_FAIL_ON="check" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push"
 assert_contains "$(calls)" "tok-check?status=down" "a failed weekly check reports down"
 
-# The tile and its status-page slug are wired.
-homepage="$(cat "${ROOT}/services/houstn/homepage-config/services.yaml")"
-assert_contains "$homepage" "HOMEPAGE_VAR_BACKUP_KUMA_SLUG" "Homepage has a Backups tile"
+# The Backups tile is commented out while backups are shelved.
+homepage="$(grep -v '^ *#' "${ROOT}/services/houstn/homepage-config/services.yaml")"
+assert_absent "$homepage" "BACKUP_KUMA_SLUG" "the Backups tile is off while shelved"
 assert_contains "$(cat "${ROOT}/services/houstn/.env.example")" "HOMEPAGE_VAR_BACKUP_KUMA_SLUG=" "its slug is in .env.example"
 
 # ── init ─────────────────────────────────────────────────────────────────────
@@ -281,8 +281,8 @@ assert_contains "$out" "unlock the vault first" "says so"
 conf="$(cat "${ROOT}/hosts/space-needle/host.conf")"
 setup="$(cat "${ROOT}/setup.sh")"
 script="$(cat "$SCRIPT")"
-assert_contains "$conf" 'BACKUP_ENABLED="true"' "space-needle enables backups"
-assert_contains "$conf" "BACKUP_JOBS=(plutus mercurius forgejo)" "space-needle runs all three jobs"
+assert_contains "$conf" 'BACKUP_ENABLED="false"' "backups are shelved on space-needle (setup.sh installs nothing)"
+assert_contains "$conf" "BACKUP_JOBS=(plutus mercurius forgejo)" "the job list is kept for when it returns"
 assert_contains "$setup" "loft-backup.timer" "setup.sh installs the nightly timer"
 assert_contains "$setup" "loft-backup-check" "setup.sh installs the weekly check"
 assert_contains "$setup" "Persistent=true" "a missed night runs at next boot"

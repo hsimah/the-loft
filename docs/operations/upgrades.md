@@ -15,7 +15,7 @@ sudo tar -czf /mammoth/backups/howlr-$(date +%Y%m%dT%H%M%S).tar.gz -C /opt howlr
 loft-ctl start howlr
 ```
 
-Backups on `/mammoth` do not survive loss of space-needle. The nightly [off-site backups](backups.md) do not replace this step: they are up to a day old and cover only Plutus, Mercurius and Forgejo.
+Backups on `/mammoth` do not survive loss of space-needle, and no off-site backup is running ([backups](backups.md), shelved).
 
 ## Deploy and verify
 

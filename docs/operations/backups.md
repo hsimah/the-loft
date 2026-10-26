@@ -1,5 +1,7 @@
 # Off-site backups
 
+**Shelved 2026-10-26: built and tested, not deployed.** `BACKUP_ENABLED="false"` in [host.conf](../../hosts/space-needle/host.conf), so setup.sh installs no timers, and the Homepage tile is off. No Google credential or repository exists yet. Backups will be planned for space-needle and helarctos as a whole before this returns; the design below (D10, D11) still stands. To turn it on, follow Setup, set `BACKUP_ENABLED="true"`, uncomment the tile, and run setup.sh.
+
 Encrypted [restic](https://restic.readthedocs.io) snapshots of Plutus, Mercurius and Kennl's Forgejo go to Google Drive through rclone. restic encrypts on space-needle; Google sees opaque pack files and never holds a key. Script: [loft-backup.sh](../../control-plane/loft-backup.sh), installed by setup.sh as `loft-backup`. Settings (`BACKUP_*`) are in [host.conf](../../hosts/space-needle/host.conf). Plan for the remaining services: [automation plans](../../automation/plans/backups.md).
 
 | Job | Repository | Backs up |

@@ -11,7 +11,7 @@ Forgejo becomes the source of truth for repositories, issues and PRs. GitHub cop
 | space-needle | `/opt/kennl/db` | Postgres |
 | helarctos | `/opt/kennl/runner` | Actions cache |
 
-Nightly to Google Drive: a `forgejo dump`, a `pg_dump` and `app.ini` in the open restic repository ([backups](../operations/backups.md); configured, not yet run against Drive). Once GitHub is only a mirror, kennl holds the only copy of issues and PRs.
+Off-site backup of a `forgejo dump`, a `pg_dump` and `app.ini` is [built but shelved](../operations/backups.md). Once GitHub is only a mirror, kennl holds the only copy of issues and PRs.
 
 ## Access
 

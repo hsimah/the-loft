@@ -54,7 +54,7 @@ Batch work follows the [GPU sharing rules](models.md#sharing-the-gpu).
 
 ## Backups
 
-Built: `document_exporter` output plus a Postgres dump, in an encrypted restic repository of its own ([runbook](../../docs/operations/backups.md)). See [backups](backups.md).
+Built but shelved (2026-10-26): `document_exporter` output plus a Postgres dump, in an encrypted restic repository of its own ([runbook](../../docs/operations/backups.md)). See [backups](backups.md).
 
 ## Open questions
 

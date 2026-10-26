@@ -49,7 +49,7 @@ Grow it later while it is online: `lvextend`, `cryptsetup resize plutus`, then `
 
 ## Backups
 
-Nightly to Google Drive: `document_exporter` output plus a Postgres dump, staged inside `/plutus/backup` and uploaded to the vault restic repository, not a copy of `/plutus` taken while it runs. The job skips while the vault is locked. Setup, restore and the recovery sheet: [backups](../operations/backups.md). Configured, not yet run against Drive: keep paper originals until a restore from Drive has been tested.
+None running. Off-site backup (`document_exporter` output plus a Postgres dump into a restic repository on Google Drive) is [built but shelved](../operations/backups.md), so the vault is one copy on one disk: keep paper originals.
 
 ## Upgrades
 

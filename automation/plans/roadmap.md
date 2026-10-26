@@ -1,6 +1,8 @@
 # Roadmap
 
-Mercurius, the open brain, comes first, so the rest of the work has somewhere to keep its notes. Plutus, the vault, follows straight away: digitising can start with plain OCR, and the AI can re-read everything later because originals are kept. Each phase ends at a usable state with a tested backup.
+Mercurius, the open brain, comes first, so the rest of the work has somewhere to keep its notes. Plutus, the vault, follows straight away: digitising can start with plain OCR, and the AI can re-read everything later because originals are kept. Each phase ends at a usable state with a tested backup. Backups are shelved since 2026-10-26 ([backups](backups.md)), so the backup lines below stay open and their "done when" restores are deferred.
+
+**Current priority** (ahead of the order below): local LLMs, first OCR in Plutus, then importing and parsing in Mercurius. Both need phase 3 pieces: the models downloaded and served on llama-swap, and, for Plutus, a one-way path from the vault to `helarctos:8080`.
 
 ```mermaid
 flowchart LR
@@ -31,7 +33,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 - [x] Compose, host.conf dirs and health URL, Caddy LAN route (the loft wildcard already resolves).
 - [x] Deploy; accounts and the `household` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
-- [ ] restic job for the wiki: built ([loft-backup](../../docs/operations/backups.md)), not yet run against Drive.
+- [ ] restic job for the wiki: built and shelved ([backups](backups.md)).
 - [x] Service page in `docs/services/`, README rows.
 
 **Done when** both of you edit from phone and laptop, on and off the LAN; edits appear in Forgejo; a wiki snapshot restores from Drive.
@@ -46,7 +48,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [ ] Move the LUKS header backup to the USB stick in the safe; recovery sheet filed.
 - [ ] Phone and scanner upload path; consume folder.
 - [ ] Retarget the OneDrive puller to vault staging; triage.
-- [ ] Exporter + Postgres dump into the vault restic repository: built, not yet run; restore test.
+- [ ] Exporter + Postgres dump into the vault restic repository: built and shelved; restore test deferred.
 
 **Done when** the first record category is scanned and searchable, and a vault restore from Drive works with only the recovery sheet.
 
@@ -54,6 +56,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 [models](models.md) · [workflows](workflows.md) · decisions D8, D18, D21. Needs #149's choice for D18.
 
+- [ ] Download the OCR model (PaddleOCR-VL-1.6 or GLM-OCR; check the licence and test both on your own scans) and serve it on llama-swap on helarctos ([models](models.md#household-roster)). First, ahead of the rest of the set.
 - [ ] Household models on llama-swap (OCR, small instruct, embeddings, whisper) with resident groups; batch slot agreed with the runner.
 - [ ] Vault egress: allow helarctos `:8080` only; probe that nothing else leaves.
 - [ ] Paperless AI suggestions and index; paperless-gpt OCR on the internal network.
@@ -105,5 +108,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Next actions
 
-1. Create the Drive client and passwords, run the first backup, then the restore test ([runbook](../../docs/operations/backups.md#setup-once)).
-2. Answer D9 (Tailscale) and D19.
+1. Plutus OCR: download the OCR model and serve it on helarctos; open the vault-to-helarctos path; paperless-gpt on the internal network (phase 3). Needs D18 and [#149](https://github.com/hsimah/the-loft/issues/149).
+2. Mercurius import and parsing: the attachment OCR job ([plan](mercurius.md#ocr-for-attachments)), then what else to import and parse.
+3. Plan backups for space-needle and helarctos as a whole, then revisit Drive ([backups](backups.md)).
+4. Answer D9 (Tailscale) and D19.

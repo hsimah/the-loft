@@ -17,7 +17,7 @@ Paperless 3.3's AI does not fill custom fields and takes no custom prompts. Due 
 
 ## Isolation
 
-- **Separate everything.** Own Compose group, database, storage and Docker network. Nothing flows from the vault into the wiki. One shared household archive (D4); Paperless permissions can split it later.
+- **Separate everything.** Own Compose group, database, storage and Docker network. Nothing flows from the vault into the wiki except links, which open only for a signed-in Plutus user. One shared household archive (D4); Paperless permissions can split it later.
 - **Encrypted at rest** (D5): LUKS2 on a 250 GB LVM volume on the NVMe, mounted at `/plutus` and unlocked by hand after each boot. Everything, including Postgres with the OCR text, is on it, and Plutus cannot start while it is locked.
 - **No internet.** Today Plutus is only on Docker `internal` networks, so it has no route out at all. Phase 3 needs one path, to `helarctos:8080`, one direction: the vault calls the model, never the reverse. That means a non-internal network with an nftables rule on its bridge, like [kennl's](../../hosts/helarctos/kennl-egress.nft); this is a first case for [#104](https://github.com/hsimah/the-loft/issues/104)/[#106](https://github.com/hsimah/the-loft/issues/106). The mail fetcher is the one exception, in its own container.
 - **No side doors.** Only the Paperless UI is routed through Caddy, LAN and Tailscale only. Never on the tunnel.

@@ -1,6 +1,6 @@
 # Mercurius: household wiki
 
-SilverBullet in multi-space mode, live since 2026-10-25: [service page](../../docs/services/mercurius.md). One account each, a `household` space, and SilverBullet's own git revisions synced to a private Forgejo repo (D2, D3). Nothing from [Plutus](plutus.md) goes in here. This page holds the remaining work; see the [roadmap](roadmap.md#phase-1--mercurius).
+SilverBullet in multi-space mode, live since 2026-10-25: [service page](../../docs/services/mercurius.md). One account each, a `household` space, and SilverBullet's own git revisions synced to a private Forgejo repo (D2, D3). Nothing from [Plutus](plutus.md) goes in here except links to its documents and saved views ([service page](../../docs/services/mercurius.md)). This page holds the remaining work; see the [roadmap](roadmap.md#phase-1--mercurius).
 
 ## Remaining
 

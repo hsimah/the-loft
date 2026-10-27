@@ -1,6 +1,6 @@
 # Mercurius — household wiki
 
-[Compose](../../services/mercurius/docker-compose.yml) runs [SilverBullet](https://docs.silverbullet.md) (`mercurius`) on space-needle: plans, trips, places, projects and lists as plain markdown, editable from phone and laptop. Named for the Roman god of communication and the planet Mercury. Nothing from Plutus (the vault) goes in here. Plan and later work: [automation plans](../../automation/plans/mercurius.md). Deployed on space-needle 2026-10-25, syncing to Forgejo.
+[Compose](../../services/mercurius/docker-compose.yml) runs [SilverBullet](https://docs.silverbullet.md) (`mercurius`) on space-needle: plans, trips, places, projects and lists as plain markdown, editable from phone and laptop. Named for the Roman god of communication and the planet Mercury. Nothing from Plutus (the vault) goes in here except links: pages may link to a Plutus document or saved view, which opens only for a signed-in Plutus user. Prefer saved-view links (`/view/<id>`) over search URLs, and keep link text generic; titles, amounts and OCR text stay in the vault. Plan and later work: [automation plans](../../automation/plans/mercurius.md). Deployed on space-needle 2026-10-25, syncing to Forgejo.
 
 | Host path | Contents |
 |---|---|

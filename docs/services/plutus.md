@@ -69,7 +69,7 @@ sudo docker exec plutus curl -sS -m 5 http://1.1.1.1
 
 ## Second-pass OCR
 
-Paperless runs its own OCR (Tesseract) on every document as it arrives. paperless-gpt then reads it again with a vision model on helarctos: it polls Paperless's API for documents carrying the tag `paperless-gpt-ocr-auto`, renders each page, sends it to `glm-ocr` at temperature 0, and writes the recognised text back. Two independent readings let a later job flag documents where they disagree ([plan](../../automation/plans/plutus.md#scanning-ocr-and-re-checking)). paperless-gpt's own suggestions (titles, tags) are off; Paperless's [built-in AI](#built-in-ai) does that.
+Paperless ingests every document as it arrives and keeps what it extracts: a PDF's embedded text layer, or Tesseract's reading of a scan. A second pass is on demand, for documents whose text is bad (older PDFs, odd layouts, poor scans): tag the document `paperless-gpt-ocr-auto` (bulk edit works for many). paperless-gpt then reads it again with a vision model on helarctos: it polls Paperless's API for documents carrying the tag `paperless-gpt-ocr-auto`, renders each page, sends it to `glm-ocr` at temperature 0, and writes the recognised text back. Two independent readings let a later job flag documents where they disagree ([plan](../../automation/plans/plutus.md#scanning-ocr-and-re-checking)). paperless-gpt's own suggestions (titles, tags) are off; Paperless's [built-in AI](#built-in-ai) does that.
 
 Settings are in [Compose](../../services/plutus/docker-compose.yml). `glm-ocr` and `paddleocr-vl` expect fixed task prompts (`Text Recognition:` and `OCR:`), so set `ocr_prompt.tmpl` to the one for the model in use. One page at a time goes in as an image, which is how the models skipped regions in [the first test](../../automation/plans/models.md#household-roster).
 
@@ -78,8 +78,8 @@ Set up, one step at a time, after the model egress is installed:
 1. `sudo bash setup.sh` installs the firewall and creates the bridge. With the vault unlocked, `sudo control-plane/plutus-vault.sh unlock` creates `/plutus/gpt`.
 2. In Plutus, create an API token (admin → Auth Tokens) and a tag `paperless-gpt-ocr-auto`. Put the token, helarctos's `LLAMA_SWAP_API_KEY` and `COMPOSE_PROFILES=ocr` in Plutus's `.env`, then `loft-ctl start plutus`.
 3. Run the probes above.
-4. Through the tunnelled page, set the OCR prompt (it is saved to `/plutus/gpt/prompts/ocr_prompt.tmpl`).
-5. Try it on a non-sensitive document: tag it by hand and confirm what changes in its content. Then add a Paperless workflow (Settings → Workflows, trigger Document Added) that assigns the tag to new documents.
+4. Replace the OCR prompt: `printf 'Text Recognition:' | sudo tee /plutus/gpt/prompts/ocr_prompt.tmpl`, then restart `plutus-gpt`. The default prompt gives the model Paperless's Tesseract text and asks it to correct it, which anchors the second reading on the first and defeats the comparison; the plain task prompt gives it the page image alone.
+5. Try it on a non-sensitive document: tag it by hand and confirm what changes in its content. No workflow tags new documents, so nothing is re-read unless you ask. Leave `OCR_SKIP_DIGITAL_PAGES` off: with it on, a pass on a born-digital PDF may skip pages it judges to have a clean text layer.
 
 On a test document, check what happens to the Tesseract text before relying on a comparison; paperless-gpt's `db` holds a run log and undo history.
 

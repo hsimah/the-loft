@@ -90,7 +90,7 @@ Paperless's own AI is enabled in [Compose](../../services/plutus/docker-compose.
 - **Chat and suggestions:** `qwen3.6-35b-a3b`. It is not resident: the first request after a swap waits 23–36 s while it loads, and it evicts whichever large model is running, including a coding job's. The request timeout is 300 s. Which model stays resident is D18 ([models](../../automation/plans/models.md#sharing-the-gpu)).
 - **Similar documents:** `embeddinggemma`, always loaded. Paperless indexes every document daily (`PAPERLESS_LLM_INDEX_TASK_CRON`, default 02:10), so the first run on a full archive is long; add the variable to Compose to move it.
 - **Key:** helarctos's `LLAMA_SWAP_API_KEY` in Plutus's `.env`. Without it, AI requests fail with 401.
-- **What leaves:** document text goes to helarctos over the LAN, in memory, for each request. Check that llama-swap does not log request bodies before putting real records through it.
+- **What leaves:** document text goes to helarctos over the LAN, as plain HTTP, for each request. It is held in memory there and not logged: after a real ID document went through, the container logs of llama-swap (helarctos) and of `plutus` and `plutus-gpt` held no document text or image data. Recheck after changing llama-swap's `logLevel`; its in-memory `/logs` buffer is not on disk and clears when the container is recreated.
 - **Models:** fetch commands are under [Paperless models](sputnik.md#paperless-models).
 
 ## Backups

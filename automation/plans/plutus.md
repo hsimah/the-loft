@@ -22,7 +22,7 @@ Paperless 3.3's AI does not fill custom fields and takes no custom prompts. Due 
 - **No internet.** Plutus's base group is only on Docker `internal` networks, so it has no route out at all. The one path, to `helarctos:8080` in one direction (the vault calls the model, never the reverse), is built for paperless-gpt as a non-internal bridge with an nftables rule, like [kennl's](../../hosts/helarctos/kennl-egress.nft), and is not yet deployed ([model egress](../../docs/services/plutus.md#model-egress)); this is a first case for [#104](https://github.com/hsimah/the-loft/issues/104)/[#106](https://github.com/hsimah/the-loft/issues/106). The mail fetcher is the one exception, in its own container.
 - **No side doors.** Only the Paperless UI is routed through Caddy, LAN and Tailscale only. Never on the tunnel.
 - **AI suggests, you approve.** Suggestions and review tags, never silent overwrites.
-- **The AI machine stores nothing.** Documents pass through helarctos in memory; check llama-swap and llama-server don't log request bodies.
+- **The AI machine stores nothing.** Documents pass through helarctos in memory. llama-swap at `logLevel: info` does not log request bodies (checked against a real ID document; see [the runbook](../../docs/services/plutus.md#built-in-ai)), and the hop is plain HTTP on the LAN.
 - **Local models only**, never Claude.
 
 ## Getting documents in

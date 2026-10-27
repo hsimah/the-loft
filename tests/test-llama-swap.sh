@@ -21,18 +21,18 @@ used="$(sed -n '/^models:/,/^routing:/p' "$CONF" | grep -oE '\$\{[a-z][a-z-]*\}'
 undefined="$(comm -23 <(printf '%s\n' "$used") <(printf '%s\n' "$macros"))"
 assert_eq "$undefined" "" "every macro a model uses is defined"
 
-# The OCR models stay loaded: persistent, and they leave other groups alone.
-ocr="$(sed -n '/"ocr":/,/members:/p' "$CONF")"
-assert_contains "$ocr" "persistent: true" "the OCR group is persistent"
-assert_contains "$ocr" "exclusive: false" "loading OCR does not unload the large model"
-assert_contains "$ocr" "swap: false" "the OCR models do not swap each other out"
+# The small models stay loaded: persistent, and they leave other groups alone.
+ocr="$(sed -n '/"small":/,/members:/p' "$CONF")"
+assert_contains "$ocr" "persistent: true" "the small group is persistent"
+assert_contains "$ocr" "exclusive: false" "loading a small model does not unload the large one"
+assert_contains "$ocr" "swap: false" "the small models do not swap each other out"
 
-# Every --model / --mmproj path is fetched by a documented command into the
+# Every --model / --mmproj path of the household and OCR models is fetched by a documented command into the
 # directory it is read from.
 while IFS= read -r path; do
   dir="$(basename "$(dirname "$path")")"
   file="$(basename "$path")"
   assert_contains "$(cat "$DOC")" "$dir" "${file}: ${dir} is a fetch destination in the Sputnik page"
-done < <(sed -n '/"glm-ocr":/,$p' "$CONF" | grep -oE '/models/[^ ]+\.gguf')
+done < <(sed -n '/"qwen3.6-35b-a3b":/,$p' "$CONF" | grep -oE '/models/[^ ]+\.gguf')
 
 finish

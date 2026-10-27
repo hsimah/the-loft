@@ -6,8 +6,10 @@
 # Plutus rather than initialise an empty archive on the unencrypted disk.
 # Unlock with control-plane/plutus-vault.sh.
 #
-# No route out. The internal default network joins the helpers; the internal
-# plutus-proxy network (created by setup.sh) is shared with Caddy only.
+# No route out except one. The internal default network joins the helpers; the
+# internal plutus-proxy network (created by setup.sh) is shared with Caddy only.
+# Paperless and the optional `gpt` service (profile ocr) also join plutus-llm,
+# a bridge the firewall limits to llama-swap on helarctos:8080.
 #   docs/services/plutus.md
 services:
   plutus:
@@ -37,6 +39,18 @@ services:
       PAPERLESS_TIKA_ENABLED: 1
       PAPERLESS_TIKA_ENDPOINT: http://tika:9998
       PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
+      # Built-in AI on the local models: suggestions and chat, and embeddings for
+      # similar documents. The route is plutus-llm; the key comes from .env. The
+      # index job runs daily (PAPERLESS_LLM_INDEX_TASK_CRON, default 02:10).
+      PAPERLESS_AI_ENABLED: "true"
+      PAPERLESS_AI_LLM_BACKEND: openai-like
+      PAPERLESS_AI_LLM_ENDPOINT: http://helarctos:8080/v1
+      PAPERLESS_AI_LLM_API_KEY: ${LLAMA_SWAP_API_KEY:-}
+      PAPERLESS_AI_LLM_MODEL: qwen3.6-35b-a3b
+      PAPERLESS_AI_LLM_EMBEDDING_BACKEND: openai-like
+      PAPERLESS_AI_LLM_EMBEDDING_MODEL: embeddinggemma
+      # A request can wait for the 35B model to load (23–36 s) after a swap.
+      PAPERLESS_AI_LLM_REQUEST_TIMEOUT: 300
     volumes:
       - type: bind
         source: /plutus/data
@@ -61,6 +75,10 @@ services:
     networks:
       - default
       - plutus-proxy
+      - plutus-llm
+    # The firewall blocks DNS, so the address is pinned (see the gpt service).
+    extra_hosts:
+      - "helarctos:192.168.86.21"
     depends_on:
       db:
         condition: service_healthy
@@ -70,6 +88,72 @@ services:
         condition: service_started
       tika:
         condition: service_started
+
+  # Second-pass OCR with the vision models on helarctos, after Paperless's own
+  # Tesseract pass (docs/services/plutus.md#second-pass-ocr). It has no login:
+  # it is on the internal network and a loopback port, never on loft-proxy or
+  # plutus-proxy. plutus-llm is its only way out; hosts/space-needle/
+  # plutus-egress.nft allows helarctos:8080 on that bridge and nothing else.
+  # The address is pinned here because the firewall blocks DNS.
+  gpt:
+    profiles: [ocr]
+    image: icereed/paperless-gpt:v0.31.0
+    container_name: plutus-gpt
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      # littledog:pack-member, which owns these directories on the vault.
+      PUID: 1003
+      PGID: 1003
+      PAPERLESS_BASE_URL: http://plutus:8000
+      PAPERLESS_API_TOKEN: ${GPT_PAPERLESS_TOKEN:-}
+      OPENAI_BASE_URL: http://helarctos:8080/v1
+      OPENAI_API_KEY: ${LLAMA_SWAP_API_KEY:-}
+      # OCR: the vision model, decoded deterministically, every page.
+      OCR_PROVIDER: llm
+      VISION_LLM_PROVIDER: openai
+      VISION_LLM_MODEL: glm-ocr
+      VISION_LLM_TEMPERATURE: 0
+      OCR_PROCESS_MODE: image
+      OCR_LIMIT_PAGES: 0
+      AUTO_OCR_TAG: paperless-gpt-ocr-auto
+      # Required by paperless-gpt but unused: suggestions come from Paperless's
+      # own AI, and nothing carries paperless-gpt's suggestion tags.
+      LLM_PROVIDER: openai
+      LLM_MODEL: qwen3.6-35b-a3b
+      LOG_LEVEL: info
+    extra_hosts:
+      - "helarctos:192.168.86.21"
+    volumes:
+      - type: bind
+        source: /plutus/gpt/config
+        target: /app/config
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /plutus/gpt/db
+        target: /app/db
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /plutus/gpt/prompts
+        target: /app/prompts
+        bind:
+          create_host_path: false
+    # The web page (review, prompts) is reached through an SSH tunnel.
+    ports:
+      - "127.0.0.1:8081:8080"
+    networks:
+      - default
+      - plutus-llm
+    depends_on:
+      - plutus
 
   db:
     image: postgres:18.6
@@ -144,4 +228,7 @@ networks:
   default:
     internal: true
   plutus-proxy:
+    external: true
+  # Created by setup.sh with a fixed bridge name for the firewall to match.
+  plutus-llm:
     external: true

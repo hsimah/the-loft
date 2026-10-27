@@ -20,10 +20,11 @@ set -euo pipefail
 : "${PLUTUS_OWNER:=littledog:pack-member}"
 : "${PLUTUS_REQUIRE_ROOT:=1}"
 
-# Paperless runs as PLUTUS_OWNER (USERMAP_UID/GID). Postgres and Valkey are
+# Paperless and paperless-gpt (gpt/) run as PLUTUS_OWNER (USERMAP_UID/GID and
+# PUID/PGID; parents are listed before children). Postgres and Valkey are
 # only given a directory: Postgres 18 chowns just its PGDATA subdirectory
 # (18/docker, mode 700), so the parent must stay traversable (755).
-APP_DIRS=(data media consume export)
+APP_DIRS=(data media consume export gpt gpt/config gpt/db gpt/prompts)
 SERVICE_DIRS=(db redis)
 
 die() { echo "plutus-vault: $*" >&2; exit 1; }

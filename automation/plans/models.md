@@ -10,8 +10,8 @@ Candidates from the second-brain proposal; none are downloaded or measured yet. 
 |---|---|---|---|
 | OCR | GLM-OCR (MIT) or PaddleOCR-VL-1.5 (Apache 2.0); both in [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), [fetch commands](../../docs/services/sputnik.md#ocr-models) | ~2 GB each | Vault, wiki attachments, recipe photos |
 | Second opinion: disagreements, handwriting | Qwen3.8-27B (vision) | ~20 GB | Vault re-check, overnight only |
-| Summaries, tags, links, routing, reports | Qwen3.6-35B-A3B, or the Qwen3.8 35B-A3B in [#149](https://github.com/hsimah/the-loft/issues/149) | ~22 GB | All |
-| Embeddings | embeddinggemma | < 1 GB | Paperless search, later wiki search |
+| Summaries, tags, links, routing, reports | Qwen3.6-35B-A3B (UD-Q4_K_XL, Apache 2.0), configured for Paperless and on demand; or the Qwen3.8 35B-A3B in [#149](https://github.com/hsimah/the-loft/issues/149) | ~22 GB | All |
+| Embeddings | embeddinggemma 300M (Q8_0, Gemma terms), configured and always loaded | < 1 GB | Paperless similar documents, later wiki search |
 | Speech to text | whisper large-v3-turbo through whisper.cpp | ~2 GB | Reels, voice notes |
 | Coding | Per #149 | 59–86 GiB | [Coding agents](coding-agents.md) |
 

@@ -1,0 +1,21 @@
+# hosts/space-needle/bootstrap — sourced by setup.sh after services start.
+# Shares REPO_DIR and the info/warn helpers.
+
+# Plutus's second-pass OCR container reaches llama-swap on helarctos through
+# the `plutus-llm` bridge, and nothing else. The table is ours alone; the
+# distro nftables service stays disabled, because its config flushes Docker's
+# rules.
+#   docs/services/plutus.md#model-egress
+info "Installing the Plutus model egress firewall..."
+
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nftables > /dev/null
+install -d -m 755 /etc/loft
+install -m 644 "${REPO_DIR}/hosts/space-needle/plutus-egress.nft" /etc/loft/plutus-egress.nft
+install -m 644 "${REPO_DIR}/hosts/space-needle/loft-plutus-egress.service" /etc/systemd/system/
+systemctl daemon-reload
+if nft --check --file /etc/loft/plutus-egress.nft; then
+  systemctl enable loft-plutus-egress > /dev/null 2>&1
+  systemctl restart loft-plutus-egress || warn "loft-plutus-egress failed; check: sudo journalctl -u loft-plutus-egress"
+else
+  warn "plutus-egress.nft does not parse; do not enable the ocr profile"
+fi

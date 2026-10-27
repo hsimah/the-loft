@@ -59,7 +59,7 @@ Set `COMPOSE_PROFILES=gpu` in helarctos's `services/sputnik/.env`; the other pro
 
 ## OCR models
 
-`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for [Plutus](plutus.md) and [Mercurius](mercurius.md), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `ocr` group, so they stay loaded beside whichever large model is running and a request for one never swaps the other out. Both are downloaded and answer on helarctos; neither is benchmarked yet, and the entries and `--ctx-size 16384` are starting values.
+`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for [Plutus](plutus.md) and [Mercurius](mercurius.md), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `small` group with the embedding model, so they stay loaded beside whichever large model is running and a request for one never swaps the others out. Both are downloaded and answer on helarctos; neither is benchmarked yet, and the entries and `--ctx-size 16384` are starting values.
 
 Each model is a language GGUF plus a separate `--mmproj` vision projector, so each is fetched in two calls, into one directory:
 
@@ -79,6 +79,29 @@ jq -n --arg m "$model" --arg p "$prompt" --rawfile img /tmp/page.b64 \
 time curl -fsS -H "Authorization: Bearer $LLAMA_SWAP_API_KEY" -H 'Content-Type: application/json' \
   -d @/tmp/ocr-req.json http://localhost:8080/v1/chat/completions | jq -r '.choices[0].message.content, .usage'
 rm -f /tmp/page.b64 /tmp/ocr-req.json
+```
+
+## Paperless models
+
+[Plutus](plutus.md)'s built-in AI (suggestions, chat, similar documents) uses two more models through the same gateway:
+
+| Model | Role | Size | Group | Licence |
+|---|---|---|---|---|
+| `qwen3.6-35b-a3b` (UD-Q4_K_XL) | Suggestions and chat | 22 GB | `large`: loads on demand in 23–36 s and evicts the large model | Apache 2.0 |
+| `embeddinggemma` (300M, Q8_0) | Embeddings for similar documents | 0.3 GB | `small`: always loaded | Gemma terms of use |
+
+The 35B model is not resident because Qwen3.8-Flash-Next (~86 GiB plus its KV cache) does not fit beside it in the 108 GiB the iGPU can map; making it resident is the residency decision (D18, [models](../../automation/plans/models.md#sharing-the-gpu)). Fetch, then recreate the container (above):
+
+```bash
+services/sputnik/fetch-model.sh unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-UD-Q4_K_XL qwen3.6-35b-a3b
+services/sputnik/fetch-model.sh ggml-org/embeddinggemma-300M-GGUF embeddinggemma-300M-Q8_0 embeddinggemma
+```
+
+Check embeddings return a vector:
+
+```bash
+curl -s http://localhost:8080/v1/embeddings -H "Authorization: Bearer $LLAMA_SWAP_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"model":"embeddinggemma","input":"a council rates notice"}' | jq '.data[0].embedding | length'
 ```
 
 ## Chat on the GPU

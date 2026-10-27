@@ -41,6 +41,25 @@ macros:
     --n-gpu-layers all --load-mode dio --flash-attn on --jinja
     --ctx-size 16384 --parallel 1
 
+  # Household text model for Paperless suggestions and chat: the same GPU
+  # settings and thinking cap as the large models, a context that holds a
+  # document and its prompt.
+  "household-server": >
+    /app/llama-server
+    --host 127.0.0.1 --port ${PORT}
+    --n-gpu-layers all --load-mode dio --flash-attn on --jinja
+    --ctx-size 32768 --parallel 1
+    --reasoning-budget 2048
+    --reasoning-budget-message "Thinking budget reached. Give the answer now."
+
+  # Embeddings for Paperless's similar-document search. The model reads 2048
+  # tokens at most, so the physical batch must hold a whole input.
+  "embed-server": >
+    /app/llama-server
+    --host 127.0.0.1 --port ${PORT}
+    --n-gpu-layers all --load-mode dio --flash-attn on --embeddings
+    --ctx-size 2048 --batch-size 2048 --ubatch-size 2048 --parallel 1
+
 models:
   # 125B, 6B active, ~86 GiB at UD-IQ4_XS: the largest that leaves room for
   # the KV cache (UD-Q4_K_XL is 102 GiB). Qwen Community License: personal,
@@ -65,6 +84,24 @@ models:
       --model /models/qwen3.5-122b-a10b/Qwen3.5-122B-A10B-UD-Q4_K_XL-00001-of-00003.gguf
     ttl: 0
 
+  # 3B active, ~22 GiB at UD-Q4_K_XL. Apache 2.0. Paperless's suggestions and
+  # chat. In the swapping group: it loads on demand (23–36 s) and evicts the
+  # large model. Moving it to the persistent group is the residency decision
+  # (D18); Qwen3.8-Flash-Next does not fit beside it.
+  "qwen3.6-35b-a3b":
+    cmd: >
+      ${household-server}
+      --model /models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
+    ttl: 0
+
+  # 300M, 0.3 GB at Q8_0. Gemma terms of use. Paperless's embeddings (similar
+  # documents, search), served at /v1/embeddings.
+  "embeddinggemma":
+    cmd: >
+      ${embed-server}
+      --model /models/embeddinggemma/embeddinggemma-300M-Q8_0.gguf
+    ttl: 0
+
   # OCR for Plutus and Mercurius (docs/services/sputnik.md#ocr-models). Small
   # vision models: the language model plus a separate vision projector
   # (--mmproj). One slot; a scanned page is a few thousand tokens in and out.
@@ -86,9 +123,9 @@ models:
       --mmproj /models/paddleocr-vl-1.5/PaddleOCR-VL-1.5-mmproj.gguf
     ttl: 0
 
-# Which models may run together. The large models swap among themselves and
-# unload any other non-persistent group; the OCR models never swap out, and
-# loading one leaves the large model alone.
+# Which models may run together. The large and household models swap among
+# themselves and unload any other non-persistent group; the small models never
+# swap out, and loading one leaves the others alone.
 routing:
   router:
     use: group
@@ -101,10 +138,12 @@ routing:
             - "qwen3.8-flash-next"
             - "gpt-oss-120b"
             - "qwen3.5-122b"
-        "ocr":
+            - "qwen3.6-35b-a3b"
+        "small":
           swap: false
           exclusive: false
           persistent: true
           members:
             - "glm-ocr"
             - "paddleocr-vl"
+            - "embeddinggemma"

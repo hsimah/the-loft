@@ -49,7 +49,7 @@ assert_eq "$status" 0 "unlock succeeds from locked"
 calls="$(calls_of fresh)"
 assert_contains "$calls" "cryptsetup open" "opens the LUKS volume"
 assert_contains "$calls" "mount /dev/mapper/plutus" "mounts the mapped device"
-for d in data media consume export db redis; do
+for d in data media consume export gpt/config gpt/db gpt/prompts db redis; do
   [[ -d "$WORK/fresh/plutus/$d" ]] && ok "creates $d inside the vault" || bad "creates $d inside the vault" "missing"
 done
 assert_eq "$(stat -c %a "$WORK/fresh/plutus/db")" 755 "Postgres can traverse the db directory"
@@ -108,7 +108,7 @@ assert_contains "$conf" '[plutus]="/plutus"' "setup waits for the vault mount"
 compose="$(cat "${ROOT}/services/plutus/docker-compose.yml")"
 sources="$(grep -c 'source: /plutus/' <<< "$compose")"
 no_create="$(grep -c 'create_host_path: false' <<< "$compose")"
-assert_eq "$sources" 6 "six binds, all inside /plutus"
+assert_eq "$sources" 9 "nine binds, all inside /plutus"
 assert_eq "$no_create" "$sources" "no bind creates its source"
 assert_absent "$(grep -E '^\s+- /' <<< "$compose")" "/" "no short-syntax binds"
 assert_contains "$compose" "internal: true" "Plutus's own network has no route out"

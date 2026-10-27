@@ -57,9 +57,9 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 [models](models.md) · [workflows](workflows.md) · decisions D8, D18, D21. Needs #149's choice for D18.
 
 - [ ] Download the OCR models and compare them on your own scans: GLM-OCR and PaddleOCR-VL-1.5 are configured in llama-swap (persistent `ocr` group), not yet fetched or measured ([commands](../../docs/services/sputnik.md#ocr-models)). First, ahead of the rest of the set.
-- [ ] Household models on llama-swap (OCR, small instruct, embeddings, whisper) with resident groups; batch slot agreed with the runner.
-- [ ] Vault egress: allow helarctos `:8080` only; probe that nothing else leaves.
-- [ ] Paperless AI suggestions and index; paperless-gpt OCR on the internal network.
+- [ ] Household models on llama-swap with resident groups; batch slot agreed with the runner. OCR and embeddings are configured in the persistent `small` group, and the 35B text model on demand ([models](models.md)); whisper is not yet.
+- [ ] Vault egress: allow helarctos `:8080` only; probe that nothing else leaves. Built for paperless-gpt ([model egress](../../docs/services/plutus.md#model-egress)), not yet deployed; Paperless itself joins with its built-in AI.
+- [ ] paperless-gpt second-pass OCR and Paperless's built-in AI (suggestions, chat, similar documents): built, not yet deployed ([runbook](../../docs/services/plutus.md#second-pass-ocr)). The text model's residency is D18.
 - [ ] Mercurius attachment OCR job ([plan](mercurius.md#ocr-for-attachments)).
 - [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.
@@ -108,7 +108,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Next actions
 
-1. Plutus OCR: download the OCR model and serve it on helarctos; open the vault-to-helarctos path; paperless-gpt on the internal network (phase 3). Needs D18 and [#149](https://github.com/hsimah/the-loft/issues/149).
+1. Plutus OCR: the models are on helarctos and the route, firewall and paperless-gpt are built; deploy and probe them ([runbook](../../docs/services/plutus.md#second-pass-ocr)), then test on real documents. Suggestions need D18 and [#149](https://github.com/hsimah/the-loft/issues/149).
 2. Mercurius import and parsing: the attachment OCR job ([plan](mercurius.md#ocr-for-attachments)), then what else to import and parse.
 3. Plan backups for space-needle and helarctos as a whole, then revisit Drive ([backups](backups.md)).
 4. Answer D9 (Tailscale) and D19.

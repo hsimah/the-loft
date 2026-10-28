@@ -30,6 +30,8 @@ services:
       # consume/a/b/x.pdf is consumed with the tags a and b.
       PAPERLESS_CONSUMER_RECURSIVE: "true"
       PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"
+      # No route to IMAP; vault mail arrives through the fetcher in automation/plans/intake.md.
+      PAPERLESS_EMAIL_TASK_CRON: disable
       # littledog:pack-member, which owns the app directories on the vault.
       USERMAP_UID: 1003
       USERMAP_GID: 1003

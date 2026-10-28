@@ -95,7 +95,7 @@ Paperless's own AI is enabled in [Compose](../../services/plutus/docker-compose.
 
 ## Bulk import
 
-The consume folder is recursive, and each folder on a document's path becomes a tag (`consume/Tax/2019/w2.pdf` gets `Tax` and `2019`). Tags are flat: a folder name used in more than one branch becomes one shared tag. The filename becomes the title. After an import, tidy up in bulk edit: move institution tags to correspondents, and delete tags that only carried the folder layout (years, `Documents`). Deleting a tag leaves its documents in place.
+The consume folder is recursive, and each folder on a document's path becomes a tag (`consume/Tax/2019/w2.pdf` gets `Tax` and `2019`). Tags are flat: a folder name used in more than one branch becomes one shared tag. The filename becomes the title. After an import, move institution tags to correspondents with [plutus-tag-to-correspondent.sh](../../control-plane/plutus-tag-to-correspondent.sh) (`--dry-run` first; the correspondents must exist), then delete those tags and the ones that only carried the folder layout (years, `Documents`). Deleting a tag leaves its documents in place; wait until paperless-gpt has no documents queued, since it rewrites tag lists.
 
 - Copy with `sudo rsync -rt --chown=1003:1003 <src>/ /plutus/consume/`. rsync writes each file under a temporary name and renames it into place, so Paperless never reads a half-copied file. Paperless deletes each file once it has been consumed, so it needs ownership.
 - Only files with a supported extension are consumed; files without one are skipped, and Paperless does not unpack zips.

@@ -9,8 +9,8 @@ Pieces used by more than one use case. Build each once, in the first phase that 
 | Media worker ([workflows](workflows.md#shell-steps)) | helarctos, Sputnik profile | Recipe reels, voice notes | Proposed |
 | Intake mailbox ([intake](intake.md)) | Google account | Vault, wiki, calendar, recipes | Proposed |
 | ntfy | space-needle, as a Houstn `notify` profile | Vault review flags, reminders, reports, intake rejects; Uptime Kuma can use it too | Proposed |
-| Forgejo ([Kennl](../../docs/services/kennl.md)) | space-needle | Coding, wiki history, wiki agent PRs | Live |
-| Agent harness ([#152](https://github.com/hsimah/the-loft/issues/152)) | helarctos runner | Coding, wiki agent | In progress |
+| Forgejo ([Kennl](../../docs/services/kennl.md)) | space-needle | Coding | Live |
+| Agent harness ([#152](https://github.com/hsimah/the-loft/issues/152)) | helarctos runner | Coding | In progress |
 | Off-site backups ([backups](backups.md)) | space-needle → Google Drive | Vault, wiki, calendar, recipes, n8n, Forgejo | Vault, wiki and Forgejo built but shelved; the rest proposed; first slice of [#108](https://github.com/hsimah/the-loft/issues/108) |
 | Tailscale (D9) | Phones, laptops, space-needle | Off-LAN access to every household app | Used for Viking management; not on phones |
 | Mushr ([Caddy, DNS](../../docs/services/mushr.md)) | space-needle | Every UI | Live |
@@ -20,8 +20,8 @@ Pieces used by more than one use case. Build each once, in the first phase that 
 
 | Zone | Contents | Rules |
 |---|---|---|
-| Open household | Mercurius, Janus, Ceres, n8n, ntfy | LAN and Tailscale. May reach llama-swap and the internet as each app needs |
-| Vault | Plutus: Paperless, helpers and `plutus-fetch` | Own network and encrypted volume. Egress only to llama-swap (fetcher: Gmail IMAP). Writes outward only through the calendar exporter |
+| Open household | Janus, Ceres, Open WebUI, n8n, ntfy | LAN and Tailscale. May reach llama-swap and the internet as each app needs. Open WebUI and n8n read and write Mercurius through Caddy with tokens; no chat or workflow combines those tools with web tools ([rule](mercurius.md#keeping-web-and-household-data-apart)) |
+| Vault | [Mercurius](mercurius.md): Paperless, SilverBullet, helpers and `mercurius-fetch` | Own networks and encrypted volume. Egress only to llama-swap (fetcher: Gmail IMAP). Writes outward only through the calendar exporter |
 | Compute | helarctos | Stateless for household work; no inbound path to space-needle data |
 
 Today every space-needle bridge app shares `loft-proxy`. The vault should not join it: give Caddy a leg on a vault-only network instead ([#104](https://github.com/hsimah/the-loft/issues/104)).

@@ -30,7 +30,7 @@ All writes go through CalDAV so phones see them on their next sync.
 |---|---|---|
 | Each of you | All | All |
 | n8n and the MCP server | All | `proposed`, `tasks` |
-| Plutus date exporter | None | `household` |
+| Paperless date exporter | None | `household` |
 
 Radicale's rights file enforces this, so the review queue doesn't depend on a prompt behaving.
 
@@ -40,7 +40,7 @@ Radicale's rights file enforces this, so the review queue doesn't depend on a pr
 |---|---|
 | Work and personal Google Calendar | Read by an n8n Google credential with read-only scopes ([Sputnik](../../docs/services/sputnik.md#google-oauth)); merged into reports, not copied |
 | Filed emails | `+cal` [intake](intake.md) → model extracts date and title → `proposed` |
-| Paper invoices, vaccination and ID expiry | [Plutus](plutus.md) custom fields (due, expiry) → exporter → `household`, with reminders before the date |
+| Paper invoices, vaccination and ID expiry | [Paperless](documents.md) custom fields (due, expiry) → exporter → `household`, with reminders before the date |
 | Manual | Any CalDAV client, or a note in the wiki `inbox/` |
 
 **Vault dates leak by default** (D14): an event title is visible to every calendar client and to n8n. The exporter runs in the vault group and writes only a generic title ("Council rates: Carlisle") plus a link to the Paperless document. Amounts and account numbers stay in the vault.

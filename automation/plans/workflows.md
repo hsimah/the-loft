@@ -9,14 +9,13 @@
 - **Workflows as code**: export each workflow to `services/sputnik/workflows/<name>.json` with a `.md` beside it.
 - **Backups**: n8n data plus `N8N_ENCRYPTION_KEY` ([backups](backups.md), [#108](https://github.com/hsimah/the-loft/issues/108)).
 
-Planned workflows: the [intake](intake.md) router, wiki inbox filing, calendar extraction and [reports](janus.md#reports), recipe imports.
+Planned workflows: wiki and document tools for chat ([Mercurius](mercurius.md#chat-and-n8n-access)), then the [intake](intake.md) router, wiki inbox filing, calendar extraction and [reports](janus.md#reports), recipe imports.
 
 ## Chat
 
 Done (D0, 2026-10-25): Open WebUI at `https://sputnik.loft.hsimah.com` uses llama-swap only; current state is on the [Sputnik page](../../docs/services/sputnik.md#chat-on-the-gpu). Remaining:
 
-- Vault documents never go into Open WebUI: its uploads and knowledge bases keep copies outside the vault. Use Paperless's document chat for those.
-- Later: Open WebUI tools that read the wiki and calendar.
+- Next: wiki and document tools through n8n ([Mercurius](mercurius.md#chat-and-n8n-access)). Chats and answers that quote documents are stored outside the vault, an accepted risk. Later: the calendar.
 - Later: [web search and research](#web-search-and-research).
 
 ### Web search and research
@@ -29,7 +28,7 @@ Not scheduled. Open WebUI has no search backend, so chat models cannot reach the
 
 Constraints:
 
-- **Web and private data never meet.** A model or chat with web tools gets no wiki or calendar tools, memories or knowledge bases, and vice versa. Fetched pages can carry prompt injection; arbitrary URL fetches and rendered markdown images are exfiltration channels.
+- **Web and private data never meet.** A model or chat with web tools gets no wiki or calendar tools, memories or knowledge bases, and vice versa. Enforced by Open WebUI settings ([how](mercurius.md#keeping-web-and-household-data-apart)). Fetched pages can carry prompt injection; arbitrary URL fetches and rendered markdown images are exfiltration channels.
 - **No LAN fetches.** Open WebUI's fetcher sits on `loft-proxy` with LAN DNS. Keep local-address fetching off: `ENABLE_LOCAL_WEB_FETCH` (the old name `ENABLE_RAG_LOCAL_WEB_FETCH` is a deprecated alias), default false in 0.12.4 (read in the source). While off, every address a fetched hostname resolves to must be globally routable, which rejects LAN, Tailscale and loopback addresses; redirects are checked the same way. Do not set either variable in Sputnik's `.env`. Confirm on the running container, then probe the real targets:
 
   ```bash

@@ -8,10 +8,6 @@ In progress, tracked in [#155](https://github.com/hsimah/the-loft/issues/155): F
 |---|---|
 | llama-swap and GTT | #149's model choice decides whether household models stay resident (D18, [models](models.md#sharing-the-gpu)) |
 | Overnight window | Coding is batch work overnight; household batch needs a slot too |
-| Forgejo | Hosts the wiki repo and its agent PRs |
-| Agent harness (`agent-run.sh`, #152) | Reused for the [LLM wiki agent](mercurius.md#llm-wiki-agent) |
-| Kennl egress policy | Wiki agent jobs run under the same sandbox |
-| Forgejo backup | Still open; the wiki repo adds to the reason ([backups](backups.md)) |
 
 ## Rules shared with household work
 

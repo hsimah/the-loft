@@ -8,7 +8,7 @@ Candidates from the second-brain proposal; none are downloaded or measured yet. 
 
 | Job | Model (open weights) | Approx. memory | Used by |
 |---|---|---|---|
-| OCR | GLM-OCR (MIT) or PaddleOCR-VL-1.5 (Apache 2.0); both in [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), [fetch commands](../../docs/services/sputnik.md#ocr-models) | ~2 GB each | Vault, wiki attachments, recipe photos |
+| OCR | GLM-OCR (MIT) or PaddleOCR-VL-1.5 (Apache 2.0); both in [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), [fetch commands](../../docs/services/sputnik.md#ocr-models) | ~2 GB each | Paperless, recipe photos |
 | Second opinion: disagreements, handwriting | Qwen3.8-27B (vision) | ~20 GB | Vault re-check, overnight only |
 | Summaries, tags, links, routing, reports | Qwen3.6-35B-A3B (UD-Q4_K_XL, Apache 2.0), configured for Paperless and on demand; or the Qwen3.8 35B-A3B in [#149](https://github.com/hsimah/the-loft/issues/149) | ~22 GB | All |
 | Embeddings | embeddinggemma 300M (Q8_0, Gemma terms), configured and always loaded | < 1 GB | Paperless similar documents, later wiki search |
@@ -32,7 +32,7 @@ Avoid models with research-only licences, such as Nanonets-OCR2-3B. Small OCR mo
 
 **Time.** Coding already claims the night ([overnight pipeline](coding-agents.md)), and the second-brain proposal put household batch work at 1–6 am. Proposed split, settled in D18:
 
-- Household batch (OCR, re-check, linker, wiki agent) gets a fixed early slot, for example 01:00–02:30, then yields to the runner.
+- Household batch (OCR, re-check, linker, wiki upkeep) gets a fixed early slot, for example 01:00–02:30, then yields to the runner.
 - Daytime household requests (a recipe import, a report on demand) run when the runner is idle.
 - Before each item, the batch worker checks llama-swap's running requests and waits if an interactive request is in flight: two models generating at once slow each other down.
 - Concurrency one, resumable per document, `Nice=19` with low `CPUWeight` and `IOWeight`.

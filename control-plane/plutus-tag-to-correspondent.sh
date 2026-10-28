@@ -45,8 +45,12 @@ for t in "${tags[@]}"; do
   tag_ids+=("$id")
 done
 
-# `all` lists every matching id regardless of page size.
-docs="$(api "documents/?tags__id__in=$(IFS=,; echo "${tag_ids[*]}")&correspondent__isnull=1&page_size=1" | jq -c '.all')"
+# One page holds every match (Paperless allows 100000); a short page is an error,
+# never a smaller count. The correspondent is checked here as well as filtered.
+json="$(api "documents/?tags__id__in=$(IFS=,; echo "${tag_ids[*]}")&correspondent__isnull=1&page_size=100000&fields=id,correspondent")"
+[[ "$(jq '.results | length' <<< "$json")" == "$(jq '.count' <<< "$json")" ]] \
+  || die "the API returned $(jq '.results | length' <<< "$json") of $(jq '.count' <<< "$json") documents"
+docs="$(jq -c '[.results[] | select(.correspondent == null) | .id]' <<< "$json")"
 n="$(jq length <<< "$docs")"
 printf '%s: %s documents tagged %s with no correspondent\n' "$name" "$n" "${tags[*]}"
 [[ "$n" -gt 0 ]] && ! $dry || exit 0

@@ -93,6 +93,16 @@ Paperless's own AI is enabled in [Compose](../../services/plutus/docker-compose.
 - **What leaves:** document text goes to helarctos over the LAN, as plain HTTP, for each request. It is held in memory there and not logged: after a real ID document went through, the container logs of llama-swap (helarctos) and of `plutus` and `plutus-gpt` held no document text or image data. Recheck after changing llama-swap's `logLevel`; its in-memory `/logs` buffer is not on disk and clears when the container is recreated.
 - **Models:** fetch commands are under [Paperless models](sputnik.md#paperless-models).
 
+## Bulk import
+
+The consume folder is recursive, and each folder on a document's path becomes a tag (`consume/Tax/2019/w2.pdf` gets `Tax` and `2019`). Tags are flat: a folder name used in more than one branch becomes one shared tag. The filename becomes the title. After an import, tidy up in bulk edit: move institution tags to correspondents, and delete tags that only carried the folder layout (years, `Documents`). Deleting a tag leaves its documents in place.
+
+- Copy with `sudo rsync -rt --chown=1003:1003 <src>/ /plutus/consume/`. rsync writes each file under a temporary name and renames it into place, so Paperless never reads a half-copied file. Paperless deletes each file once it has been consumed, so it needs ownership.
+- Only files with a supported extension are consumed; files without one are skipped, and Paperless does not unpack zips.
+- Paperless rejects a duplicate (same checksum) as a failed task; failures are listed under Tasks.
+- Documents from the consume folder have no owner, so both accounts can see them.
+- The source tree is plaintext outside the vault, but with no [backup](#backups) it is also the second copy. Delete it once the import is checked and the documents exist elsewhere (paper or OneDrive).
+
 ## Backups
 
 None running. Off-site backup (`document_exporter` output plus a Postgres dump into a restic repository on Google Drive) is [built but shelved](../operations/backups.md), so the vault is one copy on one disk: keep paper originals.

@@ -27,6 +27,9 @@ services:
       PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY?}
       PAPERLESS_TIME_ZONE: ${TZ:-America/Los_Angeles}
       PAPERLESS_OCR_LANGUAGE: eng
+      # consume/a/b/x.pdf is consumed with the tags a and b.
+      PAPERLESS_CONSUMER_RECURSIVE: "true"
+      PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"
       # littledog:pack-member, which owns the app directories on the vault.
       USERMAP_UID: 1003
       USERMAP_GID: 1003

@@ -10,7 +10,7 @@ These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/
 |---|---|---|---|
 | 0 | Chat portal: Open WebUI on the GPU | Live | [workflows](workflows.md#chat) |
 | 1 | Agentic coding | In progress ([#155](https://github.com/hsimah/the-loft/issues/155)) | [coding-agents](coding-agents.md) |
-| 2a | Mercurius: wiki and documents on the encrypted volume | Wiki and Paperless live separately (Mercurius, Plutus); merge proposed; backup shelved | [Mercurius](mercurius.md) |
+| 2a | Mercurius: wiki and documents on the encrypted volume | Merged group in the repo; host still runs Mercurius and Plutus separately until the cutover; backup shelved | [Mercurius](mercurius.md) |
 | 2b | Documents: Paperless OCR, re-checks, intake | Paperless and second-pass OCR live | [documents](documents.md) |
 | 3 | Janus: calendar, reminders and reports | Proposed | [Janus](janus.md) |
 | 4 | Ceres: recipes from email, photos and reels | Proposed | [Ceres](ceres.md) |

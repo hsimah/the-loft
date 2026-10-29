@@ -339,12 +339,12 @@ fi
 # ─── 10b. Shared Docker networks ────────────────────────────────────────
 info "Ensuring shared Docker networks..."
 docker network create loft-proxy 2>/dev/null || true
-# Plutus's only path to the LAN, shared with Caddy; --internal: no route out.
-if [[ " ${SERVICES[*]} " == *" plutus "* ]]; then
-  docker network create --internal plutus-proxy 2>/dev/null || true
-  # Plutus's one route out, to helarctos:8080 only. The fixed bridge name is what
-  # hosts/space-needle/plutus-egress.nft filters on.
-  docker network create --opt com.docker.network.bridge.name=plutus-llm plutus-llm 2>/dev/null || true
+# Mercurius's only path to the LAN, shared with Caddy; --internal: no route out.
+if [[ " ${SERVICES[*]} " == *" mercurius "* ]]; then
+  docker network create --internal mercurius-proxy 2>/dev/null || true
+  # Mercurius's one route out, to helarctos:8080 only. The fixed bridge name is
+  # what hosts/space-needle/mercurius-egress.nft filters on.
+  docker network create --opt com.docker.network.bridge.name=mercurius-llm mercurius-llm 2>/dev/null || true
 fi
 
 # ─── 11. Deploy services ─────────────────────────────────────────────────────

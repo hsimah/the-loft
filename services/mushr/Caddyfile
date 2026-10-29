@@ -131,18 +131,18 @@ sputnik.{$LOFT_DOMAIN} {
 	reverse_proxy open-webui:8080
 }
 
-# mercurius — household wiki (SilverBullet). HTTPS only: its offline PWA needs
-# a secure origin, and each space is bound to this hostname. Never on the tunnel.
-mercurius.{$LOFT_DOMAIN} {
+# mercurius — household wiki and documents, reached over the internal
+# mercurius-proxy network (space-needle mushr override). Never on the tunnel.
+# SilverBullet is HTTPS only: its offline PWA needs a secure origin, and each
+# space is bound to this hostname.
+wiki.{$LOFT_DOMAIN} {
 	import cloudflare_tls
-	reverse_proxy mercurius:3000
+	reverse_proxy silverbullet:3000
 }
 
-# plutus — household vault (Paperless-ngx). Reached over the internal
-# plutus-proxy network (space-needle mushr override). Never on the tunnel.
-plutus.{$LOFT_DOMAIN} {
+paperless.{$LOFT_DOMAIN} {
 	import cloudflare_tls
-	reverse_proxy plutus:8000
+	reverse_proxy paperless:8000
 }
 
 n8n.{$LOFT_DOMAIN} {

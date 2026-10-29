@@ -35,7 +35,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] Deploy; accounts and the `household` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
 - [ ] restic job for the wiki: built and shelved ([backups](backups.md)).
 - [x] Service page in `docs/services/`, README rows.
-- [ ] Merge with Paperless onto the encrypted volume: one group, `wiki.` and `paperless.` hostnames, git sync off, revisions kept ([migration](mercurius.md#migration)).
+- [ ] Merge with Paperless onto the encrypted volume: one group, `wiki.` and `paperless.` hostnames, git sync off, revisions kept. In the repo; host cutover pending ([migration](mercurius.md#migration)).
 - [ ] Paperless preview widget in the wiki ([plan](mercurius.md#preview-widget)).
 
 **Done when** both of you edit from phone and laptop, on and off the LAN; the wiki runs from the vault with its revisions; a vault snapshot restores from Drive.
@@ -44,7 +44,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 [Documents](documents.md) · decisions D4, D5, D6.
 
-- [x] Encrypted volume and its unlock procedure ([runbook](../../docs/services/plutus.md)).
+- [x] Encrypted volume and its unlock procedure ([runbook](../../docs/services/mercurius.md)).
 - [x] Compose group: Paperless-ngx, Postgres, Valkey, Tika, Gotenberg on internal networks only; Caddy joins `plutus-proxy`.
 - [x] Deploy: create the volume, start Paperless (as Plutus), accounts with two-factor, egress probe.
 - [ ] Move the LUKS header backup to the USB stick in the safe; recovery sheet filed.
@@ -60,9 +60,9 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 - [x] OCR models on llama-swap: `glm-ocr` and `paddleocr-vl` in the persistent `small` group ([OCR models](../../docs/services/sputnik.md#ocr-models)). Not yet scored on a sample set.
 - [ ] Household models on llama-swap with resident groups; batch slot agreed with the runner. OCR and embeddings are configured in the persistent `small` group, and the 35B text model on demand ([models](models.md)); whisper is not yet.
-- [x] Vault egress: helarctos `:8080` only, for Paperless and paperless-gpt ([model egress](../../docs/services/plutus.md#model-egress)). The hop is plain HTTP until Tailscale (D9).
-- [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../../docs/services/plutus.md#second-pass-ocr)).
-- [ ] Paperless's built-in AI (suggestions, chat, similar documents): configured, not yet tried from the UI ([built-in AI](../../docs/services/plutus.md#built-in-ai)). The text model's residency is D18.
+- [x] Vault egress: helarctos `:8080` only, for Paperless and paperless-gpt ([model egress](../../docs/services/mercurius.md#model-egress)). The hop is plain HTTP until Tailscale (D9).
+- [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../../docs/services/mercurius.md#second-pass-ocr)).
+- [ ] Paperless's built-in AI (suggestions, chat, similar documents): configured, not yet tried from the UI ([built-in AI](../../docs/services/mercurius.md#built-in-ai)). The text model's residency is D18.
 - [ ] Chat and n8n tools for the wiki and documents: n8n MCP workflows, a Household model in Open WebUI, code interpreter off ([plan](mercurius.md#chat-and-n8n-access)).
 - [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.

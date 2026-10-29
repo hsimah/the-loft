@@ -1,6 +1,6 @@
 # space-needle
 
-Minisforum MS-01, x86_64, Ubuntu 24.04, wired LAN `192.168.86.28`. Primary server. [host.conf](../../hosts/space-needle/host.conf) owns services, storage directories and health URLs. Runs Howlr `server`, Houstn `hub,metrics`, Sputnik `chat,agent`, Mushr, Pawpcorn, Stellarr, Hubbl, Kennl `forge`, Mercurius, Plutus and Snoot. Plutus runs only while its encrypted volume is unlocked: after a reboot, see [Plutus](../services/plutus.md#after-every-reboot). Its [bootstrap](../../hosts/space-needle/bootstrap) installs the firewall that limits Plutus's one route out ([model egress](../services/plutus.md#model-egress)).
+Minisforum MS-01, x86_64, Ubuntu 24.04, wired LAN `192.168.86.28`. Primary server. [host.conf](../../hosts/space-needle/host.conf) owns services, storage directories and health URLs. Runs Howlr `server`, Houstn `hub,metrics`, Sputnik `chat,agent`, Mushr, Pawpcorn, Stellarr, Hubbl, Kennl `forge`, Mercurius and Snoot. Mercurius runs only while its encrypted volume is unlocked: after a reboot, see [Mercurius](../services/mercurius.md#after-every-reboot). Its [bootstrap](../../hosts/space-needle/bootstrap) installs the firewall that limits Mercurius's one route out ([model egress](../services/mercurius.md#model-egress)). Until the [cutover](../../automation/plans/mercurius.md#migration), live state is the separate Plutus and Mercurius.
 
 ## Storage and networking
 

@@ -102,7 +102,7 @@ models:
       --model /models/embeddinggemma/embeddinggemma-300M-Q8_0.gguf
     ttl: 0
 
-  # OCR for Plutus and Mercurius (docs/services/sputnik.md#ocr-models). Small
+  # OCR for Mercurius's Paperless (docs/services/sputnik.md#ocr-models). Small
   # vision models: the language model plus a separate vision projector
   # (--mmproj). One slot; a scanned page is a few thousand tokens in and out.
   # Starting values, to be measured on real scans.

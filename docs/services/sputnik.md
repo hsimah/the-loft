@@ -59,7 +59,7 @@ Set `COMPOSE_PROFILES=gpu` in helarctos's `services/sputnik/.env`; the other pro
 
 ## OCR models
 
-`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for [Plutus](plutus.md) and [Mercurius](mercurius.md), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `small` group with the embedding model, so they stay loaded beside whichever large model is running and a request for one never swaps the others out. Both are downloaded and answer on helarctos; neither is benchmarked yet, and the entries and `--ctx-size 16384` are starting values.
+`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for Paperless's [second-pass OCR](mercurius.md#second-pass-ocr), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `small` group with the embedding model, so they stay loaded beside whichever large model is running and a request for one never swaps the others out. Both are downloaded and answer on helarctos; neither is benchmarked yet, and the entries and `--ctx-size 16384` are starting values.
 
 Each model is a language GGUF plus a separate `--mmproj` vision projector, so each is fetched in two calls, into one directory:
 
@@ -83,7 +83,7 @@ rm -f /tmp/page.b64 /tmp/ocr-req.json
 
 ## Paperless models
 
-[Plutus](plutus.md)'s built-in AI (suggestions, chat, similar documents) uses two more models through the same gateway:
+Paperless's [built-in AI](mercurius.md#built-in-ai) (suggestions, chat, similar documents) uses two more models through the same gateway:
 
 | Model | Role | Size | Group | Licence |
 |---|---|---|---|---|

@@ -1,5 +1,5 @@
 [Unit]
-Description=Loft Plutus model egress firewall
+Description=Loft Mercurius model egress firewall
 DefaultDependencies=no
 After=local-fs.target
 Wants=network-pre.target
@@ -9,8 +9,8 @@ Conflicts=shutdown.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/sbin/nft -f /etc/loft/plutus-egress.nft
-ExecReload=/usr/sbin/nft -f /etc/loft/plutus-egress.nft
+ExecStart=/usr/sbin/nft -f /etc/loft/mercurius-egress.nft
+ExecReload=/usr/sbin/nft -f /etc/loft/mercurius-egress.nft
 
 [Install]
 WantedBy=multi-user.target

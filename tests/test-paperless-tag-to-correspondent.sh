@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# test-plutus-tag-to-correspondent.sh — run the tag-to-correspondent script
+# test-paperless-tag-to-correspondent.sh — run the tag-to-correspondent script
 # against a mocked Paperless API. No network.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SCRIPT="${ROOT}/control-plane/plutus-tag-to-correspondent.sh"
+SCRIPT="${ROOT}/control-plane/paperless-tag-to-correspondent.sh"
 source "${ROOT}/tests/lib/assert.sh"
 require jq
 
@@ -43,7 +43,7 @@ chmod +x "$WORK/bin/curl"
 run() { # case args...; echoes combined output and leaves the mock's records
   local dir="$WORK/$1"; shift
   mkdir -p "$dir"
-  MOCK_DIR="$dir" PATH="$WORK/bin:$PATH" PLUTUS_TOKEN=s3cret PLUTUS_URL=https://plutus.test \
+  MOCK_DIR="$dir" PATH="$WORK/bin:$PATH" PAPERLESS_TOKEN=s3cret PAPERLESS_URL=https://paperless.test \
     bash "$SCRIPT" "$@" 2>&1
 }
 

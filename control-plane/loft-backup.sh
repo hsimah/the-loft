@@ -8,10 +8,10 @@
 # Installed by setup.sh to /usr/local/bin/loft-backup and run by systemd timers.
 # Configuration comes from /etc/default/loft-backup (BACKUP_* — from host.conf).
 #
-# Two repositories with two passwords. The vault repository holds Plutus only; its
-# password file lives inside the vault, so nothing here can read vault backups
-# while /plutus is locked, and a stolen root disk cannot decrypt them. The open
-# repository holds Mercurius and Forgejo.
+# Two repositories with two passwords. The vault repository holds Mercurius
+# (Paperless and the wiki) only; its password file lives inside the vault, so
+# nothing here can read vault backups while /mercurius is locked, and a stolen
+# root disk cannot decrypt them. The open repository holds Forgejo.
 #   docs/operations/backups.md
 set -uo pipefail
 
@@ -19,7 +19,7 @@ set -uo pipefail
 PATH="${PATH}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 : "${BACKUP_REMOTE:=}"
-: "${BACKUP_JOBS:=plutus mercurius forgejo}"
+: "${BACKUP_JOBS:=mercurius forgejo}"
 : "${BACKUP_RCLONE_CONFIG:=/etc/loft/rclone/gdrive.conf}"
 : "${BACKUP_OPEN_PASSWORD_FILE:=/etc/loft/restic/open.pass}"
 : "${BACKUP_STATE_DIR:=/var/lib/loft/backup}"
@@ -30,14 +30,13 @@ PATH="${PATH}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 : "${BACKUP_HOST:=$(hostname)}"
 : "${BACKUP_REQUIRE_ROOT:=1}"
 
-: "${PLUTUS_MOUNT:=/plutus}"
-: "${PLUTUS_MAPPER_DEV:=/dev/mapper/plutus}"
-: "${MERCURIUS_DIR:=/mammoth/mercurius}"
+: "${MERCURIUS_MOUNT:=/mercurius}"
+: "${MERCURIUS_MAPPER_DEV:=/dev/mapper/mercurius}"
 : "${FORGEJO_CONFIG_DIR:=/opt/kennl/forgejo/config}"
 
 # The vault's password file sits on the vault; backup/stage holds the export
 # and database dump so no plaintext copy of either reaches the plain disk.
-VAULT_BACKUP_DIR="${PLUTUS_MOUNT}/backup"
+VAULT_BACKUP_DIR="${MERCURIUS_MOUNT}/backup"
 VAULT_STAGE_DIR="${VAULT_BACKUP_DIR}/stage"
 : "${BACKUP_VAULT_PASSWORD_FILE:=${VAULT_BACKUP_DIR}/restic.pass}"
 
@@ -74,13 +73,13 @@ push() { # job up|down
 }
 
 vault_unlocked() {
-  [[ "$(findmnt -n -o SOURCE --mountpoint "$PLUTUS_MOUNT" 2> /dev/null || true)" == "$PLUTUS_MAPPER_DEV" ]]
+  [[ "$(findmnt -n -o SOURCE --mountpoint "$MERCURIUS_MOUNT" 2> /dev/null || true)" == "$MERCURIUS_MAPPER_DEV" ]]
 }
 
 job_repo() { # job → vault|open
   case "$1" in
-    plutus) echo vault ;;
-    mercurius | forgejo) echo open ;;
+    mercurius) echo vault ;;
+    forgejo) echo open ;;
     *) return 1 ;;
   esac
 }
@@ -122,42 +121,36 @@ forget() { # vault|open job
 
 # ── Jobs ─────────────────────────────────────────────────────────────────────
 
-job_plutus() {
+job_mercurius() {
   if ! vault_unlocked; then
-    log "plutus: vault is locked; skipping"
+    log "mercurius: vault is locked; skipping"
     return "$RC_SKIP"
   fi
-  [[ -s "$BACKUP_VAULT_PASSWORD_FILE" ]] || { log "plutus: no password file at ${BACKUP_VAULT_PASSWORD_FILE}"; return 1; }
+  [[ -s "$BACKUP_VAULT_PASSWORD_FILE" ]] || { log "mercurius: no password file at ${BACKUP_VAULT_PASSWORD_FILE}"; return 1; }
+  # An empty wiki folder on an unlocked vault means the data is gone; a
+  # snapshot of it would only push good snapshots out of retention.
+  [[ -n "$(ls -A "${MERCURIUS_MOUNT}/silverbullet" 2> /dev/null)" ]] \
+    || { log "mercurius: ${MERCURIUS_MOUNT}/silverbullet is missing or empty"; return 1; }
 
   install -d -m 700 "$VAULT_BACKUP_DIR" "$VAULT_STAGE_DIR" || return 1
 
   # Exporter output is portable across Paperless versions; -d keeps the export
   # directory an exact copy of the archive, so it is only ever this job's.
-  log "plutus: exporting documents"
-  docker exec plutus document_exporter /usr/src/paperless/export -c -d --no-progress-bar || return 1
+  log "mercurius: exporting documents"
+  docker exec paperless document_exporter /usr/src/paperless/export -c -d --no-progress-bar || return 1
 
   # The importer wants the Paperless version that exported; the snapshot says which.
-  docker inspect --format '{{.Config.Image}}' plutus > "${VAULT_STAGE_DIR}/plutus-image.txt" || return 1
+  docker inspect --format '{{.Config.Image}}' paperless > "${VAULT_STAGE_DIR}/paperless-image.txt" || return 1
 
-  log "plutus: dumping Postgres"
+  log "mercurius: dumping Postgres"
   dump_to "${VAULT_STAGE_DIR}/paperless.dump" \
-    docker exec plutus-db sh -c 'pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"' || return 1
+    docker exec mercurius-db sh -c 'pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"' || return 1
 
-  log "plutus: backing up"
-  rs vault backup --host "$BACKUP_HOST" --tag plutus \
-    "${PLUTUS_MOUNT}/export" "$VAULT_STAGE_DIR" || return 1
-  forget vault plutus
-}
-
-job_mercurius() {
-  # An empty folder means /mammoth is not mounted or the data is gone; either
-  # way a snapshot of it would only push good snapshots out of retention.
-  [[ -d "$MERCURIUS_DIR" && -n "$(ls -A "$MERCURIUS_DIR" 2> /dev/null)" ]] \
-    || { log "mercurius: ${MERCURIUS_DIR} is missing or empty"; return 1; }
-
+  # The wiki folder is copied live, its .git (the page revisions) included.
   log "mercurius: backing up"
-  rs open backup --host "$BACKUP_HOST" --tag mercurius "$MERCURIUS_DIR" || return 1
-  forget open mercurius
+  rs vault backup --host "$BACKUP_HOST" --tag mercurius \
+    "${MERCURIUS_MOUNT}/export" "$VAULT_STAGE_DIR" "${MERCURIUS_MOUNT}/silverbullet" || return 1
+  forget vault mercurius
 }
 
 job_forgejo() {

@@ -33,19 +33,21 @@ exit 0'
 mock findmnt 'printf "%s\n" "${MOCK_MOUNT_SRC:-}"'
 mock curl 'echo "curl $*" >> "$CALLS"'
 
-UNLOCKED="/dev/mapper/plutus"
+UNLOCKED="/dev/mapper/mercurius"
 
 # run_case <case> "<loft-backup args>" [VAR=value...]
-# Each case gets its own plain-disk state, fake /plutus and fake data folders.
+# Each case gets its own plain-disk state, fake /mercurius and fake data folders.
 # Sets out (combined output), rc and CASE (the case directory).
 run_case() {
   local c="$WORK/$1" args="$2"
   shift 2
-  mkdir -p "$c/plutus/backup" "$c/mercurius/spaces" "$c/forgejo-config" "$c/etc"
-  echo note > "$c/mercurius/spaces/page.md"
+  mkdir -p "$c/mercurius/backup" "$c/mercurius/silverbullet" "$c/forgejo-config" "$c/etc"
+  # EMPTY_WIKI=1 leaves the wiki folder empty.
+  [[ -n "${EMPTY_WIKI:-}" ]] \
+    || { mkdir -p "$c/mercurius/silverbullet/spaces"; echo note > "$c/mercurius/silverbullet/spaces/page.md"; }
   echo "[server]" > "$c/forgejo-config/app.ini"
   echo open-pw > "$c/etc/open.pass"
-  echo vault-pw > "$c/plutus/backup/restic.pass"
+  echo vault-pw > "$c/mercurius/backup/restic.pass"
   : > "$c/calls"
   # shellcheck disable=SC2086
   out="$(env CALLS="$c/calls" PATH="$MOCK_BIN:$PATH" \
@@ -57,9 +59,8 @@ run_case() {
     BACKUP_HOST="space-needle" \
     BACKUP_NTFY_URL="https://ntfy.test/loft-backup" \
     BACKUP_PUSH_FILE="$c/no-push-file" \
-    PLUTUS_MOUNT="$c/plutus" \
-    PLUTUS_MAPPER_DEV="$UNLOCKED" \
-    MERCURIUS_DIR="$c/mercurius" \
+    MERCURIUS_MOUNT="$c/mercurius" \
+    MERCURIUS_MAPPER_DEV="$UNLOCKED" \
     FORGEJO_CONFIG_DIR="$c/forgejo-config" \
     "$@" bash "$SCRIPT" $args 2>&1)"
   rc=$?
@@ -69,72 +70,63 @@ calls() { cat "$CASE/calls"; }
 restic_calls() { grep '^repo=' "$CASE/calls" || true; }
 
 # ── Locked vault: skip cleanly ───────────────────────────────────────────────
-# After a reboot /plutus is an empty directory on the plain disk. Nothing may
-# be exported, dumped or uploaded, and the skip is not a failure.
-run_case locked "backup plutus" MOCK_MOUNT_SRC=""
+# After a reboot /mercurius is an empty directory on the plain disk. Nothing
+# may be exported, dumped or uploaded, and the skip is not a failure.
+run_case locked "backup mercurius" MOCK_MOUNT_SRC=""
 assert_eq "$rc" "0" "a locked vault is not a failure"
 assert_contains "$out" "vault is locked" "says why it skipped"
 assert_eq "$(calls)" "" "a locked vault runs no docker, restic or ntfy"
-assert_missing "$CASE/plutus/backup/stage" "a locked vault stages nothing"
-assert_missing "$CASE/state/last-success.plutus" "a skip is not stamped as success"
+assert_missing "$CASE/mercurius/backup/stage" "a locked vault stages nothing"
+assert_missing "$CASE/state/last-success.mercurius" "a skip is not stamped as success"
 
 # A different device on the mount point is not the vault either.
-run_case wrongdev "backup plutus" MOCK_MOUNT_SRC="/dev/sda1"
-assert_eq "$rc" "0" "another device on /plutus is skipped"
-assert_eq "$(calls)" "" "another device on /plutus is never backed up"
+run_case wrongdev "backup mercurius" MOCK_MOUNT_SRC="/dev/sda1"
+assert_eq "$rc" "0" "another device on /mercurius is skipped"
+assert_eq "$(calls)" "" "another device on /mercurius is never backed up"
 
-# ── Plutus: export and dump staged inside the vault ──────────────────────────
-run_case plutus "backup plutus" MOCK_MOUNT_SRC="$UNLOCKED"
-assert_eq "$rc" "0" "plutus backup succeeds"
-assert_contains "$(calls)" "docker exec plutus document_exporter /usr/src/paperless/export" "runs document_exporter"
-assert_contains "$(calls)" "docker exec plutus-db sh -c" "dumps Postgres from plutus-db"
-assert_file "$CASE/plutus/backup/stage/paperless.dump" "pgdump-bytes" "the dump is staged inside the vault"
-assert_file "$CASE/plutus/backup/stage/plutus-image.txt" "ghcr.io/paperless-ngx/paperless-ngx:3.3.4" "records the Paperless image that exported"
+# ── Mercurius: export and dump staged inside the vault, plus the wiki ────────
+run_case mercurius "backup mercurius" MOCK_MOUNT_SRC="$UNLOCKED"
+assert_eq "$rc" "0" "mercurius backup succeeds"
+assert_contains "$(calls)" "docker exec paperless document_exporter /usr/src/paperless/export" "runs document_exporter"
+assert_contains "$(calls)" "docker exec mercurius-db sh -c" "dumps Postgres from mercurius-db"
+assert_file "$CASE/mercurius/backup/stage/paperless.dump" "pgdump-bytes" "the dump is staged inside the vault"
+assert_file "$CASE/mercurius/backup/stage/paperless-image.txt" "ghcr.io/paperless-ngx/paperless-ngx:3.3.4" "records the Paperless image that exported"
 assert_eq "$(find "$CASE/state" -name '*.dump*' | wc -l)" "0" "no dump lands on the plain disk"
-assert_contains "$(restic_calls)" "$CASE/plutus/export $CASE/plutus/backup/stage" "snapshots the export and the staged dump"
-assert_contains "$(restic_calls)" "--tag plutus" "tags the snapshot"
-[[ -f "$CASE/state/last-success.plutus" ]] && ok "stamps success" || bad "stamps success" "no last-success.plutus"
+assert_contains "$(restic_calls)" "$CASE/mercurius/export $CASE/mercurius/backup/stage $CASE/mercurius/silverbullet" "snapshots the export, the staged dump and the wiki"
+assert_contains "$(restic_calls)" "--tag mercurius" "tags the snapshot"
+[[ -f "$CASE/state/last-success.mercurius" ]] && ok "stamps success" || bad "stamps success" "no last-success.mercurius"
 
 # Only the vault repository and the vault's own password are used.
 mismatch=""
 while IFS= read -r line; do
-  [[ "$line" == "repo=rclone:gdrive:the-loft/vault pass=$CASE/plutus/backup/restic.pass rclone=$WORK/gdrive.conf ::"* ]] \
+  [[ "$line" == "repo=rclone:gdrive:the-loft/vault pass=$CASE/mercurius/backup/restic.pass rclone=$WORK/gdrive.conf ::"* ]] \
     || mismatch="$line"
 done < <(restic_calls)
-assert_eq "$mismatch" "" "plutus uses only the vault repository and password"
-assert_absent "$(restic_calls)" "the-loft/open" "plutus never touches the open repository"
+assert_eq "$mismatch" "" "mercurius uses only the vault repository and password"
+assert_absent "$(restic_calls)" "the-loft/open" "mercurius never touches the open repository"
 
 # Retention: the plan's 7/4/12, and the vault keeps every year.
-assert_contains "$(restic_calls)" "forget --tag plutus --group-by host,tags --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-yearly unlimited" "vault retention keeps yearlies forever"
+assert_contains "$(restic_calls)" "forget --tag mercurius --group-by host,tags --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-yearly unlimited" "vault retention keeps yearlies forever"
 assert_absent "$(restic_calls)" "--prune" "nightly run does not prune"
 
 # A failed export must not produce a snapshot of stale data.
-run_case exportfail "backup plutus" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="document_exporter"
+run_case exportfail "backup mercurius" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="document_exporter"
 assert_fails "$rc" "a failed export fails the job"
 assert_eq "$(restic_calls)" "" "a failed export uploads nothing"
-assert_missing "$CASE/state/last-success.plutus" "a failed export is not stamped as success"
+assert_missing "$CASE/state/last-success.mercurius" "a failed export is not stamped as success"
 assert_contains "$(calls)" "curl" "a failed export notifies"
 
-run_case dumpfail "backup plutus" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="pg_dump"
+run_case dumpfail "backup mercurius" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="pg_dump"
 assert_fails "$rc" "a failed pg_dump fails the job"
 assert_eq "$(restic_calls)" "" "a failed pg_dump uploads nothing"
-assert_missing "$CASE/plutus/backup/stage/paperless.dump" "a failed pg_dump leaves no half-written dump"
+assert_missing "$CASE/mercurius/backup/stage/paperless.dump" "a failed pg_dump leaves no half-written dump"
 
-# ── Mercurius ────────────────────────────────────────────────────────────────
-run_case mercurius "backup mercurius" MOCK_MOUNT_SRC=""
-assert_eq "$rc" "0" "mercurius backs up while the vault is locked"
-assert_contains "$(restic_calls)" "repo=rclone:gdrive:the-loft/open pass=$CASE/etc/open.pass" "mercurius uses the open repository and password"
-assert_contains "$(restic_calls)" "backup --host space-needle --tag mercurius $CASE/mercurius" "backs up the data folder"
-assert_contains "$(restic_calls)" "forget --tag mercurius --group-by host,tags --keep-daily 7 --keep-weekly 4 --keep-monthly 12" "open retention"
-assert_absent "$(restic_calls)" "keep-yearly" "open data has no yearly keep"
-assert_absent "$(restic_calls)" "the-loft/vault" "mercurius never touches the vault repository"
-
-# An empty folder means the storage is missing; backing it up would only push
-# good snapshots out of retention.
-rm -rf "$WORK/emptymerc"; mkdir -p "$WORK/emptymerc"
-run_case merc-empty "backup mercurius" MERCURIUS_DIR="$WORK/emptymerc"
-assert_fails "$rc" "an empty Mercurius folder fails"
-assert_eq "$(restic_calls)" "" "an empty Mercurius folder is not backed up"
+# An empty wiki folder on an unlocked vault means the data is gone; backing it
+# up would only push good snapshots out of retention.
+EMPTY_WIKI=1 run_case wiki-empty "backup mercurius" MOCK_MOUNT_SRC="$UNLOCKED"
+assert_fails "$rc" "an empty wiki folder fails"
+assert_contains "$out" "silverbullet is missing or empty" "says so"
+assert_eq "$(restic_calls)" "" "an empty wiki folder is not backed up"
 
 # ── Forgejo ──────────────────────────────────────────────────────────────────
 run_case forgejo "backup forgejo" MOCK_MOUNT_SRC=""
@@ -163,18 +155,17 @@ assert_missing "$CASE/state/stage/forgejo" "staging is removed after a failure"
 # ── One failure does not stop the others ─────────────────────────────────────
 run_case isolate "backup" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="document_exporter"
 assert_fails "$rc" "any failed job fails the run"
-assert_contains "$(restic_calls)" "--tag mercurius" "mercurius still runs after plutus fails"
-assert_contains "$(restic_calls)" "--tag forgejo" "forgejo still runs after plutus fails"
+assert_contains "$(restic_calls)" "--tag forgejo" "forgejo still runs after mercurius fails"
 assert_contains "$(calls)" "curl -fsS -m 20" "failure goes to ntfy"
 assert_contains "$(calls)" "https://ntfy.test/loft-backup" "to the configured topic"
-assert_contains "$(calls)" "Backup failed: plutus" "naming the failed job"
-assert_absent "$(calls)" "mercurius forgejo" "without blaming the jobs that worked"
+assert_contains "$(calls)" "Backup failed: mercurius" "naming the failed job"
+assert_absent "$(calls)" "mercurius forgejo" "without blaming the job that worked"
 
 run_case quiet "backup" MOCK_MOUNT_SRC="$UNLOCKED"
 assert_eq "$rc" "0" "all jobs succeed"
 assert_absent "$(calls)" "curl" "success sends no notification"
 
-run_case nontfy "backup plutus" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="document_exporter" BACKUP_NTFY_URL=""
+run_case nontfy "backup mercurius" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="document_exporter" BACKUP_NTFY_URL=""
 assert_fails "$rc" "failure still fails without an ntfy URL"
 assert_absent "$(calls)" "curl" "no ntfy URL, no curl"
 
@@ -199,7 +190,7 @@ run_check() { # case: fresh success stamps for every job; a case may then age on
   local c="$WORK/$1"
   mkdir -p "$c/state"
   local j
-  for j in plutus mercurius forgejo; do date -Is > "$c/state/last-success.$j"; done
+  for j in mercurius forgejo; do date -Is > "$c/state/last-success.$j"; done
 }
 run_check weekly
 run_case weekly "check" MOCK_MOUNT_SRC="$UNLOCKED"
@@ -224,30 +215,31 @@ assert_contains "$(calls)" "Repository check failed" "and notifies"
 # A vault that has been locked for days leaves no recent snapshot; the skip is
 # silent, so the weekly check must say so.
 run_check weekly-stale
-touch -d '10 days ago' "$WORK/weekly-stale/state/last-success.plutus"
+touch -d '10 days ago' "$WORK/weekly-stale/state/last-success.mercurius"
 run_case weekly-stale "check" MOCK_MOUNT_SRC=""
 assert_fails "$rc" "a stale job fails the weekly check"
-assert_contains "$out" "plutus: no successful backup in 3 days" "naming the job"
-assert_contains "$(calls)" "No recent backup for: plutus" "and notifies"
+assert_contains "$out" "mercurius: no successful backup in 3 days" "naming the job"
+assert_contains "$(calls)" "No recent backup for: mercurius" "and notifies"
 
 # ── Uptime Kuma push monitors (the Homepage Backups tile) ────────────────────
-printf 'plutus https://uptime.test/api/push/tok-plutus\nmercurius https://uptime.test/api/push/tok-merc\ncheck https://uptime.test/api/push/tok-check\n' > "$WORK/push"
-run_case push-ok "backup plutus mercurius" MOCK_MOUNT_SRC="$UNLOCKED" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push"
-assert_contains "$(calls)" "tok-plutus?status=up&msg=OK" "a good job reports up"
-assert_contains "$(calls)" "tok-merc?status=up&msg=OK" "each job uses its own monitor"
+printf 'mercurius https://uptime.test/api/push/tok-merc\nforgejo https://uptime.test/api/push/tok-forgejo\ncheck https://uptime.test/api/push/tok-check\n' > "$WORK/push"
+run_case push-ok "backup mercurius forgejo" MOCK_MOUNT_SRC="$UNLOCKED" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push"
+assert_contains "$(calls)" "tok-merc?status=up&msg=OK" "a good job reports up"
+assert_contains "$(calls)" "tok-forgejo?status=up&msg=OK" "each job uses its own monitor"
 
-run_case push-fail "backup plutus mercurius" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="document_exporter" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push"
-assert_contains "$(calls)" "tok-plutus?status=down&msg=FAILED" "a failed job reports down"
-assert_contains "$(calls)" "tok-merc?status=up" "a good job still reports up after another fails"
+run_case push-fail "backup mercurius forgejo" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_DOCKER_FAIL_ON="document_exporter" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push"
+assert_contains "$(calls)" "tok-merc?status=down&msg=FAILED" "a failed job reports down"
+assert_contains "$(calls)" "tok-forgejo?status=up" "a good job still reports up after another fails"
 
 # A skip pushes nothing; the monitor lapses to down on its own.
-run_case push-skip "backup plutus" MOCK_MOUNT_SRC="" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push"
+run_case push-skip "backup mercurius" MOCK_MOUNT_SRC="" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push"
 assert_absent "$(calls)" "curl" "a locked vault pushes nothing"
 
 # A job with no monitor listed, or no file at all, is not an error.
-run_case push-none "backup mercurius forgejo" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push"
+printf 'check https://uptime.test/api/push/tok-check\n' > "$WORK/push-checkonly"
+run_case push-none "backup forgejo" BACKUP_NTFY_URL="" BACKUP_PUSH_FILE="$WORK/push-checkonly"
 assert_eq "$rc" "0" "a job without a monitor still succeeds"
-run_case push-nofile "backup mercurius" BACKUP_NTFY_URL=""
+run_case push-nofile "backup forgejo" BACKUP_NTFY_URL=""
 assert_eq "$rc" "0" "no push file is fine"
 assert_absent "$(calls)" "curl" "no push file, no curl"
 
@@ -266,7 +258,7 @@ assert_contains "$(cat "${ROOT}/services/houstn/.env.example")" "HOMEPAGE_VAR_BA
 # ── init ─────────────────────────────────────────────────────────────────────
 run_case init-new "init" MOCK_MOUNT_SRC="$UNLOCKED" MOCK_RESTIC_HAS_REPO=1
 assert_eq "$rc" "0" "init succeeds"
-assert_contains "$(restic_calls)" "repo=rclone:gdrive:the-loft/vault pass=$CASE/plutus/backup/restic.pass rclone=$WORK/gdrive.conf :: init" "initialises the vault repository"
+assert_contains "$(restic_calls)" "repo=rclone:gdrive:the-loft/vault pass=$CASE/mercurius/backup/restic.pass rclone=$WORK/gdrive.conf :: init" "initialises the vault repository"
 assert_contains "$(restic_calls)" "repo=rclone:gdrive:the-loft/open pass=$CASE/etc/open.pass rclone=$WORK/gdrive.conf :: init" "initialises the open repository"
 
 run_case init-again "init" MOCK_MOUNT_SRC="$UNLOCKED"
@@ -282,18 +274,18 @@ conf="$(cat "${ROOT}/hosts/space-needle/host.conf")"
 setup="$(cat "${ROOT}/setup.sh")"
 script="$(cat "$SCRIPT")"
 assert_contains "$conf" 'BACKUP_ENABLED="false"' "backups are shelved on space-needle (setup.sh installs nothing)"
-assert_contains "$conf" "BACKUP_JOBS=(plutus mercurius forgejo)" "the job list is kept for when it returns"
+assert_contains "$conf" "BACKUP_JOBS=(mercurius forgejo)" "the job list is kept for when it returns"
 assert_contains "$setup" "loft-backup.timer" "setup.sh installs the nightly timer"
 assert_contains "$setup" "loft-backup-check" "setup.sh installs the weekly check"
 assert_contains "$setup" "Persistent=true" "a missed night runs at next boot"
 assert_contains "$setup" "restic rclone" "setup.sh installs restic and rclone"
 # The jobs back up folders the host provisions and containers Compose names.
-assert_contains "$conf" "/mammoth/mercurius" "host.conf provisions the Mercurius folder"
 assert_contains "$conf" "/opt/kennl/forgejo/config" "host.conf provisions Forgejo's config folder"
-assert_contains "$script" "MERCURIUS_DIR:=/mammoth/mercurius" "script default matches Mercurius"
+assert_contains "$script" "MERCURIUS_MOUNT:=/mercurius" "script default matches the vault mount"
+assert_contains "$conf" '[mercurius]="/mercurius"' "which host.conf waits for"
 assert_contains "$script" "FORGEJO_CONFIG_DIR:=/opt/kennl/forgejo/config" "script default matches Forgejo"
-for name in plutus plutus-db forgejo kennl-db; do
-  grep -rq "container_name: ${name}$" "${ROOT}/services/plutus" "${ROOT}/services/kennl" \
+for name in paperless mercurius-db forgejo kennl-db; do
+  grep -rq "container_name: ${name}$" "${ROOT}/services/mercurius" "${ROOT}/services/kennl" \
     && ok "Compose names container ${name}" || bad "Compose names container ${name}" "not found"
 done
 # The unit file template must not put the vault's password anywhere but the vault.

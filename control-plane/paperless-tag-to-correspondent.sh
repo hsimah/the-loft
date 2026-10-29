@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# plutus-tag-to-correspondent.sh — give every Plutus document that carries any
-# of the tags, and has no correspondent yet, the named correspondent. For the
-# tidy-up after a bulk import, where folder names arrive as tags
-# (docs/services/plutus.md#bulk-import). The tags and the correspondent must
-# already exist; the tags are left in place.
+# paperless-tag-to-correspondent.sh — give every Paperless document that
+# carries any of the tags, and has no correspondent yet, the named
+# correspondent. For the tidy-up after a bulk import, where folder names arrive
+# as tags (docs/services/mercurius.md#bulk-import). The tags and the
+# correspondent must already exist; the tags are left in place.
 #
-#   control-plane/plutus-tag-to-correspondent.sh [--dry-run] CORRESPONDENT [TAG...]
+#   control-plane/paperless-tag-to-correspondent.sh [--dry-run] CORRESPONDENT [TAG...]
 #
 # TAG defaults to CORRESPONDENT. The API token (Profile → API Auth Token) comes
-# from PLUTUS_TOKEN or a prompt; PLUTUS_URL overrides the address.
+# from PAPERLESS_TOKEN or a prompt; PAPERLESS_URL overrides the address.
 set -euo pipefail
 
-URL="${PLUTUS_URL:-https://plutus.loft.hsimah.com}"
+URL="${PAPERLESS_URL:-https://paperless.loft.hsimah.com}"
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 dry=false
@@ -21,14 +21,14 @@ name="$1"; shift
 tags=("$@")
 [[ ${#tags[@]} -gt 0 ]] || tags=("$name")
 
-if [[ -z "${PLUTUS_TOKEN:-}" ]]; then
-  read -rsp 'Plutus API token: ' PLUTUS_TOKEN < /dev/tty
+if [[ -z "${PAPERLESS_TOKEN:-}" ]]; then
+  read -rsp 'Paperless API token: ' PAPERLESS_TOKEN < /dev/tty
   echo >&2
 fi
 
 api() { # path [curl args...]; the header file keeps the token out of argv
   local path="$1"; shift
-  curl -fsS -H @<(printf 'Authorization: Token %s\n' "$PLUTUS_TOKEN") \
+  curl -fsS -H @<(printf 'Authorization: Token %s\n' "$PAPERLESS_TOKEN") \
     -H 'Accept: application/json' "$@" "${URL}/api/${path}"
 }
 id_of() { # kind name → the id of the one object with that name, ignoring case

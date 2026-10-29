@@ -90,7 +90,7 @@ Paperless's [built-in AI](mercurius.md#built-in-ai) (suggestions, chat, similar 
 | `qwen3.6-35b-a3b` (UD-Q4_K_XL) | Suggestions and chat | 22 GB | `large`: loads on demand in 23–36 s and evicts the large model | Apache 2.0 |
 | `embeddinggemma` (300M, Q8_0) | Embeddings for similar documents | 0.3 GB | `small`: always loaded | Gemma terms of use |
 
-The 35B model is not resident because Qwen3.8-Flash-Next (~86 GiB plus its KV cache) does not fit beside it in the 108 GiB the iGPU can map; making it resident is the residency decision (D18, [models](../../automation/plans/models.md#sharing-the-gpu)). Fetch, then recreate the container (above):
+The 35B model is not resident because Qwen3.8-Flash-Next (~86 GiB plus its KV cache) does not fit beside it in the 108 GiB the iGPU can map; making it resident is the residency decision (D18, [models](../automation/models.md#sharing-the-gpu)). Fetch, then recreate the container (above):
 
 ```bash
 services/sputnik/fetch-model.sh unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-UD-Q4_K_XL qwen3.6-35b-a3b

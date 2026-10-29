@@ -7,7 +7,7 @@ loft-ctl health
 sudo docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 sudo docker logs <container> --tail 100
 sudo docker inspect <container> --format '{{json .State}}'
-df -h /opt /mammoth
+df -h /opt /mammoth /mercurius
 ```
 
 `loft-ctl health` checks container state/healthchecks plus URL reachability. Any HTTP response passes (including 500/502) and TLS is not verified, so green does not prove playback, login, VPN or content. See [health helpers](docs/scripts/common-sh.md).
@@ -15,6 +15,7 @@ df -h /opt /mammoth
 | Symptom | Next check |
 |---|---|
 | Missing/exited/restarting container | Logs and `.State`; active profiles in the service `.env` |
+| Mercurius down after a reboot (`bind source path does not exist`) | The vault is locked: [unlock it](docs/services/mercurius.md#after-every-reboot) |
 | Exit 137 | `.State.OOMKilled`, `free -h`, `sudo docker stats --no-stream` |
 | App works directly, proxy fails | [Mushr](docs/services/mushr.md): network membership, route, DNS, Caddy logs |
 | Names fail to resolve | `dig @192.168.86.28 radarr.space-needle +short` |

@@ -30,7 +30,7 @@ is needed, provide the specific operator check rather than assuming remote acces
 - Update the canonical affected documentation when behavior changes. Review README for changes to fleet membership, service purpose or entry-point instructions. Link to config for exact tags, ports and paths instead of copying tables across pages.
 - Keep docs short and current-state. Do not record rollout narratives, validation logs, superseded approaches or why something changed unless it prevents a repeat mistake; git history holds the rest. Open work goes in [plans/maintenance.md](plans/maintenance.md); delete it when done.
 - Repository configuration does not prove live deployment; label unverified state briefly.
-- Write scripts and tests in bash (with jq, curl and coreutils), not Python; the owner reviews everything and does not read Python. Existing Python is being migrated.
+- Write scripts and tests in bash (with jq, curl and coreutils), not Python; the owner reviews everything and does not read Python.
 
 ## Names
 
@@ -38,4 +38,4 @@ Services use single-word dog/spitz or space/aerospace wordplay: howlr (audio), h
 
 Host names come from something physically visible to the owner: space-needle from the landmark; viking/fjord from a vodka bottle. Ask what is visible when proposing a host name.
 
-Single-container services use the service name. A primary application keeps the name and helpers take prefixes (`hubbl-db`). Bundles of independent products use product names (`radarr`, `beszel`, `ollama`); glue uses the bundle prefix (`stellarr-vpn`).
+Single-container services use the service name. A primary application keeps the name and helpers take prefixes (`hubbl-db`). Bundles of independent products use product names (`radarr`, `beszel`, `paperless`); glue uses the bundle prefix (`stellarr-vpn`).

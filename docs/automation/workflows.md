@@ -1,6 +1,6 @@
 # Custom AI workflows
 
-**n8n already runs.** Sputnik's `agent` profile runs n8n on space-needle with no workflows yet, against llama-swap ([Sputnik](../../docs/services/sputnik.md)). Item 5 is therefore conventions, not a new tool.
+**n8n already runs.** Sputnik's `agent` profile runs n8n on space-needle with no workflows yet, against llama-swap ([Sputnik](../services/sputnik.md)). Item 5 is therefore conventions, not a new tool.
 
 ## Plan
 
@@ -13,7 +13,7 @@ Planned workflows: wiki and document tools for chat ([Mercurius](mercurius.md#ch
 
 ## Chat
 
-Done (D0, 2026-10-25): Open WebUI at `https://sputnik.loft.hsimah.com` uses llama-swap only; current state is on the [Sputnik page](../../docs/services/sputnik.md#chat-on-the-gpu). Remaining:
+Done (D0, 2026-10-25): Open WebUI at `https://sputnik.loft.hsimah.com` uses llama-swap only; current state is on the [Sputnik page](../services/sputnik.md#chat-on-the-gpu). Remaining:
 
 - Next: wiki and document tools through n8n ([Mercurius](mercurius.md#chat-and-n8n-access)). Chats and answers that quote documents are stored outside the vault, an accepted risk. Later: the calendar.
 - Later: [web search and research](#web-search-and-research).

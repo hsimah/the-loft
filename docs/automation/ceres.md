@@ -27,4 +27,4 @@ Instagram needs a logged-in session for reels (D16). Options: cookies from a thr
 ## Open questions
 
 - D15: Mealie or Tandoor? Recommendation: Mealie.
-- D22: do recipes need sharing outside the house? A public share link needs a first-level tunnel name, like [Hubbl](../../docs/services/hubbl.md). Exporting or printing avoids that.
+- D22: do recipes need sharing outside the house? A public share link needs a first-level tunnel name, like [Hubbl](../services/hubbl.md). Exporting or printing avoids that.

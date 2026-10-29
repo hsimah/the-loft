@@ -40,7 +40,7 @@ hosts/<hostname>/i3/...             # Optional i3 desktop config (when I3_ENABLE
 services/<name>/docker-compose.yml  # Shared service definition
 services/<name>/.env.example        # Secret template
 control-plane/                      # Shared scripts
-automation/plans/                   # Proposed household AI services (planning notes)
+docs/automation/                    # Proposed household AI services (planning notes)
 bashrc.d inputrc.d nanorc.d tmux.d  # Dotfiles installed for adminhabl
 setup.sh                            # Idempotent host provisioner
 loft-ctl                            # Day-to-day control

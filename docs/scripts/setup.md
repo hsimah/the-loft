@@ -29,11 +29,11 @@ Kiosk wallpaper: supply `/home/rodnik/Pictures/wallpaper.webp` by hand; `Mod+Shi
 ## Fresh host
 
 1. Install a minimal OS with user `adminhabl` and key SSH. Pis: Raspberry Pi OS Lite 64-bit. Surfaces: see [Calavera reimage](../hosts/calavera.md#reimage).
-2. Give adminhabl read access to `hsimah-services/the-loft` and clone it:
+2. Give adminhabl read access to `hsimah/the-loft` and clone it:
 
    ```bash
    sudo install -d -o adminhabl -g adminhabl /srv/the-loft
-   git clone git@github.com:hsimah-services/the-loft.git /srv/the-loft
+   git clone git@github.com:hsimah/the-loft.git /srv/the-loft
    ```
 
 3. Create each service's `.env` from its example (Houstn `COMPOSE_PROFILES=metrics`, [Snoot](../services/snoot.md) with a new Beszel system).

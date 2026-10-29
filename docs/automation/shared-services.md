@@ -4,17 +4,17 @@ Pieces used by more than one use case. Build each once, in the first phase that 
 
 | Piece | Where | Used by | State |
 |---|---|---|---|
-| llama-swap ([models](models.md)) | helarctos, Sputnik `gpu` | Coding, chat, vault, wiki, calendar, recipes, n8n | Live: coding evaluation models, Open WebUI chat; household models not added |
+| llama-swap ([models](models.md)) | helarctos, Sputnik `gpu` | Coding, chat, vault, wiki, calendar, recipes, n8n | Live: coding evaluation models, Open WebUI chat, Paperless OCR, AI and embeddings |
 | n8n ([workflows](workflows.md)) | space-needle, Sputnik `agent` | Intake, calendar, reports, recipes, wiki inbox | Live, no workflows yet |
 | Media worker ([workflows](workflows.md#shell-steps)) | helarctos, Sputnik profile | Recipe reels, voice notes | Proposed |
 | Intake mailbox ([intake](intake.md)) | Google account | Vault, wiki, calendar, recipes | Proposed |
 | ntfy | space-needle, as a Houstn `notify` profile | Vault review flags, reminders, reports, intake rejects; Uptime Kuma can use it too | Proposed |
-| Forgejo ([Kennl](../../docs/services/kennl.md)) | space-needle | Coding | Live |
+| Forgejo ([Kennl](../services/kennl.md)) | space-needle | Coding | Live |
 | Agent harness ([#152](https://github.com/hsimah/the-loft/issues/152)) | helarctos runner | Coding | In progress |
-| Off-site backups ([backups](backups.md)) | space-needle → Google Drive | Vault, wiki, calendar, recipes, n8n, Forgejo | Vault, wiki and Forgejo built but shelved; the rest proposed; first slice of [#108](https://github.com/hsimah/the-loft/issues/108) |
+| Off-site backups ([backups](backups.md)) | space-needle → Google Drive | Vault, wiki, calendar, recipes, n8n, Forgejo | Mercurius (vault) and Forgejo built but shelved; the rest proposed; first slice of [#108](https://github.com/hsimah/the-loft/issues/108) |
 | Tailscale (D9, [plan](tailscale.md)) | Phones, laptops, space-needle | Off-LAN access to every household app | Viking management only; space-needle enrolled, no phones |
-| Mushr ([Caddy, DNS](../../docs/services/mushr.md)) | space-needle | Every UI | Live |
-| OIDC single sign-on, e.g. Pocket ID (D20) | space-needle | Optional: one passkey login for Paperless, Mealie, Forgejo; also the only way to give [Hubbl](../../docs/services/hubbl.md) a second factor | Idea |
+| Mushr ([Caddy, DNS](../services/mushr.md)) | space-needle | Every UI | Live |
+| OIDC single sign-on, e.g. Pocket ID (D20) | space-needle | Optional: one passkey login for Paperless, Mealie, Forgejo; also the only way to give [Hubbl](../services/hubbl.md) a second factor | Idea |
 
 ## Trust zones
 
@@ -24,4 +24,4 @@ Pieces used by more than one use case. Build each once, in the first phase that 
 | Vault | [Mercurius](mercurius.md): Paperless, SilverBullet, helpers and `mercurius-fetch` | Own networks and encrypted volume. Egress only to llama-swap (fetcher: Gmail IMAP). Writes outward only through the calendar exporter |
 | Compute | helarctos | Stateless for household work; no inbound path to space-needle data |
 
-Today every space-needle bridge app shares `loft-proxy`. The vault should not join it: give Caddy a leg on a vault-only network instead ([#104](https://github.com/hsimah/the-loft/issues/104)).
+Every other space-needle bridge app shares `loft-proxy`; Mercurius does not, and Caddy reaches it on the internal `mercurius-proxy` network ([#104](https://github.com/hsimah/the-loft/issues/104)).

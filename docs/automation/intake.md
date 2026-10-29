@@ -4,7 +4,7 @@ Curated mail only: you forward what should be filed; nothing arrives just becaus
 
 ## Mailbox (D12)
 
-A **dedicated Google account** used only for intake, not your main Gmail. The main account's n8n credential stays read-only ([Sputnik](../../docs/services/sputnik.md#google-oauth)), and the intake account holds nothing else worth stealing.
+A **dedicated Google account** used only for intake, not your main Gmail. The main account's n8n credential stays read-only ([Sputnik](../services/sputnik.md#google-oauth)), and the intake account holds nothing else worth stealing.
 
 Addresses, one per destination:
 

@@ -2,7 +2,7 @@
 
 Encrypted restic snapshots to Google Drive through rclone (D10), not an rsync mirror: a mirror copies deletions, corruption and mistakes to the off-site copy on the next run. This is the first slice of the fleet backup work in [#108](https://github.com/hsimah/the-loft/issues/108) and the Backups row in [maintenance](../../plans/maintenance.md).
 
-**Shelved 2026-10-26.** Built and tested for Mercurius (one vault job: Paperless and the wiki) and Forgejo but not deployed: no Google credential or repository exists, and `BACKUP_ENABLED="false"`. Backups will be planned for space-needle and helarctos as a whole, including every service's configuration and `.env`, before this returns. Setup, restore and the recovery sheet are in the [runbook](../../docs/operations/backups.md). Check the Drive quota against the vault's expected size first.
+**Shelved 2026-10-26.** Built and tested for Mercurius (one vault job: Paperless and the wiki) and Forgejo but not deployed: no Google credential or repository exists, and `BACKUP_ENABLED="false"`. Backups will be planned for space-needle and helarctos as a whole, including every service's configuration and `.env`, before this returns. Setup, restore and the recovery sheet are in the [runbook](../operations/backups.md). Check the Drive quota against the vault's expected size first.
 
 ## Key custody (D11)
 

@@ -1,6 +1,6 @@
 # Documents: Paperless in Mercurius
 
-The document half of [Mercurius](mercurius.md): financial, medical and personal records, and any other document, in Paperless-ngx on the encrypted volume. Every document is searchable by content; the original is kept forever so its text can be re-read as models improve. Paperless with standard OCR is live in Mercurius ([service page](../../docs/services/mercurius.md)); the move into Mercurius is on [Mercurius](mercurius.md#migration). This page holds the OCR, intake and backup work still to come.
+The document half of [Mercurius](mercurius.md): financial, medical and personal records, and any other document, in Paperless-ngx on the encrypted volume. Every document is searchable by content; the original is kept forever so its text can be re-read as models improve. Paperless with standard OCR is live in Mercurius ([service page](../services/mercurius.md)). This page holds the OCR, intake and backup work still to come.
 
 ## Stack
 
@@ -17,13 +17,13 @@ Paperless 3.3's AI does not fill custom fields and takes no custom prompts. Due 
 
 ## Isolation
 
-- **Shared with the wiki.** Paperless and SilverBullet share the group, the encrypted volume and its internal networks ([Mercurius](mercurius.md#target)). Wiki pages may quote documents. One shared household archive (D4); Paperless permissions can split it later.
+- **Shared with the wiki.** Paperless and SilverBullet share the group, the encrypted volume and its internal networks ([Mercurius](../services/mercurius.md#isolation)). Wiki pages may quote documents. One shared household archive (D4); Paperless permissions can split it later.
 - **Encrypted at rest** (D5): LUKS2 on a 250 GB LVM volume on the NVMe, unlocked by hand after each boot. Everything, including Postgres with the OCR text, is on it, and nothing in the group starts while it is locked.
-- **One route out.** Paperless and paperless-gpt reach `helarctos:8080` only, one way, through a bridge and nftables rule ([model egress](../../docs/services/mercurius.md#model-egress)); the rest of the group is on internal networks. The mail fetcher is the one exception, in its own container.
+- **One route out.** Paperless and paperless-gpt reach `helarctos:8080` only, one way, through a bridge and nftables rule ([model egress](../services/mercurius.md#model-egress)); the rest of the group is on internal networks. The mail fetcher is the one exception, in its own container.
 - **Read from outside.** Open WebUI and n8n read documents through Caddy with an API token ([chat and n8n access](mercurius.md#chat-and-n8n-access)); what they store is outside the vault, an accepted risk.
 - **No side doors.** Only the Paperless and SilverBullet UIs are routed through Caddy, LAN and Tailscale only. Never on the tunnel.
 - **AI suggests, you approve.** Suggestions and review tags, never silent overwrites.
-- **The AI machine stores nothing.** Documents pass through helarctos in memory. llama-swap at `logLevel: info` does not log request bodies (checked against a real ID document; see [the runbook](../../docs/services/mercurius.md#built-in-ai)), and the hop is plain HTTP on the LAN.
+- **The AI machine stores nothing.** Documents pass through helarctos in memory. llama-swap at `logLevel: info` does not log request bodies (checked against a real ID document; see [the runbook](../services/mercurius.md#built-in-ai)), and the hop is plain HTTP on the LAN.
 - **Local models only**, never Claude.
 
 ## Getting documents in
@@ -60,18 +60,17 @@ Batch work follows the [GPU sharing rules](models.md#sharing-the-gpu).
 Possible jobs; none started.
 
 - **Second-pass OCR failures.** After the bulk import, 26 documents carry `paperless-gpt-failed`, and the logs from that run have rotated out. Three are text files (CSV, TXT) with no page to render: keep non-image types out of the tag. The rest are born-digital bank statements and 1099s of 2–6 dense pages. Candidates: glm-ocr's `--ctx-size 16384` is too small for a dense page's image plus transcription, or the PDFs are encrypted (one, an `International_Application` PDF, has no page count in Paperless). Fix by raising the context, or skip the second pass for born-digital PDFs whose text layer is already exact. Document 114 is queued again as a test.
-- **paperless-gpt logs.** At `LOG_LEVEL: info` the container writes large serialized text to its Docker log, probably document text, under `/var/lib/docker` on the unencrypted root disk (up to 30 MB). Try `warn`, recheck, and correct the [log check](../../docs/services/mercurius.md#built-in-ai).
-- **Built-in AI.** Try suggestions, chat and similar documents on the imported archive ([built-in AI](../../docs/services/mercurius.md#built-in-ai)).
+- **paperless-gpt logs.** At `LOG_LEVEL: info` the container writes large serialized text to its Docker log, probably document text, under `/var/lib/docker` on the unencrypted root disk (up to 30 MB). Try `warn`, recheck, and correct the [log check](../services/mercurius.md#built-in-ai).
+- **Built-in AI.** Try suggestions, chat and similar documents on the imported archive ([built-in AI](../services/mercurius.md#built-in-ai)).
 - **Expiry dates.** Fill an `Expiry` custom field (passports, licences) for [Janus](janus.md) reminders, through the linker job above or paperless-gpt.
 - **OCR scoring.** Score `glm-ocr` against `paddleocr-vl` on a sample of real documents ([roadmap](roadmap.md#phase-7--ai-upkeep)).
 
 ## Backups
 
-Built but shelved (2026-10-26): `document_exporter` output plus a Postgres dump, in an encrypted restic repository of its own. After the move the same job also takes the SilverBullet folder ([runbook](../../docs/operations/backups.md)). See [backups](backups.md).
+Built but shelved (2026-10-26): `document_exporter` output plus a Postgres dump, in an encrypted restic repository of its own. After the move the same job also takes the SilverBullet folder ([runbook](../operations/backups.md)). See [backups](backups.md).
 
 ## Open questions
 
-- D6: what goes in first: tax and financial, medical, or IDs and certificates?
 - D7: re-check interval: 3, 6 or 9 months?
 - D8: who reviews flagged documents, and how are you notified?
 - Is there a scanner with a document feeder, or is the phone the scanner?

@@ -37,4 +37,4 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [setup.sh](scripts/setup.md), [loft-ctl](scripts/loft-ctl.md), [health helpers](scripts/common-sh.md)
 - [Release puller](scripts/deploy-pull.md), [GitHub App tokens](scripts/github-app-token.md), [image update check](scripts/image-updates.md)
 - [Open work](../plans/maintenance.md)
-- [Automation plans](../automation/plans/README.md) — household AI services: proposed, not built
+- [Automation plans](automation/README.md) — household AI services: plans and open work

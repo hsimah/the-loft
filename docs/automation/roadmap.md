@@ -2,7 +2,7 @@
 
 [Mercurius](mercurius.md) holds the wiki and the document archive together on the encrypted volume: SilverBullet is the index, Paperless keeps the documents. Digitising starts with plain OCR, and the AI can re-read everything later because originals are kept. Each phase ends at a usable state with a tested backup. Backups are shelved since 2026-10-26 ([backups](backups.md)), so the backup lines below stay open and their "done when" restores are deferred.
 
-**Current priority** (ahead of the order below): local LLMs and OCR in Paperless (done), then the [Mercurius merge](mercurius.md#migration), then [chat and n8n access](mercurius.md#chat-and-n8n-access) to the wiki and documents. Email intake and web clippings wait: chat with wiki write tools covers them for now.
+**Current priority** (ahead of the order below): local LLMs and OCR in Paperless and the Mercurius merge (both done), then [chat and n8n access](mercurius.md#chat-and-n8n-access) to the wiki and documents. Email intake and web clippings wait: chat with wiki write tools covers them for now.
 
 ```mermaid
 flowchart LR
@@ -25,17 +25,17 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] Names ([names](names.md)).
 - [ ] Check Google Drive quota and create the rclone Drive client (`drive.file`).
 - [ ] Tailscale on both phones and laptops: route, split DNS and grants on space-needle, which is already enrolled ([plan](tailscale.md)).
-- [x] Write the backup recovery sheet template ([runbook](../../docs/operations/backups.md#recovery-sheet)); print it, fill it in and file it.
+- [x] Write the backup recovery sheet template ([runbook](../operations/backups.md#recovery-sheet)); print it, fill it in and file it.
 
 ## Phase 1 — Mercurius
 
 [Mercurius](mercurius.md) · decisions D2, D3, D19.
 
 - [x] Compose, host.conf dirs and health URL, Caddy LAN route (the loft wildcard already resolves).
-- [x] Deploy; accounts and the `home` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
+- [x] Deploy; accounts and the `home` space; Forgejo repo with SilverBullet's deploy key ([setup](../services/mercurius.md#setup)).
 - [ ] restic job for the wiki: built and shelved ([backups](backups.md)).
 - [x] Service page in `docs/services/`, README rows.
-- [x] Merge with Paperless onto the encrypted volume: one group, `wiki.` and `paperless.` hostnames, git sync off, revisions kept. Live 2026-10-29 ([migration](mercurius.md#migration)).
+- [x] Merge with Paperless onto the encrypted volume: one group, `wiki.` and `paperless.` hostnames, git sync off, revisions kept. Live 2026-10-29 ([service page](../services/mercurius.md)).
 - [ ] Paperless preview widget in the wiki ([plan](mercurius.md#preview-widget)).
 
 **Done when** both of you edit from phone and laptop, on and off the LAN; the wiki runs from the vault with its revisions; a vault snapshot restores from Drive.
@@ -44,7 +44,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 [Documents](documents.md) · decisions D4, D5, D6.
 
-- [x] Encrypted volume and its unlock procedure ([runbook](../../docs/services/mercurius.md)).
+- [x] Encrypted volume and its unlock procedure ([runbook](../services/mercurius.md)).
 - [x] Compose group: Paperless-ngx, Postgres, Valkey, Tika, Gotenberg on internal networks only; Caddy joins `plutus-proxy`.
 - [x] Deploy: create the volume, start Paperless (as Plutus), accounts with two-factor, egress probe.
 - [ ] Move the LUKS header backup to the USB stick in the safe; recovery sheet filed.
@@ -58,11 +58,11 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 [models](models.md) · [workflows](workflows.md) · decisions D8, D18, D21. Needs #149's choice for D18.
 
-- [x] OCR models on llama-swap: `glm-ocr` and `paddleocr-vl` in the persistent `small` group ([OCR models](../../docs/services/sputnik.md#ocr-models)). Not yet scored on a sample set.
+- [x] OCR models on llama-swap: `glm-ocr` and `paddleocr-vl` in the persistent `small` group ([OCR models](../services/sputnik.md#ocr-models)). Not yet scored on a sample set.
 - [ ] Household models on llama-swap with resident groups; batch slot agreed with the runner. OCR and embeddings are configured in the persistent `small` group, and the 35B text model on demand ([models](models.md)); whisper is not yet.
-- [x] Vault egress: helarctos `:8080` only, for Paperless and paperless-gpt ([model egress](../../docs/services/mercurius.md#model-egress)). The hop is plain HTTP until Tailscale (D9).
-- [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../../docs/services/mercurius.md#second-pass-ocr)).
-- [ ] Paperless's built-in AI (suggestions, chat, similar documents): configured, not yet tried from the UI ([built-in AI](../../docs/services/mercurius.md#built-in-ai)). The text model's residency is D18.
+- [x] Vault egress: helarctos `:8080` only, for Paperless and paperless-gpt ([model egress](../services/mercurius.md#model-egress)). The hop is plain HTTP until Tailscale (D9).
+- [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../services/mercurius.md#second-pass-ocr)).
+- [ ] Paperless's built-in AI (suggestions, chat, similar documents): configured, not yet tried from the UI ([built-in AI](../services/mercurius.md#built-in-ai)). The text model's residency is D18.
 - [ ] Chat and n8n tools for the wiki and documents: n8n MCP workflows, a Household model in Open WebUI, code interpreter off ([plan](mercurius.md#chat-and-n8n-access)).
 - [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.
@@ -111,7 +111,6 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Next actions
 
-1. Merge Paperless and SilverBullet into Mercurius on the encrypted volume ([migration](mercurius.md#migration)).
-2. Chat and n8n tools for the wiki and documents ([plan](mercurius.md#chat-and-n8n-access)); turn off Open WebUI's code interpreter now.
-3. Plan backups for space-needle and helarctos as a whole, then revisit Drive ([backups](backups.md)).
-4. Answer D9 (Tailscale) and D19.
+1. Chat and n8n tools for the wiki and documents ([plan](mercurius.md#chat-and-n8n-access)); turn off Open WebUI's code interpreter now.
+2. Plan backups for space-needle and helarctos as a whole, then revisit Drive ([backups](backups.md)).
+3. Answer D9 (Tailscale).

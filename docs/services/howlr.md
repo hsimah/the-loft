@@ -41,4 +41,5 @@ Verify actual playback, not just the UI. Back up `/opt/howlr` before server upgr
 
 - **Connected but silent**: ALSA device, DAC power/mixer, MA queue, client logs.
 - **"You do not have permission to perform this action"** on a player or group: new players are not added to users' allowed players. Add them in Settings → Users.
+- **Group member silently left out** (absent from the group's volume panel; Snapweb shows it idle on `default`; MA's `set_members` log omits it): removing and re-adding that one member doesn't help. Remove every member from the group and add them back. The stream ID is kept.
 - **Missing player after recreation**: check `HOST_ID` against the UI; remove orphans only once the replacement works.

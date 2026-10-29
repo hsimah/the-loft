@@ -4,11 +4,11 @@ The apps and all data live on space-needle; helarctos is only the model engine, 
 
 ## Household roster
 
-Candidates from the second-brain proposal; none are downloaded or measured yet. PaddleOCR-VL-1.6 has community GGUFs only, so the official 1.5 is the one configured.
+Candidates from the second-brain proposal. The OCR, embedding and 35B text models are downloaded and configured; none is benchmarked. PaddleOCR-VL-1.6 has community GGUFs only, so the official 1.5 is the one configured.
 
 | Job | Model (open weights) | Approx. memory | Used by |
 |---|---|---|---|
-| OCR | GLM-OCR (MIT) or PaddleOCR-VL-1.5 (Apache 2.0); both in [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), [fetch commands](../../docs/services/sputnik.md#ocr-models) | ~2 GB each | Paperless, recipe photos |
+| OCR | GLM-OCR (MIT) or PaddleOCR-VL-1.5 (Apache 2.0); both in [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), [fetch commands](../services/sputnik.md#ocr-models) | ~2 GB each | Paperless, recipe photos |
 | Second opinion: disagreements, handwriting | Qwen3.8-27B (vision) | ~20 GB | Vault re-check, overnight only |
 | Summaries, tags, links, routing, reports | Qwen3.6-35B-A3B (UD-Q4_K_XL, Apache 2.0), configured for Paperless and on demand; or the Qwen3.8 35B-A3B in [#149](https://github.com/hsimah/the-loft/issues/149) | ~22 GB | All |
 | Embeddings | embeddinggemma 300M (Q8_0, Gemma terms), configured and always loaded | < 1 GB | Paperless similar documents, later wiki search |

@@ -29,7 +29,7 @@ sudo docker compose --env-file services/clog/.env \
   clog-cli user:admin NAME
 ```
 
-The command checks the role/firewall/Docker, downloads and verifies the archive, validates images and config **before** stopping Clog, refreshes Caddy only when its config changed, stops writes, backs up the DB (`pre-deploy-*.sqlite`), runs the release installer, creates the first account only if none exists, recreates Nginx/FPM and checks Clog plus both Pawst sites. It never pulls Git or touches Cloudflare.
+The command checks the role/firewall/Docker, downloads and verifies the archive, validates images and config **before** stopping Clog, refreshes Caddy only when its config changed, stops writes, backs up the DB (`pre-deploy-*.sqlite`), runs the release installer, creates the first account only if none exists, recreates Nginx/FPM and checks Clog and the Pawst site. It never pulls Git or touches Cloudflare.
 
 State in `/var/lib/loft/deploy/`: `clog.json` (last success), `clog-pending.json` (interrupted run), `clog.lock`.
 

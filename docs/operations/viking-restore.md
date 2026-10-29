@@ -45,7 +45,7 @@ hosts/viking/restore --plan
 sudo hosts/viking/restore --apply
 ```
 
-`--apply` checks the host, attestation, firewall and IDs, then force-fetches the blog's latest GitHub release with [pawst-deploy.sh](../../control-plane/pawst-deploy.sh), starts only Mushr and Pawst, and checks both sites plus unknown-host 404. It never starts the tunnel. If production was rolled back, fix GitHub's latest release first or redeploy that tag afterwards with `loft-ctl deploy pawst hsimah <tag>`.
+`--apply` checks the host, attestation, firewall and IDs, then force-fetches the blog's latest GitHub release with [pawst-deploy.sh](../../control-plane/pawst-deploy.sh), starts only Mushr and Pawst, and checks the blog plus unknown-host 404. It never starts the tunnel. If production was rolled back, fix GitHub's latest release first or redeploy that tag afterwards with `loft-ctl deploy pawst hsimah <tag>`.
 
 ## 4. Enable ingress
 

@@ -1,6 +1,6 @@
 # Coding agents
 
-In progress, tracked in [#155](https://github.com/hsimah/the-loft/issues/155): Forgejo ([Kennl](../../docs/services/kennl.md)) on space-needle, runner and llama-swap on helarctos, the listory pipeline being ported ([#152](https://github.com/hsimah/the-loft/issues/152)), model choice in [#149](https://github.com/hsimah/the-loft/issues/149), and personas and evals in [#156](https://github.com/hsimah/the-loft/issues/156). The issues are canonical; this page records only what the household work shares with it.
+In progress, tracked in [#155](https://github.com/hsimah/the-loft/issues/155): Forgejo ([Kennl](../services/kennl.md)) on space-needle, runner and llama-swap on helarctos, the listory pipeline being ported ([#152](https://github.com/hsimah/the-loft/issues/152)), model choice in [#149](https://github.com/hsimah/the-loft/issues/149), and personas and evals in [#156](https://github.com/hsimah/the-loft/issues/156). The issues are canonical; this page records only what the household work shares with it.
 
 ## Shared with household work
 

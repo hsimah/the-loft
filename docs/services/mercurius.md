@@ -1,8 +1,8 @@
 # Mercurius — household wiki and documents
 
-[Compose](../../services/mercurius/docker-compose.yml) runs the household wiki and document archive on space-needle, all on one encrypted volume. [SilverBullet](https://docs.silverbullet.md) (`silverbullet`) holds plans, trips, places, projects, lists and notes about documents as plain markdown. [Paperless-ngx](https://docs.paperless-ngx.com) (`paperless`) stores financial, medical and personal records, with Postgres (`mercurius-db`), Valkey (`mercurius-redis`), and Gotenberg and Tika (`mercurius-gotenberg`, `mercurius-tika`) for email and office files. Named for the Roman god of commerce and communication, and the planet Mercury. Plan and later work: [automation plans](../../automation/plans/mercurius.md).
+[Compose](../../services/mercurius/docker-compose.yml) runs the household wiki and document archive on space-needle, all on one encrypted volume. [SilverBullet](https://docs.silverbullet.md) (`silverbullet`) holds plans, trips, places, projects, lists and notes about documents as plain markdown. [Paperless-ngx](https://docs.paperless-ngx.com) (`paperless`) stores financial, medical and personal records, with Postgres (`mercurius-db`), Valkey (`mercurius-redis`), and Gotenberg and Tika (`mercurius-gotenberg`, `mercurius-tika`) for email and office files. Named for the Roman god of commerce and communication, and the planet Mercury. Plan and later work: [automation plans](../automation/mercurius.md).
 
-Deployed on space-needle 2026-10-29, replacing the separate Plutus and wiki-only Mercurius; egress probes confirmed. The old wiki folder and Forgejo repo await [cleanup](../../automation/plans/mercurius.md#migration).
+Deployed on space-needle 2026-10-29, replacing the separate Plutus and wiki-only Mercurius; egress probes confirmed.
 
 | Path | Contents |
 |---|---|
@@ -40,7 +40,7 @@ Run from `/srv/the-loft`, one at a time:
 
 1. `sudo lvcreate -L 250G -n mercurius ubuntu-vg`
 2. `sudo cryptsetup luksFormat --type luks2 /dev/ubuntu-vg/mercurius`. Use a long passphrase and store it in the password manager.
-3. `sudo cryptsetup luksAddKey /dev/ubuntu-vg/mercurius`: a second, recovery passphrase (`openssl rand -base64 30`) for the printed recovery sheet in the safe ([backups plan](../../automation/plans/backups.md#key-custody-d11)).
+3. `sudo cryptsetup luksAddKey /dev/ubuntu-vg/mercurius`: a second, recovery passphrase (`openssl rand -base64 30`) for the printed recovery sheet in the safe ([backups plan](../automation/backups.md#key-custody-d11)).
 4. `sudo cryptsetup luksHeaderBackup /dev/ubuntu-vg/mercurius --header-backup-file /root/mercurius-luks-header.img`. A damaged header makes the volume unrecoverable even with the passphrase. Copy it to the USB stick in the safe, then `sudo shred -u` it on the host: with either passphrase it opens the vault. Renaming the LV does not change the header, so the `plutus-luks-header.img` already in the safe is still this volume's.
 5. `sudo cryptsetup open /dev/ubuntu-vg/mercurius mercurius`, then `sudo mkfs.xfs -L mercurius /dev/mapper/mercurius`.
 6. `sudo control-plane/mercurius-vault.sh unlock` mounts it and creates the directories.
@@ -82,9 +82,9 @@ sudo docker exec paperless curl -sS -m 5 http://1.1.1.1
 
 ## Second-pass OCR
 
-Paperless ingests every document as it arrives and keeps what it extracts: a PDF's embedded text layer, or Tesseract's reading of a scan. A second pass is on demand, for documents whose text is bad (older PDFs, odd layouts, poor scans): tag the document `paperless-gpt-ocr-auto` (bulk edit works for many). paperless-gpt then reads it again with a vision model on helarctos: it polls Paperless's API for documents carrying the tag, renders each page, sends it to `glm-ocr` at temperature 0, and writes the recognised text back. Two independent readings let a later job flag documents where they disagree ([plan](../../automation/plans/documents.md#scanning-ocr-and-re-checking)). paperless-gpt's own suggestions (titles, tags) are off; Paperless's [built-in AI](#built-in-ai) does that.
+Paperless ingests every document as it arrives and keeps what it extracts: a PDF's embedded text layer, or Tesseract's reading of a scan. A second pass is on demand, for documents whose text is bad (older PDFs, odd layouts, poor scans): tag the document `paperless-gpt-ocr-auto` (bulk edit works for many). paperless-gpt then reads it again with a vision model on helarctos: it polls Paperless's API for documents carrying the tag, renders each page, sends it to `glm-ocr` at temperature 0, and writes the recognised text back. Two independent readings let a later job flag documents where they disagree ([plan](../automation/documents.md#scanning-ocr-and-re-checking)). paperless-gpt's own suggestions (titles, tags) are off; Paperless's [built-in AI](#built-in-ai) does that.
 
-Settings are in [Compose](../../services/mercurius/docker-compose.yml). `glm-ocr` and `paddleocr-vl` expect fixed task prompts (`Text Recognition:` and `OCR:`), so set `ocr_prompt.tmpl` to the one for the model in use. One page at a time goes in as an image, which is how the models skipped regions in [the first test](../../automation/plans/models.md#household-roster).
+Settings are in [Compose](../../services/mercurius/docker-compose.yml). `glm-ocr` and `paddleocr-vl` expect fixed task prompts (`Text Recognition:` and `OCR:`), so set `ocr_prompt.tmpl` to the one for the model in use. One page at a time goes in as an image, which is how the models skipped regions in [the first test](../automation/models.md#household-roster).
 
 Set up, one step at a time, after the model egress is installed:
 
@@ -100,10 +100,10 @@ paperless-gpt's `db` holds a run log and undo history.
 
 Paperless's own AI is enabled in [Compose](../../services/mercurius/docker-compose.yml) and points at llama-swap (`PAPERLESS_AI_*`): suggestions on a document, chat, and similar documents. Not yet tried on 3.3.4.
 
-- **Chat and suggestions:** `qwen3.6-35b-a3b`. It is not resident: the first request after a swap waits 23–36 s while it loads, and it evicts whichever large model is running, including a coding job's. The request timeout is 300 s. Which model stays resident is D18 ([models](../../automation/plans/models.md#sharing-the-gpu)).
+- **Chat and suggestions:** `qwen3.6-35b-a3b`. It is not resident: the first request after a swap waits 23–36 s while it loads, and it evicts whichever large model is running, including a coding job's. The request timeout is 300 s. Which model stays resident is D18 ([models](../automation/models.md#sharing-the-gpu)).
 - **Similar documents:** `embeddinggemma`, always loaded. Paperless indexes every document daily (`PAPERLESS_LLM_INDEX_TASK_CRON`, default 02:10), so the first run on a full archive is long; add the variable to Compose to move it.
 - **Key:** helarctos's `LLAMA_SWAP_API_KEY` in Mercurius's `.env`. Without it, AI requests fail with 401.
-- **What leaves:** document text goes to helarctos over the LAN, as plain HTTP, for each request. It is held in memory there and not logged: after a real ID document went through, the container logs of llama-swap (helarctos), Paperless and paperless-gpt held no document text or image data. After the bulk second-pass OCR, paperless-gpt's log held large serialized text, probably document text; not yet checked ([plan](../../automation/plans/documents.md#llm-improvements)). Recheck after changing llama-swap's `logLevel`; its in-memory `/logs` buffer is not on disk and clears when the container is recreated.
+- **What leaves:** document text goes to helarctos over the LAN, as plain HTTP, for each request. It is held in memory there and not logged: after a real ID document went through, the container logs of llama-swap (helarctos), Paperless and paperless-gpt held no document text or image data. After the bulk second-pass OCR, paperless-gpt's log held large serialized text, probably document text; not yet checked ([plan](../automation/documents.md#llm-improvements)). Recheck after changing llama-swap's `logLevel`; its in-memory `/logs` buffer is not on disk and clears when the container is recreated.
 - **Models:** fetch commands are under [Paperless models](sputnik.md#paperless-models).
 
 ## Bulk import

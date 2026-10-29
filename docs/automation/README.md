@@ -1,6 +1,6 @@
 # Automation plans
 
-Planning notes for the household AI services: apps and data on [space-needle](../../docs/hosts/space-needle.md), inference on [helarctos](../../docs/hosts/helarctos.md). **Everything here is proposed** unless a line says otherwise. Once something is built, its current state moves to `docs/services/<name>.md` and the plan page shrinks to the remaining work; delete a page when nothing is left.
+Planning notes for the household AI services: apps and data on [space-needle](../hosts/space-needle.md), inference on [helarctos](../hosts/helarctos.md). **Everything here is proposed** unless a line says otherwise. Once something is built, its current state moves to `docs/services/<name>.md` and the plan page shrinks to the remaining work; delete a page when nothing is left.
 
 These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/EbMpmFyehGEkf5CyRf4reR) doc; its content is in [Mercurius](mercurius.md), [documents](documents.md) and [models](models.md).
 
@@ -10,7 +10,7 @@ These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/
 |---|---|---|---|
 | 0 | Chat portal: Open WebUI on the GPU | Live | [workflows](workflows.md#chat) |
 | 1 | Agentic coding | In progress ([#155](https://github.com/hsimah/the-loft/issues/155)) | [coding-agents](coding-agents.md) |
-| 2a | Mercurius: wiki and documents on the encrypted volume | Merged and live 2026-10-29; old wiki folder and Forgejo repo to remove; backup shelved | [Mercurius](mercurius.md) |
+| 2a | Mercurius: wiki and documents on the encrypted volume | Merged and live 2026-10-29; backup shelved | [Mercurius](mercurius.md) |
 | 2b | Documents: Paperless OCR, re-checks, intake | Paperless and second-pass OCR live | [documents](documents.md) |
 | 3 | Janus: calendar, reminders and reports | Proposed | [Janus](janus.md) |
 | 4 | Ceres: recipes from email, photos and reels | Proposed | [Ceres](ceres.md) |

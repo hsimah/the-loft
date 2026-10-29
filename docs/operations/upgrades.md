@@ -29,6 +29,9 @@ Commit the pin, then `loft-ctl update <service>` (or `--no-pull` if already chec
 | Houstn | Beszel/Kuma data; upgrade hub before agents |
 | Sputnik | WebUI/n8n state + `N8N_ENCRYPTION_KEY`; a chat reply from llama-swap |
 | Mushr | Caddy volumes + `.env`; DNS, TLS, routes, tunnel from outside |
+| Hubbl | `pg_dumpall` first ([Hubbl](../services/hubbl.md#upgrades)); library browses, a phone upload lands |
+| Kennl | `forgejo dump` first; a clone over SSH, a runner job |
+| Mercurius | `document_exporter` and `pg_dump` first ([Mercurius](../services/mercurius.md#upgrades)); a document opens with its text, the wiki loads |
 
 ## Rollback and pin exceptions
 
@@ -36,6 +39,6 @@ Reverting a pin does not revert migrated data; restore the matching backup with 
 
 - **Snapclient, NordVPN**: digest-pinned `latest`. Never use the VPN's `v3.12.3` tag; it fails authentication.
 - **Lidarr**: nightly, because its DB schema is ahead of stable. Moving to stable is a migration, not a tag change.
-- **Uptime Kuma 1.x, MariaDB 12.2, Redis 7**: deliberately held.
+- **Uptime Kuma 1.x**: deliberately held.
 - **Caddy**: local build with an unpinned Cloudflare module; keep the previous image for rollback.
 - **Jackett**: `AUTO_UPDATE=true`, so the tag is not the whole version.

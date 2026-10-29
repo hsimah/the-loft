@@ -38,7 +38,7 @@ Radicale's rights file enforces this, so the review queue doesn't depend on a pr
 
 | Source | Path |
 |---|---|
-| Work and personal Google Calendar | Read by an n8n Google credential with read-only scopes ([Sputnik](../../docs/services/sputnik.md#google-oauth)); merged into reports, not copied |
+| Work and personal Google Calendar | Read by an n8n Google credential with read-only scopes ([Sputnik](../services/sputnik.md#google-oauth)); merged into reports, not copied |
 | Filed emails | `+cal` [intake](intake.md) → model extracts date and title → `proposed` |
 | Paper invoices, vaccination and ID expiry | [Paperless](documents.md) custom fields (due, expiry) → exporter → `household`, with reminders before the date |
 | Manual | Any CalDAV client, or a note in the wiki `inbox/` |
@@ -49,7 +49,7 @@ Radicale's rights file enforces this, so the review queue doesn't depend on a pr
 
 - **Morning** (daily, after the overnight GPU window), **weekly** (Sunday) and **monthly look-ahead** (the 1st), plus **on demand** from a Homepage link to an n8n webhook.
 - Facts are assembled in code: date arithmetic, "in 12 days", what is due this week. The model only phrases them, so it cannot invent a date.
-- Output: a report page, a short ntfy push, and optionally spoken through [Howlr](../../docs/services/howlr.md) with a local TTS voice. That last one is an idea, not a commitment.
+- Output: a report page, a short ntfy push, and optionally spoken through [Howlr](../services/howlr.md) with a local TTS voice. That last one is an idea, not a commitment.
 
 ## Open questions
 

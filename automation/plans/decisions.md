@@ -8,7 +8,7 @@ Register of open choices. When one is made, set Status to the decision and date,
 | D1 | Service names | Pick from the proposals | Decided 2026-10-25: Mercurius (wiki), Plutus (vault), Janus (calendar), Ceres (recipes). 2026-10-28: Plutus retired; Mercurius covers wiki and documents (D24) | [names](names.md) | Phase 1 |
 | D2 | Wiki editor | SilverBullet; Obsidian optional on the same repo | Decided 2026-10-25: SilverBullet | [Mercurius](mercurius.md) | Phase 1 |
 | D3 | Wiki history | Sidecar autocommit to a private Forgejo repo | Decided 2026-10-25: SilverBullet's built-in revisions and git sync (deploy key); no sidecar. 2026-10-28: local revisions on the vault, no git sync (D24) | [Mercurius](mercurius.md) | Phase 1 |
-| D9 | Off-LAN access | Tailscale on phones and laptops; nothing on the tunnel | Open | [shared-services](shared-services.md) | Phase 1 |
+| D9 | Off-LAN access | Tailscale on phones and laptops; nothing on the tunnel | Open | [Tailscale](tailscale.md) | Phase 1 |
 | D10 | Off-site backup tool | restic through rclone to Google Drive | Decided 2026-10-25: restic through rclone to Google Drive; build shelved 2026-10-26 | [backups](backups.md) | Phase 1 |
 | D11 | Backup key custody | Password manager + printed sheet in the safe; both of you can restore | Decided 2026-10-25: two repositories and passwords (vault, open); each in the password manager and on the printed recovery sheet; both can restore | [backups](backups.md) | Phase 1 |
 | D19 | Planning pages after the wiki is live | Stay in this repo | Open | [Mercurius](mercurius.md) | Phase 1 |

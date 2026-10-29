@@ -16,7 +16,7 @@ These pages replace the [Home Second Brain proposal](https://claude.ai/artifact/
 | 4 | Ceres: recipes from email, photos and reels | Proposed | [Ceres](ceres.md) |
 | 5 | Custom AI workflows | n8n already runs (CPU) | [workflows](workflows.md) |
 
-Cross-cutting: [shared services](shared-services.md) · [email intake](intake.md) · [off-site backups](backups.md) · [models and GPU sharing](models.md).
+Cross-cutting: [shared services](shared-services.md) · [email intake](intake.md) · [off-site backups](backups.md) · [models and GPU sharing](models.md) · [Tailscale](tailscale.md).
 
 Planning: [roadmap](roadmap.md) · [decisions](decisions.md) · [names](names.md).
 

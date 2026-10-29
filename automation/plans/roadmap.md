@@ -24,7 +24,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] Open WebUI pointed at llama-swap ([chat](workflows.md#chat)).
 - [x] Names ([names](names.md)).
 - [ ] Check Google Drive quota and create the rclone Drive client (`drive.file`).
-- [ ] Tailscale on both phones and laptops, and on space-needle.
+- [ ] Tailscale on both phones and laptops: route, split DNS and grants on space-needle, which is already enrolled ([plan](tailscale.md)).
 - [x] Write the backup recovery sheet template ([runbook](../../docs/operations/backups.md#recovery-sheet)); print it, fill it in and file it.
 
 ## Phase 1 — Mercurius

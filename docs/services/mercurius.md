@@ -2,7 +2,7 @@
 
 [Compose](../../services/mercurius/docker-compose.yml) runs the household wiki and document archive on space-needle, all on one encrypted volume. [SilverBullet](https://docs.silverbullet.md) (`silverbullet`) holds plans, trips, places, projects, lists and notes about documents as plain markdown. [Paperless-ngx](https://docs.paperless-ngx.com) (`paperless`) stores financial, medical and personal records, with Postgres (`mercurius-db`), Valkey (`mercurius-redis`), and Gotenberg and Tika (`mercurius-gotenberg`, `mercurius-tika`) for email and office files. Named for the Roman god of commerce and communication, and the planet Mercury. Plan and later work: [automation plans](../../automation/plans/mercurius.md).
 
-**Configured, not deployed.** Live state is still the separate Plutus (Paperless on `/plutus`) and Mercurius (SilverBullet on `/mammoth/mercurius`, git sync to Forgejo) until the [cutover](../../automation/plans/mercurius.md#migration).
+Deployed on space-needle 2026-10-29, replacing the separate Plutus and wiki-only Mercurius; egress probes confirmed. The old wiki folder and Forgejo repo await [cleanup](../../automation/plans/mercurius.md#migration).
 
 | Path | Contents |
 |---|---|
@@ -20,7 +20,7 @@ Everything the group stores, including Postgres with the OCR text and every wiki
 
 ## Accounts
 
-- **SilverBullet:** one account each, both with `write` on the `household` space. In SilverBullet, `write` includes authoring Space Lua that runs in the other person's browser, so only trusted people get it.
+- **SilverBullet:** one account each, both with `write` on the `home` space. In SilverBullet, `write` includes authoring Space Lua that runs in the other person's browser, so only trusted people get it.
 - **Paperless:** one shared archive with an account each, both superusers: owners otherwise hide documents from each other, and either superuser can reset the other's password or two-factor. Enable two-factor authentication on both (Profile → Two-factor authentication).
 
 ## After every reboot
@@ -53,7 +53,7 @@ Grow it later while it is online: `lvextend`, `cryptsetup resize mercurius`, the
 2. `sudo bash setup.sh` creates the `mercurius-proxy` and `mercurius-llm` networks and installs the egress firewall. Then `loft-ctl start mushr` recreates Caddy on `mercurius-proxy`.
 3. With the vault unlocked: `loft-ctl start mercurius`, then `loft-ctl health mercurius`.
 4. Paperless: open `https://paperless.loft.hsimah.com` and create the first account, which becomes the superuser. Create the second under Settings → Users & Groups as a superuser too, and turn on two-factor for both.
-5. SilverBullet: open `https://wiki.loft.hsimah.com`. The setup wizard creates the first admin account, then the first space: name it `household`, bound to `wiki.loft.hsimah.com` at `/`. In the dashboard, create the second account and add it to `household` with `write`; set each account's full name and email, which revisions are attributed to. Turn on revisions in **Managed** mode, with no remote.
+5. SilverBullet: open `https://wiki.loft.hsimah.com`. The setup wizard creates the first admin account, then the first space: name it `home`, bound to `wiki.loft.hsimah.com` at `/`. In the dashboard, create the second account and add it to `home` with `write`; set each account's full name and email, which revisions are attributed to. Turn on revisions in **Managed** mode, with no remote.
 6. Confirm the way out is only the model route ([model egress](#model-egress)).
 
 ## Wiki revisions
@@ -134,4 +134,5 @@ None running. One vault job (Paperless's `document_exporter` output, a Postgres 
 - **Database authentication fails at start**: `DB_PASSWORD` changed after the cluster was initialised. Fix it with `ALTER ROLE` inside `mercurius-db`.
 - **Paperless two-factor activation returns `{"success":false}`**: the code didn't match the secret. Paperless makes a new secret each time the dialog opens; delete the authenticator entry, open the dialog once, scan, and enter the code at once.
 - **Wiki space not found or redirects to the dashboard**: the space is bound to a different hostname than the one in the browser.
+- **Every wiki request redirects to another hostname**, so the dashboard is unreachable: `primaryUrl` in `/mercurius/silverbullet/server.json` names it. `sudo docker stop silverbullet`, fix the line with `sudo nano` (which keeps littledog as owner; `sed -i` would not), then start it.
 - **SilverBullet logs `boot mode: single-space`**: a legacy `SB_*` variable is set, or `/mercurius/silverbullet` held files before the first boot. Multi-space setup only runs on an empty data folder with no legacy variables.

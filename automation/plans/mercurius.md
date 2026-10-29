@@ -1,6 +1,6 @@
 # Mercurius: household wiki and documents
 
-One Compose group on the encrypted volume holds the wiki and the document archive: [Paperless-ngx](https://docs.paperless-ngx.com) stores every document, and [SilverBullet](https://docs.silverbullet.md) is the index where notes about them live. Open WebUI and n8n read and write both. **In the repo, not yet live** ([service page](../../docs/services/mercurius.md)): the host still runs the wiki as Mercurius on `/mammoth` with git sync to Forgejo, and Paperless as Plutus on the vault, until the [cutover](#migration). Document work (OCR, re-checks, intake) is on [documents](documents.md); see the [roadmap](roadmap.md).
+One Compose group on the encrypted volume holds the wiki and the document archive: [Paperless-ngx](https://docs.paperless-ngx.com) stores every document, and [SilverBullet](https://docs.silverbullet.md) is the index where notes about them live. Open WebUI and n8n read and write both. **Live since 2026-10-29** ([service page](../../docs/services/mercurius.md)); only step 14 of the [migration](#migration) is left. Document work (OCR, re-checks, intake) is on [documents](documents.md); see the [roadmap](roadmap.md).
 
 ## Target
 
@@ -22,7 +22,7 @@ The repo holds the merged group ([service page](../../docs/services/mercurius.md
 
 Run from `/srv/the-loft` on space-needle, one at a time. Steps 1–3 use the **old** checkout: after the pull, `loft-ctl` no longer knows `plutus` and `plutus-vault.sh` is gone.
 
-1. In SilverBullet's dashboard (`https://mercurius.loft.hsimah.com/.dashboard`), disconnect the `household` space's git repository. Check its history stayed: `sudo -u littledog git -C /mammoth/mercurius/spaces/household log --oneline -3`.
+1. In SilverBullet's dashboard (`https://mercurius.loft.hsimah.com/.dashboard`), disconnect the `home` space's git repository. Disconnecting leaves the remote in `.git/config`; remove it with `sudo -u littledog git -C /mammoth/mercurius/spaces/home remote remove origin`, then check the history stayed: `sudo -u littledog git -C /mammoth/mercurius/spaces/home log --oneline -3`.
 2. `loft-ctl stop mercurius plutus`
 3. `sudo control-plane/plutus-vault.sh lock`
 4. `git pull`, then `mv -f services/plutus/.env services/mercurius/.env` and `rmdir services/plutus`. Plutus's `.env` has every variable the group needs; the wiki's held only `TZ`.
@@ -33,7 +33,7 @@ Run from `/srv/the-loft` on space-needle, one at a time. Steps 1–3 use the **o
 9. Remove the old firewall: `sudo systemctl disable --now loft-plutus-egress`, `sudo rm /etc/systemd/system/loft-plutus-egress.service /etc/loft/plutus-egress.nft`, `sudo systemctl daemon-reload`, `sudo nft delete table inet loft_plutus`, `sudo rmdir /plutus`.
 10. `sudo bash setup.sh`: creates `mercurius-proxy` and `mercurius-llm`, installs the new firewall, recreates Mushr on the new network and starts the group.
 11. `sudo docker network rm plutus-proxy plutus-llm`, then `loft-ctl health mercurius` (the wiki check fails until step 12).
-12. At `https://wiki.loft.hsimah.com/.dashboard`, rebind `household` to `wiki.loft.hsimah.com` and set revisions to **Managed** if disconnecting changed it. Check `Revisions:` shows the old history.
+12. Every request redirects to `primaryUrl` in `/mercurius/silverbullet/server.json`, still the old name: `sudo docker stop silverbullet`, change it to `https://wiki.loft.hsimah.com` with `sudo nano` (keeps the owner), start it. Then at `https://wiki.loft.hsimah.com/.dashboard`, check `home` is bound to `wiki.loft.hsimah.com` and set revisions to **Managed** if disconnecting changed it. Check `Revisions:` shows the old history.
 13. Run the [egress probes](../../docs/services/mercurius.md#model-egress). Sign in again to Paperless at the new name and point any phone app at it. Update Uptime Kuma monitors or bookmarks that use `mercurius.` or `plutus.` (not in the repo).
 14. After a few days' use: `sudo rm -rf /mammoth/mercurius`, and archive or delete the Forgejo repo `hsimah/mercurius` (your call; it holds only pre-move content). Then make this page's Target current-state and delete this section.
 

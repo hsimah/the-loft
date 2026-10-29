@@ -82,8 +82,8 @@ For the vault use `.../vault` and the vault password.
 ```bash
 export RESTIC_REPOSITORY=rclone:gdrive:the-loft/vault   # and the VAULT password
 restic restore latest --tag mercurius --target ~/restore
-ls ~/restore/mercurius/silverbullet/spaces/household
-git -C ~/restore/mercurius/silverbullet/spaces/household log -3
+ls ~/restore/mercurius/silverbullet/spaces/home
+git -C ~/restore/mercurius/silverbullet/spaces/home log -3
 cat ~/restore/mercurius/backup/stage/paperless-image.txt   # the Paperless image that exported
 ```
 

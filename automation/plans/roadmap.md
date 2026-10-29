@@ -32,10 +32,10 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 [Mercurius](mercurius.md) · decisions D2, D3, D19.
 
 - [x] Compose, host.conf dirs and health URL, Caddy LAN route (the loft wildcard already resolves).
-- [x] Deploy; accounts and the `household` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
+- [x] Deploy; accounts and the `home` space; Forgejo repo with SilverBullet's deploy key ([setup](../../docs/services/mercurius.md#setup)).
 - [ ] restic job for the wiki: built and shelved ([backups](backups.md)).
 - [x] Service page in `docs/services/`, README rows.
-- [ ] Merge with Paperless onto the encrypted volume: one group, `wiki.` and `paperless.` hostnames, git sync off, revisions kept. In the repo; host cutover pending ([migration](mercurius.md#migration)).
+- [x] Merge with Paperless onto the encrypted volume: one group, `wiki.` and `paperless.` hostnames, git sync off, revisions kept. Live 2026-10-29 ([migration](mercurius.md#migration)).
 - [ ] Paperless preview widget in the wiki ([plan](mercurius.md#preview-widget)).
 
 **Done when** both of you edit from phone and laptop, on and off the LAN; the wiki runs from the vault with its revisions; a vault snapshot restores from Drive.

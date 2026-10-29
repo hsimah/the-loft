@@ -1,6 +1,6 @@
 # Documents: Paperless in Mercurius
 
-The document half of [Mercurius](mercurius.md): financial, medical and personal records, and any other document, in Paperless-ngx on the encrypted volume. Every document is searchable by content; the original is kept forever so its text can be re-read as models improve. Paperless with standard OCR is live today as Plutus ([service page](../../docs/services/mercurius.md)); the move into Mercurius is on [Mercurius](mercurius.md#migration). This page holds the OCR, intake and backup work still to come.
+The document half of [Mercurius](mercurius.md): financial, medical and personal records, and any other document, in Paperless-ngx on the encrypted volume. Every document is searchable by content; the original is kept forever so its text can be re-read as models improve. Paperless with standard OCR is live in Mercurius ([service page](../../docs/services/mercurius.md)); the move into Mercurius is on [Mercurius](mercurius.md#migration). This page holds the OCR, intake and backup work still to come.
 
 ## Stack
 

@@ -11,11 +11,9 @@ flowchart LR
   p3 --> p6[6 Ceres]
   p4 -.-> p6
   p3 --> p7[7 AI upkeep]
-  c149[#149 model choice] --> p3
-  c152[#152 agent harness] --> p7
 ```
 
-Recipes can run in parallel with phases 4–5 once phase 3 is done; only their email path waits for intake. Coding work ([#155](https://github.com/hsimah/the-loft/issues/155)) continues alongside and gates phases 3 and 7.
+Recipes can run in parallel with phases 4–5 once phase 3 is done; only their email path waits for intake. Local coding ([#155](https://github.com/hsimah/the-loft/issues/155)) is deferred; household work has the GPU (D18).
 
 ## Phase 0 — Prep
 
@@ -56,13 +54,13 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Phase 3 — Local AI
 
-[models](models.md) · [workflows](workflows.md) · decisions D8, D18, D21. Needs #149's choice for D18.
+[models](models.md) · [workflows](workflows.md) · decisions D8, D18, D21.
 
-- [x] OCR models on llama-swap: `glm-ocr` and `paddleocr-vl` in the persistent `small` group ([OCR models](../services/sputnik.md#ocr-models)). Not yet scored on a sample set.
-- [ ] Household models on llama-swap with resident groups; batch slot agreed with the runner. OCR and embeddings are configured in the persistent `small` group, and the 35B text model on demand ([models](models.md)); whisper is not yet.
+- [x] OCR models on llama-swap: `glm-ocr` and `paddleocr-vl` in the persistent `household` group ([OCR models](../services/sputnik.md#ocr-models)). Not yet scored on a sample set.
+- [ ] Household models resident on llama-swap: the 35B text, OCR and embedding models in the persistent `household` group (D18, [models](models.md#sharing-the-gpu)); whisper is not yet.
 - [x] Vault egress: helarctos `:8080` only, for Paperless and paperless-gpt ([model egress](../services/mercurius.md#model-egress)). The hop is plain HTTP until Tailscale (D9).
 - [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../services/mercurius.md#second-pass-ocr)).
-- [ ] Paperless's built-in AI (suggestions, chat, similar documents): configured, not yet tried from the UI ([built-in AI](../services/mercurius.md#built-in-ai)). The text model's residency is D18.
+- [ ] Paperless's built-in AI (suggestions, chat, similar documents): configured, not yet tried from the UI ([built-in AI](../services/mercurius.md#built-in-ai)).
 - [ ] Chat and n8n tools for the wiki and documents: n8n MCP workflows, a Household model in Open WebUI, code interpreter off ([plan](mercurius.md#chat-and-n8n-access)).
 - [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.

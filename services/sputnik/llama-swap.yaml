@@ -1,11 +1,11 @@
 # llama-swap on helarctos (Sputnik gpu profile). Recreate the container after
 # a git pull: this file is a single bind mount (docs/services/sputnik.md).
 #
-# Model choice is open (#149); the large entries are the evaluation set. Each
-# is too large to share the iGPU's GTT with another, so llama-swap runs one at
-# a time and swaps on demand in 23–36 s (docs/services/sputnik.md). The small
-# OCR models are a second, persistent group: they stay loaded beside whichever
-# large model is running (see routing, below).
+# Household work has the GPU (D18). The household models (text, OCR,
+# embeddings) are a persistent group: once loaded, nothing swaps them out. The
+# large models share the rest of the iGPU's GTT one at a time and swap on
+# demand in 23–36 s (docs/services/sputnik.md); each must fit beside the
+# household set (see routing, below).
 # Paths are inside the container: /models is /den/sputnik/models, filled by
 # services/sputnik/fetch-model.sh.
 healthCheckTimeout: 600
@@ -61,15 +61,6 @@ macros:
     --ctx-size 2048 --batch-size 2048 --ubatch-size 2048 --parallel 1
 
 models:
-  # 125B, 6B active, ~86 GiB at UD-IQ4_XS: the largest that leaves room for
-  # the KV cache (UD-Q4_K_XL is 102 GiB). Qwen Community License: personal,
-  # non-commercial use.
-  "qwen3.8-flash-next":
-    cmd: >
-      ${server}
-      --model /models/qwen3.8-flash-next/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf
-    ttl: 0
-
   # ~5B active, ~59 GiB in its native MXFP4. Apache 2.0.
   "gpt-oss-120b":
     cmd: >
@@ -77,17 +68,16 @@ models:
       --model /models/gpt-oss-120b/gpt-oss-120b-MXFP4.gguf
     ttl: 0
 
-  # 10B active, ~71 GiB at UD-Q4_K_XL. Slowest of the three; quality ceiling.
+  # 10B active, ~71 GiB at UD-Q4_K_XL. Slower; quality ceiling. Not yet
+  # measured beside the household set.
   "qwen3.5-122b":
     cmd: >
       ${server}
       --model /models/qwen3.5-122b-a10b/Qwen3.5-122B-A10B-UD-Q4_K_XL-00001-of-00003.gguf
     ttl: 0
 
-  # 3B active, ~22 GiB at UD-Q4_K_XL. Apache 2.0. Paperless's suggestions and
-  # chat. In the swapping group: it loads on demand (23–36 s) and evicts the
-  # large model. Moving it to the persistent group is the residency decision
-  # (D18); Qwen3.8-Flash-Next does not fit beside it.
+  # 3B active, ~22 GiB at UD-Q4_K_XL. Apache 2.0. Household text model:
+  # Paperless's suggestions and chat, and the wiki and document chat tools.
   "qwen3.6-35b-a3b":
     cmd: >
       ${household-server}
@@ -123,9 +113,9 @@ models:
       --mmproj /models/paddleocr-vl-1.5/PaddleOCR-VL-1.5-mmproj.gguf
     ttl: 0
 
-# Which models may run together. The large and household models swap among
-# themselves and unload any other non-persistent group; the small models never
-# swap out, and loading one leaves the others alone.
+# Which models may run together. The large models swap among themselves and
+# unload any other non-persistent group; the household models never swap out,
+# and loading one leaves the others alone.
 routing:
   router:
     use: group
@@ -135,15 +125,14 @@ routing:
           swap: true
           exclusive: true
           members:
-            - "qwen3.8-flash-next"
             - "gpt-oss-120b"
             - "qwen3.5-122b"
-            - "qwen3.6-35b-a3b"
-        "small":
+        "household":
           swap: false
           exclusive: false
           persistent: true
           members:
+            - "qwen3.6-35b-a3b"
             - "glm-ocr"
             - "paddleocr-vl"
             - "embeddinggemma"

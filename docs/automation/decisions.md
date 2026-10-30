@@ -16,7 +16,7 @@ Register of open choices. When one is made, set Status to the decision and date,
 | D4 | Vault areas | Shared to start; Paperless permissions can split later | Decided 2026-10-25: shared | [documents](documents.md) | Phase 2 |
 | D5 | Vault encryption at rest | LUKS volume unlocked by hand after each boot. A keyfile on the root disk only protects a stolen data disk | Decided 2026-10-25: LUKS2 on a 250 GB NVMe LVM volume at `/plutus` (renamed `/mercurius` 2026-10-29, D24), manual unlock after each boot | [documents](documents.md) | Phase 2 |
 | D6 | First records in | Your call: tax and financial, medical, or IDs | Done 2026-10-28: all at once, by the OneDrive bulk import | [documents](documents.md) | Phase 2 |
-| D18 | GPU residency and night split | Keep the household set resident; prefer a coder that fits beside it; household batch 01:00–02:30 | Open; depends on [#149](https://github.com/hsimah/the-loft/issues/149) | [models](models.md#sharing-the-gpu) | Phase 3 |
+| D18 | GPU residency and night split | Keep the household set resident; prefer a coder that fits beside it; household batch 01:00–02:30 | Decided 2026-10-29: household set (35B text, OCR, embeddings) resident; large models on demand and must fit beside it; household batch overnight; local coding deferred | [models](models.md#sharing-the-gpu) | Phase 3 |
 | D21 | Ollama on space-needle | Retire after Open WebUI (D0) and n8n use llama-swap | Done 2026-10-25 | [workflows](workflows.md) | Phase 3 |
 | D8 | Review notifications | ntfy push; reviewer named per document type | Open | [documents](documents.md) | Phase 3 |
 | D12 | Intake mailbox | Dedicated Google account with plus addresses; Cloudflare routing optional | Open | [intake](intake.md) | Phase 4 |

@@ -21,11 +21,16 @@ used="$(sed -n '/^models:/,/^routing:/p' "$CONF" | grep -oE '\$\{[a-z][a-z-]*\}'
 undefined="$(comm -23 <(printf '%s\n' "$used") <(printf '%s\n' "$macros"))"
 assert_eq "$undefined" "" "every macro a model uses is defined"
 
-# The small models stay loaded: persistent, and they leave other groups alone.
-ocr="$(sed -n '/"small":/,/members:/p' "$CONF")"
-assert_contains "$ocr" "persistent: true" "the small group is persistent"
-assert_contains "$ocr" "exclusive: false" "loading a small model does not unload the large one"
-assert_contains "$ocr" "swap: false" "the small models do not swap each other out"
+# The household models stay loaded (D18): persistent, and they leave other
+# groups alone.
+household="$(sed -n '/"household":/,/members:/p' "$CONF")"
+assert_contains "$household" "persistent: true" "the household group is persistent"
+assert_contains "$household" "exclusive: false" "loading a household model does not unload the large one"
+assert_contains "$household" "swap: false" "the household models do not swap each other out"
+household_members="$(sed -n '/"household":/,$p' "$CONF" | sed -nE 's/^ +- "([^"]+)"$/\1/p')"
+for model in qwen3.6-35b-a3b embeddinggemma glm-ocr paddleocr-vl; do
+  assert_contains "$household_members" "$model" "${model} is resident in the household group"
+done
 
 # Every --model / --mmproj path of the household and OCR models is fetched by a documented command into the
 # directory it is read from.

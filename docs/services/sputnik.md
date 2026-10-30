@@ -30,19 +30,17 @@ Read-only is deliberate: a model reading an untrusted inbox is a prompt-injectio
 
 ## GPU engine on helarctos
 
-The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. The evaluation set for [#149](https://github.com/hsimah/the-loft/issues/149) is Qwen3.8-Flash-Next, gpt-oss-120b and Qwen3.5-122B-A10B. Each needs most of the GTT, so one is loaded at a time and a request for another swaps it. The runner takes one job at a time to match. Measured from disk with a short prompt (2026-10-24):
+The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. The household models stay resident (D18, [models](../automation/models.md#sharing-the-gpu)). The large models, gpt-oss-120b and Qwen3.5-122B-A10B, load on demand into the rest of the GTT, one at a time; a request for the other swaps it. Qwen3.5-122B is not yet measured beside the household set. Measured from disk with a short prompt (2026-10-24, before the household set was resident):
 
 | Model | Swap and load | Generation |
 |---|---|---|
 | gpt-oss-120b (MXFP4) | 10 s warm, 23–25 s cold | 51 tok/s |
 | Qwen3.5-122B-A10B (UD-Q4_K_XL) | 36 s | 23 tok/s |
-| Qwen3.8-Flash-Next (UD-IQ4_XS) | 34 s | 26 tok/s; about half the reported speed, possibly the IQ quant on Vulkan |
 
 - Models: [llama-swap.yaml](../../services/sputnik/llama-swap.yaml). llama-swap watches it, but the file is a single bind mount: after a `git pull`, recreate the container (`sudo docker compose -f services/sputnik/docker-compose.yml up -d --force-recreate llama-swap`).
 - Weights: `/den/sputnik/models` (`/models` in the container). [fetch-model.sh](../../services/sputnik/fetch-model.sh) downloads them from Hugging Face, resumably and SHA-256 checked; rerun it after an interruption. Run it as adminhabl in tmux:
 
   ```bash
-  services/sputnik/fetch-model.sh unsloth/Qwen3.8-Flash-Next-GGUF UD-IQ4_XS/ qwen3.8-flash-next
   services/sputnik/fetch-model.sh ggml-org/gpt-oss-120b-GGUF gpt-oss-120b-MXFP4 gpt-oss-120b
   services/sputnik/fetch-model.sh unsloth/Qwen3.5-122B-A10B-GGUF UD-Q4_K_XL/ qwen3.5-122b-a10b
   ```
@@ -59,7 +57,7 @@ Set `COMPOSE_PROFILES=gpu` in helarctos's `services/sputnik/.env`; the other pro
 
 ## OCR models
 
-`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for Paperless's [second-pass OCR](mercurius.md#second-pass-ocr), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `small` group with the embedding model, so they stay loaded beside whichever large model is running and a request for one never swaps the others out. Both are downloaded and answer on helarctos; neither is benchmarked yet, and the entries and `--ctx-size 16384` are starting values.
+`glm-ocr` (MIT) and `paddleocr-vl` (Apache 2.0) are small vision models for Paperless's [second-pass OCR](mercurius.md#second-pass-ocr), about 1.5–2 GB each with their vision projector. They sit in llama-swap's persistent `household` group with the text and embedding models, so they stay loaded beside whichever large model is running and a request for one never swaps the others out. Both are downloaded and answer on helarctos; neither is benchmarked yet, and the entries and `--ctx-size 16384` are starting values.
 
 Each model is a language GGUF plus a separate `--mmproj` vision projector, so each is fetched in two calls, into one directory:
 
@@ -87,10 +85,10 @@ Paperless's [built-in AI](mercurius.md#built-in-ai) (suggestions, chat, similar 
 
 | Model | Role | Size | Group | Licence |
 |---|---|---|---|---|
-| `qwen3.6-35b-a3b` (UD-Q4_K_XL) | Suggestions and chat | 22 GB | `large`: loads on demand in 23–36 s and evicts the large model | Apache 2.0 |
-| `embeddinggemma` (300M, Q8_0) | Embeddings for similar documents | 0.3 GB | `small`: always loaded | Gemma terms of use |
+| `qwen3.6-35b-a3b` (UD-Q4_K_XL) | Suggestions and chat | 22 GB | `household`: resident; loads once after llama-swap starts (23–36 s) | Apache 2.0 |
+| `embeddinggemma` (300M, Q8_0) | Embeddings for similar documents | 0.3 GB | `household`: resident | Gemma terms of use |
 
-The 35B model is not resident because Qwen3.8-Flash-Next (~86 GiB plus its KV cache) does not fit beside it in the 108 GiB the iGPU can map; making it resident is the residency decision (D18, [models](../automation/models.md#sharing-the-gpu)). Fetch, then recreate the container (above):
+Fetch, then recreate the container (above):
 
 ```bash
 services/sputnik/fetch-model.sh unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-UD-Q4_K_XL qwen3.6-35b-a3b

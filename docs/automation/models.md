@@ -10,10 +10,10 @@ Candidates from the second-brain proposal. The OCR, embedding and 35B text model
 |---|---|---|---|
 | OCR | GLM-OCR (MIT) or PaddleOCR-VL-1.5 (Apache 2.0); both in [llama-swap.yaml](../../services/sputnik/llama-swap.yaml), [fetch commands](../services/sputnik.md#ocr-models) | ~2 GB each | Paperless, recipe photos |
 | Second opinion: disagreements, handwriting | Qwen3.8-27B (vision) | ~20 GB | Vault re-check, overnight only |
-| Summaries, tags, links, routing, reports | Qwen3.6-35B-A3B (UD-Q4_K_XL, Apache 2.0), configured for Paperless and on demand; or the Qwen3.8 35B-A3B in [#149](https://github.com/hsimah/the-loft/issues/149) | ~22 GB | All |
+| Summaries, tags, links, routing, reports, chat tools | Qwen3.6-35B-A3B (UD-Q4_K_XL, Apache 2.0), configured and resident | ~22 GB | All |
 | Embeddings | embeddinggemma 300M (Q8_0, Gemma terms), configured and always loaded | < 1 GB | Paperless similar documents, later wiki search |
 | Speech to text | whisper large-v3-turbo through whisper.cpp | ~2 GB | Reels, voice notes |
-| Coding | Per #149 | 59–86 GiB | [Coding agents](coding-agents.md) |
+| Heavy questions; coding (deferred) | gpt-oss-120b or Qwen3.5-122B-A10B, on demand | 59–71 GiB | Open WebUI, [coding agents](coding-agents.md) |
 
 Avoid models with research-only licences, such as Nanonets-OCR2-3B. Small OCR models (~1B) now top OmniDocBench ([overview](https://blog.roboflow.com/best-open-source-ocr-models/)), cheap enough to re-read the whole archive.
 
@@ -22,17 +22,15 @@ Avoid models with research-only licences, such as Nanonets-OCR2-3B. Small OCR mo
 ## Serving
 
 - llama-swap stays the single gateway ([llama-swap.yaml](../../services/sputnik/llama-swap.yaml)). Batch jobs never load models themselves.
-- The small household set stays resident beside one large model through llama-swap's router groups (`persistent`, `exclusive: false`); the OCR group is configured on the pinned v265 syntax, and the rest of the set joins it.
+- The household set stays resident beside one large model through llama-swap's persistent `household` group (`exclusive: false`). The 35B text, OCR and embedding models are in it; whisper joins it.
 - Vulkan is in use today. ROCm reportedly does over twice Vulkan's prompt processing on Strix Halo ([discussion](https://github.com/ggml-org/llama.cpp/discussions/27154)), which suits image-heavy OCR. Benchmark both on real documents; the comparison is already open in #149.
 - whisper.cpp's server behind llama-swap for `/v1/audio/transcriptions`; verify on the pinned version.
 
 ## Sharing the GPU
 
-**Residency (D18).** The household set is ~30 GB without the 27B vision model. gpt-oss-120b (~59 GiB) fits beside it. Qwen3.8-Flash-Next (~86 GiB plus KV cache) does not, so choosing it in #149 means every household request evicts the coder, a 30 s+ swap each way.
+Household work has the GPU; local coding is deferred (D18).
 
-**Time.** Coding already claims the night ([overnight pipeline](coding-agents.md)), and the second-brain proposal put household batch work at 1–6 am. Proposed split, settled in D18:
-
-- Household batch (OCR, re-check, linker, wiki upkeep) gets a fixed early slot, for example 01:00–02:30, then yields to the runner.
-- Daytime household requests (a recipe import, a report on demand) run when the runner is idle.
-- Before each item, the batch worker checks llama-swap's running requests and waits if an interactive request is in flight: two models generating at once slow each other down.
-- Concurrency one, resumable per document, `Nice=19` with low `CPUWeight` and `IOWeight`.
+- **Residency.** The household set (35B text, OCR, embeddings; ~26 GB plus context) is always loaded. A large model must fit beside it in the 108 GiB GTT: gpt-oss-120b (~59 GiB) does; Qwen3.5-122B (~71 GiB plus its 131k context) is not yet measured. The 27B vision model, when added, goes in the `large` group.
+- **Large models** load on demand and evict each other, never the household set.
+- **Batch.** Household batch work (OCR, re-check, linker, wiki upkeep) runs overnight, concurrency one, resumable per document, `Nice=19` with low `CPUWeight` and `IOWeight`. Before each item it checks llama-swap's running requests and waits if an interactive request is in flight: the 35B model has one slot.
+- **Coding, if it returns,** runs overnight or when llama-swap is idle (`/running`, `/upstream/<model>/slots`), on a model that fits beside the household set. Not designed.

@@ -96,7 +96,8 @@ services:
       PAPERLESS_AI_LLM_MODEL: qwen3.6-35b-a3b
       PAPERLESS_AI_LLM_EMBEDDING_BACKEND: openai-like
       PAPERLESS_AI_LLM_EMBEDDING_MODEL: embeddinggemma
-      # A request can wait for the 35B model to load (23–36 s) after a swap.
+      # The first request after llama-swap restarts waits for the 35B model to
+      # load (23–36 s), and the model has one slot, so requests queue.
       PAPERLESS_AI_LLM_REQUEST_TIMEOUT: 300
     volumes:
       - type: bind

@@ -13,7 +13,7 @@ Open WebUI and n8n stay in [Sputnik](../services/sputnik.md) and reach `wiki.` a
 - **Tools as n8n workflows**, exposed through n8n's MCP Server Trigger; Open WebUI connects as an MCP client. One tool set serves both apps, no Python, and the workflows are exported to `services/sputnik/workflows/` ([workflows](workflows.md)). Verify MCP on the pinned n8n 2.44.7 and Open WebUI 0.12.4 before building.
 - **Wiki tools**: search, list, read, write a page. Writes go straight to the page and the tool returns what it changed; revisions are the undo.
 - **Document tools**: search and read, read-only to start.
-- **Model**: `qwen3.6-35b-a3b`, the one served model suited to tool calls. It is not resident, so a chat's first call waits 23–36 s and evicts the coder (D18).
+- **Model**: `qwen3.6-35b-a3b`, resident (D18). It has one slot, shared with Paperless, so a chat waits behind a Paperless request in flight.
 
 ### Keeping web and household data apart
 

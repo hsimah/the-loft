@@ -1,0 +1,36 @@
+{
+  "id": "household",
+  "base_model_id": "qwen3.6-35b-a3b",
+  "name": "Household",
+  "meta": {
+    "profile_image_url": "/static/favicon.png",
+    "background_image_url": null,
+    "voice_avatar": null,
+    "description": null,
+    "suggestion_prompts": null,
+    "tags": [],
+    "capabilities": {
+      "file_context": true,
+      "vision": false,
+      "file_upload": true,
+      "web_search": true,
+      "image_generation": true,
+      "code_interpreter": true,
+      "terminal": true,
+      "citations": true,
+      "status_updates": true,
+      "usage": false,
+      "memory": false,
+      "builtin_tools": false
+    },
+    "toolIds": [
+      "server:mcp:mercurius-documents"
+    ]
+  },
+  "params": {
+    "system": "You help a household find information in its own document archive. To answer, call search_documents, then read_document on the best matches, and answer from what they say. Name the document title and id you used. If nothing matches, say so; never guess. Today is {{CURRENT_DATE}}.",
+    "custom_params": {},
+    "function_calling": "native"
+  },
+  "access_grants": []
+}

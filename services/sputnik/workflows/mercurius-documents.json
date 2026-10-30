@@ -1,0 +1,142 @@
+{
+  "name": "Paperless",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "bearerAuth",
+        "path": "mercurius-documents"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3857aa6e-b58f-4d32-8156-947fef3f0e45",
+      "name": "MCP Server Trigger",
+      "webhookId": "879efe86-a525-430d-81cd-920d16735aaa",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "kpN1EbJTcfrsY182",
+          "name": "Open WebUI MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Full-text search of the household document archive. Returns up to 10 matches with id, title, created date and highlighted snippets. Then call read_document with an id for the full text.",
+        "url": "https://paperless.loft.hsimah.com/api/documents/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $fromAI('query', 'search words, e.g. passport expiry', 'string') }}"
+            },
+            {
+              "name": "page_size",
+              "value": "10"
+            },
+            {
+              "name": "fields",
+              "value": "id,title,created"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        96,
+        208
+      ],
+      "id": "43b35721-5a32-4224-a5de-b7179bf755fa",
+      "name": "search_documents",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WSwSOLORPUE0l6Kq",
+          "name": "Paperless sputnik (read-only)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read one document's full text by its id from search_documents.",
+        "url": "=https://paperless.loft.hsimah.com/api/documents/{{ $fromAI('id', 'document id from search_documents', 'number') }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "id,title,created,content"
+            }
+          ]
+        },
+        "options": {},
+        "optimizeResponse": true
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        192,
+        160
+      ],
+      "id": "bccf8419-efef-436a-b145-d2a81157ed87",
+      "name": "read_document",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WSwSOLORPUE0l6Kq",
+          "name": "Paperless sputnik (read-only)"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "search_documents": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read_document": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "9a52f4f8-3f5c-4d33-89fa-09a208e18a90",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "01bb4c68c6421a0ec676d1bbfa63e87d40f4f167550d0209d039755b4b415e67"
+  },
+  "nodeGroups": [],
+  "id": "juGfQwk1MtiNLQpp",
+  "tags": []
+}

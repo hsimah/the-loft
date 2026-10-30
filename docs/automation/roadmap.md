@@ -61,7 +61,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] Vault egress: helarctos `:8080` only, for Paperless and paperless-gpt ([model egress](../services/mercurius.md#model-egress)). The hop is plain HTTP until Tailscale (D9).
 - [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../services/mercurius.md#second-pass-ocr)).
 - [ ] Paperless's built-in AI ([built-in AI](../services/mercurius.md#built-in-ai)): suggestions and chat work; slow.
-- [ ] Chat and n8n tools for the wiki and documents: n8n MCP workflows, a Household model in Open WebUI, code interpreter off ([plan](mercurius.md#chat-and-n8n-access)).
+- [ ] Chat and n8n tools for the wiki and documents ([plan](mercurius.md#chat-and-n8n-access)): document search and read, the Household model and code interpreter off are live; wiki tools next.
 - [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.
 
@@ -109,6 +109,6 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 ## Next actions
 
-1. Chat and n8n tools for the wiki and documents ([plan](mercurius.md#chat-and-n8n-access)); turn off Open WebUI's code interpreter now.
+1. Wiki tools for chat ([plan](mercurius.md#chat-and-n8n-access)); the document tools are live.
 2. Plan backups for space-needle and helarctos as a whole, then revisit Drive ([backups](backups.md)).
 3. Answer D9 (Tailscale).

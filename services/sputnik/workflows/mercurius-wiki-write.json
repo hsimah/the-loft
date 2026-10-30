@@ -1,0 +1,221 @@
+{
+  "name": "mercurius-wiki-write",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "mode",
+              "type": "string"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "heading",
+              "type": "string"
+            },
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check: validate the request before anything touches the wiki.\nconst { mode, path, heading, text } = $input.first().json;\nconst p = String(path || '').trim().replace(/^\\/+/, '');\nconst segments = p.split('/');\nif (!p.endsWith('.md') || segments.some((s) => s === '' || s === '..' || s.startsWith('.'))) {\n  throw new Error(`Invalid page path \"${p}\". Use a relative path ending in .md, e.g. Travel/Canada/Quebec/Montreal.md`);\n}\nconst body = String(text || '').trimEnd();\nif (!body.trim()) throw new Error('Nothing to write: text is empty.');\n// SilverBullet runs these as code in the browser of everyone who opens the page.\nfor (const bad of ['space-lua', 'space-style', 'space-script', '${', '<!--#', '<script', '<iframe']) {\n  if (body.toLowerCase().includes(bad)) {\n    throw new Error(`Refused: the text contains \"${bad}\", which SilverBullet runs as code. Rewrite it as plain markdown.`);\n  }\n}\nconst section = String(heading || '').trim().replace(/^#+\\s*/, '');\nif (mode === 'append' && !section) throw new Error('append_to_page needs a heading, e.g. Recommendations.');\nreturn [{ json: { mode, path: p, urlPath: segments.map(encodeURIComponent).join('/'), heading: section, text: body } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "name": "Check"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://wiki.loft.hsimah.com/home/.fs/{{ $json.urlPath }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Sync-Mode",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Read page",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "SilverBullet sputnik"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Edit: build the new page from what is there now, guarded by its ETag.\nconst req = $('Check').first().json;\nconst res = $input.first().json;\nif (res.statusCode !== 200 && res.statusCode !== 404) throw new Error(`Reading ${req.path} failed: HTTP ${res.statusCode}`);\nconst exists = res.statusCode === 200;\nconst title = req.path.replace(/\\.md$/, '').split('/').pop();\nlet content;\nif (req.mode === 'create') {\n  if (exists) throw new Error(`${req.path} already exists. Read it, then use append_to_page.`);\n  content = req.text + '\\n';\n} else if (!exists) {\n  content = `# ${title}\\n\\n## ${req.heading}\\n\\n${req.text}\\n`;\n} else {\n  const lines = String(res.body ?? '').replace(/\\s+$/, '').split('\\n');\n  const want = `## ${req.heading}`.toLowerCase();\n  const start = lines.findIndex((l) => l.trim().toLowerCase() === want);\n  if (start === -1) {\n    lines.push('', `## ${req.heading}`, '', req.text);\n  } else {\n    // The section runs to the next heading of level 1 or 2.\n    let end = lines.findIndex((l, i) => i > start && /^#{1,2}\\s/.test(l));\n    if (end === -1) end = lines.length;\n    while (end > start + 1 && lines[end - 1].trim() === '') end--;\n    // A list item continues the list above it; anything else is a new paragraph.\n    const isItem = (l) => /^\\s*([-*+]|\\d+\\.)\\s/.test(l);\n    if (isItem(lines[end - 1]) && isItem(req.text)) lines.splice(end, 0, req.text);\n    else lines.splice(end, 0, '', req.text);\n  }\n  content = lines.join('\\n') + '\\n';\n}\nreturn [{\n  json: {\n    path: req.path,\n    urlPath: req.urlPath,\n    content,\n    added: req.text,\n    created: !exists,\n    conditionHeader: exists ? 'If-Match' : 'If-None-Match',\n    conditionValue: exists ? res.headers.etag : '*',\n  },\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Edit"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://wiki.loft.hsimah.com/home/.fs/{{ $json.urlPath }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Sync-Mode",
+              "value": "true"
+            },
+            {
+              "name": "={{ $json.conditionHeader }}",
+              "value": "={{ $json.conditionValue }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/markdown",
+        "body": "={{ $json.content }}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "name": "Write page",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "SilverBullet sputnik"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Result: what the tool tells the model; a refused write is an error it can act on.\nconst w = $('Edit').first().json;\nconst r = $input.first().json;\nif (r.statusCode === 412) throw new Error(`${w.path} changed while it was being edited. Read it again and retry.`);\nif (r.statusCode >= 300) throw new Error(`Writing ${w.path} failed: HTTP ${r.statusCode}`);\nreturn [{ json: { result: `${w.created ? 'Created' : 'Updated'} ${w.path}`, added: w.added } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "name": "Result"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check": {
+      "main": [
+        [
+          {
+            "node": "Read page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read page": {
+      "main": [
+        [
+          {
+            "node": "Edit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit": {
+      "main": [
+        [
+          {
+            "node": "Write page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write page": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

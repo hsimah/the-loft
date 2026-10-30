@@ -1,0 +1,290 @@
+{
+  "name": "mercurius-wiki",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "bearerAuth",
+        "path": "mercurius-wiki"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "name": "MCP Server Trigger",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "Open WebUI MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "List every file in the household wiki. Pages end in .md; folders are path prefixes, e.g. Travel/Canada/Quebec/Montreal.md. Use it to find existing pages and follow the layout already in use.",
+        "url": "https://wiki.loft.hsimah.com/home/.fs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Sync-Mode",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {},
+        "optimizeResponse": true,
+        "responseType": "json",
+        "fieldsToInclude": "selected",
+        "fields": "name"
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        220
+      ],
+      "name": "list_pages",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "SilverBullet sputnik"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read one wiki page as markdown by its path, e.g. Travel.md or Travel/Canada/Quebec/Montreal.md. Read an area page (Travel.md) for its Conventions section before writing under it.",
+        "url": "=https://wiki.loft.hsimah.com/home/.fs/{{ $fromAI('path', 'page path ending in .md', 'string') }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Sync-Mode",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        200,
+        220
+      ],
+      "name": "read_page",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "SilverBullet sputnik"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Create a new wiki page. Fails if the page exists. text is the whole page in plain markdown, starting with a # title.",
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "create",
+            "path": "={{ $fromAI('path', 'page path ending in .md, e.g. Travel/Canada/Quebec/Montreal.md', 'string') }}",
+            "heading": "",
+            "text": "={{ $fromAI('text', 'the whole page in markdown', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "path",
+              "displayName": "path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "heading",
+              "displayName": "heading",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        220
+      ],
+      "name": "create_page"
+    },
+    {
+      "parameters": {
+        "description": "Add text under a ## heading on a wiki page. Creates the section, or the page, if missing. Never removes or rewrites anything already there.",
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "append",
+            "path": "={{ $fromAI('path', 'page path ending in .md, e.g. Travel/Canada/Quebec/Montreal.md', 'string') }}",
+            "heading": "={{ $fromAI('heading', 'the ## section to add under, e.g. Recommendations', 'string') }}",
+            "text": "={{ $fromAI('text', 'markdown to add, e.g. a list item', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "path",
+              "displayName": "path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "heading",
+              "displayName": "heading",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        600,
+        220
+      ],
+      "name": "append_to_page"
+    }
+  ],
+  "connections": {
+    "list_pages": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read_page": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_page": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "append_to_page": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

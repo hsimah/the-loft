@@ -20,7 +20,8 @@ Everything the group stores, including Postgres with the OCR text and every wiki
 
 ## Accounts
 
-- **SilverBullet:** one account each, both with `write` on the `home` space. In SilverBullet, `write` includes authoring Space Lua that runs in the other person's browser, so only trusted people get it.
+- **SilverBullet:** one account each on the `Home` space: the first is an admin, which gets `write` on every space without being listed as a member; the second is a member with `write`. In SilverBullet, `write` includes authoring Space Lua that runs in the other person's browser, so only trusted people get it. `sputnik` is the chat tools' account: not an admin, a `write` member, with an API token ([Household tools](sputnik.md#household-tools)).
+- **Space binding:** `Home` is bound to the path prefix `/home`, not a hostname, so the wiki is `https://wiki.loft.hsimah.com/home/` and its HTTP API `https://wiki.loft.hsimah.com/home/.fs`.
 - **Paperless:** one shared archive with an account each, both superusers: owners otherwise hide documents from each other, and either superuser can reset the other's password or two-factor. Enable two-factor authentication on both (Profile → Two-factor authentication).
 
 ## After every reboot
@@ -53,7 +54,7 @@ Grow it later while it is online: `lvextend`, `cryptsetup resize mercurius`, the
 2. `sudo bash setup.sh` creates the `mercurius-proxy` and `mercurius-llm` networks and installs the egress firewall. Then `loft-ctl start mushr` recreates Caddy on `mercurius-proxy`.
 3. With the vault unlocked: `loft-ctl start mercurius`, then `loft-ctl health mercurius`.
 4. Paperless: open `https://paperless.loft.hsimah.com` and create the first account, which becomes the superuser. Create the second under Settings → Users & Groups as a superuser too, and turn on two-factor for both.
-5. SilverBullet: open `https://wiki.loft.hsimah.com`. The setup wizard creates the first admin account, then the first space: name it `home`, bound to `wiki.loft.hsimah.com` at `/`. In the dashboard, create the second account and add it to `home` with `write`; set each account's full name and email, which revisions are attributed to. Turn on revisions in **Managed** mode, with no remote.
+5. SilverBullet: open `https://wiki.loft.hsimah.com`. The setup wizard creates the first admin account, then the first space: `Home`, bound to the prefix `/home`. In the dashboard, create the second account and add it to `Home` with `write`; set each account's full name and email, which revisions are attributed to. Turn on revisions in **Managed** mode, with no remote.
 6. Confirm the way out is only the model route ([model egress](#model-egress)).
 
 ## Wiki revisions

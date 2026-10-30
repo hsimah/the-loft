@@ -61,7 +61,6 @@ Possible jobs; none started.
 
 - **Second-pass OCR failures.** After the bulk import, 26 documents carry `paperless-gpt-failed`, and the logs from that run have rotated out. Three are text files (CSV, TXT) with no page to render: keep non-image types out of the tag. The rest are born-digital bank statements and 1099s of 2–6 dense pages. Candidates: glm-ocr's `--ctx-size 16384` is too small for a dense page's image plus transcription, or the PDFs are encrypted (one, an `International_Application` PDF, has no page count in Paperless). Fix by raising the context, or skip the second pass for born-digital PDFs whose text layer is already exact. Document 114 is queued again as a test.
 - **paperless-gpt logs.** At `LOG_LEVEL: info` the container writes large serialized text to its Docker log, probably document text, under `/var/lib/docker` on the unencrypted root disk (up to 30 MB). Try `warn`, recheck, and correct the [log check](../services/mercurius.md#built-in-ai).
-- **Built-in AI.** Try suggestions, chat and similar documents on the imported archive ([built-in AI](../services/mercurius.md#built-in-ai)).
 - **Expiry dates.** Fill an `Expiry` custom field (passports, licences) for [Janus](janus.md) reminders, through the linker job above or paperless-gpt.
 - **OCR scoring.** Score `glm-ocr` against `paddleocr-vl` on a sample of real documents ([roadmap](roadmap.md#phase-7--ai-upkeep)).
 

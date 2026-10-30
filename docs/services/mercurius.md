@@ -98,10 +98,11 @@ paperless-gpt's `db` holds a run log and undo history.
 
 ## Built-in AI
 
-Paperless's own AI is enabled in [Compose](../../services/mercurius/docker-compose.yml) and points at llama-swap (`PAPERLESS_AI_*`): suggestions on a document, chat, and similar documents. Not yet tried on 3.3.4.
+Paperless's own AI is enabled in [Compose](../../services/mercurius/docker-compose.yml) and points at llama-swap (`PAPERLESS_AI_*`): suggestions on a document, and chat. Both work (2026-10-29) and both are slow: a suggestion on a long document or a chat answer can take a minute or more, and the suggest button spins until it returns. Chat sources are listed by title, and imported documents are titled by their original filename.
 
 - **Chat and suggestions:** `qwen3.6-35b-a3b`, resident on helarctos (D18, [models](../automation/models.md#sharing-the-gpu)). Only the first request after llama-swap starts waits 23–36 s while it loads. It has one slot, shared with the chat tools, so requests queue. The request timeout is 300 s.
-- **Similar documents:** `embeddinggemma`, always loaded. Paperless indexes every document daily (`PAPERLESS_LLM_INDEX_TASK_CRON`, default 02:10), so the first run on a full archive is long; add the variable to Compose to move it.
+- **Embeddings:** `embeddinggemma`, resident. They pick the documents chat answers from and the similar documents a suggestion uses as context. Paperless indexes every document daily (`PAPERLESS_LLM_INDEX_TASK_CRON`, default 02:10), so the first run on a full archive is long; add the variable to Compose to move it.
+- **More like this** is not AI: it runs on the full-text (Tantivy) index. On 3.3.4 and 3.4.0 it returns nothing once the index holds deleted entries, which updates leave behind; Paperless logs `More Like This scoring panicked`. A reindex should clear it until documents change again ([maintenance](../../plans/maintenance.md)).
 - **Key:** helarctos's `LLAMA_SWAP_API_KEY` in Mercurius's `.env`. Without it, AI requests fail with 401.
 - **What leaves:** document text goes to helarctos over the LAN, as plain HTTP, for each request. It is held in memory there and not logged: after a real ID document went through, the container logs of llama-swap (helarctos), Paperless and paperless-gpt held no document text or image data. After the bulk second-pass OCR, paperless-gpt's log held large serialized text, probably document text; not yet checked ([plan](../automation/documents.md#llm-improvements)). Recheck after changing llama-swap's `logLevel`; its in-memory `/logs` buffer is not on disk and clears when the container is recreated.
 - **Models:** fetch commands are under [Paperless models](sputnik.md#paperless-models).

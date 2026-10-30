@@ -87,7 +87,7 @@ services:
       PAPERLESS_TIKA_ENDPOINT: http://tika:9998
       PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
       # Built-in AI on the local models: suggestions and chat, and embeddings for
-      # similar documents. The route is mercurius-llm; the key comes from .env.
+      # chat retrieval. The route is mercurius-llm; the key comes from .env.
       # The index job runs daily (PAPERLESS_LLM_INDEX_TASK_CRON, default 02:10).
       PAPERLESS_AI_ENABLED: "true"
       PAPERLESS_AI_LLM_BACKEND: openai-like

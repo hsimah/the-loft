@@ -30,7 +30,7 @@ Read-only is deliberate: a model reading an untrusted inbox is a prompt-injectio
 
 ## GPU engine on helarctos
 
-The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. The household models stay resident (D18, [models](../automation/models.md#sharing-the-gpu)). The large models, gpt-oss-120b and Qwen3.5-122B-A10B, load on demand into the rest of the GTT, one at a time; a request for the other swaps it. Qwen3.5-122B is not yet measured beside the household set. Measured from disk with a short prompt (2026-10-24, before the household set was resident):
+The `gpu` profile runs llama-swap on [helarctos](../hosts/helarctos.md). It starts llama.cpp's `llama-server` (Vulkan) for whichever model a request names, and serves the OpenAI and Anthropic Messages APIs on `:8080`. The household models stay resident (D18, [models](../automation/models.md#sharing-the-gpu)). The large models, gpt-oss-120b and Qwen3.5-122B-A10B, load on demand into the rest of the GTT, one at a time; a request for the other swaps it. Both fit beside the household set ([GTT use](../automation/models.md#sharing-the-gpu)). Measured from disk with a short prompt (2026-10-24, before the household set was resident):
 
 | Model | Swap and load | Generation |
 |---|---|---|
@@ -81,12 +81,12 @@ rm -f /tmp/page.b64 /tmp/ocr-req.json
 
 ## Paperless models
 
-Paperless's [built-in AI](mercurius.md#built-in-ai) (suggestions, chat, similar documents) uses two more models through the same gateway:
+Paperless's [built-in AI](mercurius.md#built-in-ai) (suggestions and chat) uses two more models through the same gateway:
 
 | Model | Role | Size | Group | Licence |
 |---|---|---|---|---|
 | `qwen3.6-35b-a3b` (UD-Q4_K_XL) | Suggestions and chat | 22 GB | `household`: resident; loads once after llama-swap starts (23–36 s) | Apache 2.0 |
-| `embeddinggemma` (300M, Q8_0) | Embeddings for similar documents | 0.3 GB | `household`: resident | Gemma terms of use |
+| `embeddinggemma` (300M, Q8_0) | Embeddings for chat retrieval and suggestion context | 0.3 GB | `household`: resident | Gemma terms of use |
 
 Fetch, then recreate the container (above):
 

@@ -60,7 +60,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [ ] Household models resident on llama-swap: the 35B text, OCR and embedding models in the persistent `household` group (D18, [models](models.md#sharing-the-gpu)); whisper is not yet.
 - [x] Vault egress: helarctos `:8080` only, for Paperless and paperless-gpt ([model egress](../services/mercurius.md#model-egress)). The hop is plain HTTP until Tailscale (D9).
 - [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../services/mercurius.md#second-pass-ocr)).
-- [ ] Paperless's built-in AI (suggestions, chat, similar documents): configured, not yet tried from the UI ([built-in AI](../services/mercurius.md#built-in-ai)).
+- [ ] Paperless's built-in AI ([built-in AI](../services/mercurius.md#built-in-ai)): suggestions and chat work; slow.
 - [ ] Chat and n8n tools for the wiki and documents: n8n MCP workflows, a Household model in Open WebUI, code interpreter off ([plan](mercurius.md#chat-and-n8n-access)).
 - [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.

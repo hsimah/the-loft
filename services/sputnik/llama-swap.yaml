@@ -68,8 +68,7 @@ models:
       --model /models/gpt-oss-120b/gpt-oss-120b-MXFP4.gguf
     ttl: 0
 
-  # 10B active, ~71 GiB at UD-Q4_K_XL. Slower; quality ceiling. Not yet
-  # measured beside the household set.
+  # 10B active, ~71 GiB at UD-Q4_K_XL. Slower; quality ceiling.
   "qwen3.5-122b":
     cmd: >
       ${server}

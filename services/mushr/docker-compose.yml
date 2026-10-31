@@ -35,7 +35,7 @@ services:
       retries: 3
 
   mushr-tunnel:
-    image: cloudflare/cloudflared:2026.7.3
+    image: cloudflare/cloudflared:2026.10.3
     container_name: mushr-tunnel
     restart: unless-stopped
     logging:

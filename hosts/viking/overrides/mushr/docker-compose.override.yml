@@ -39,7 +39,7 @@ services: !override
       retries: 3
   mushr-tunnel:
     profiles: [public]
-    image: cloudflare/cloudflared:2026.7.3
+    image: cloudflare/cloudflared:2026.10.3
     container_name: mushr-tunnel
     user: "65532:65532"
     restart: unless-stopped

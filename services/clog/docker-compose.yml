@@ -52,7 +52,7 @@ services:
     entrypoint: [php, /opt/clog/server/standalone/cli.php]
     command: [schema]
   clog:
-    image: nginx:1.30.4-alpine
+    image: nginx:1.30.6-alpine
     container_name: clog
     user: "1003:1003"
     entrypoint: [nginx, -g, "daemon off;"]

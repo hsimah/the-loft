@@ -1,6 +1,6 @@
 services: !override
   pawst-dev:
-    image: nginx:1.30.4-alpine
+    image: nginx:1.30.6-alpine
     container_name: pawst-dev
     user: "1003:1003"
     entrypoint: [nginx, -g, "daemon off;"]
@@ -25,7 +25,7 @@ services: !override
       timeout: 5s
       retries: 3
   pawst-test:
-    image: nginx:1.30.4-alpine
+    image: nginx:1.30.6-alpine
     container_name: pawst-test
     user: "1003:1003"
     entrypoint: [nginx, -g, "daemon off;"]

@@ -2,7 +2,7 @@
 # own environments (hosts/*/overrides/pawst). Content comes from deploy-pull.sh.
 services:
   pawst:
-    image: nginx:1.30.4-alpine
+    image: nginx:1.30.6-alpine
     container_name: pawst
     user: "1003:1003"
     entrypoint: [nginx, -g, "daemon off;"]

@@ -11,7 +11,7 @@ A Space Lua widget that renders a Paperless link as a card (title, correspondent
 Open WebUI and n8n stay in [Sputnik](../services/sputnik.md) and reach `wiki.` and `paperless.` through Caddy with API tokens. Accepted: answers, chats and n8n execution data that quote documents are stored unencrypted under `/opt/sputnik` on space-needle.
 
 - **Tools as n8n workflows**, exposed through n8n's MCP Server Trigger; Open WebUI connects as an MCP client. One tool set serves both apps, no Python, and the workflows are exported to `services/sputnik/workflows/` ([workflows](workflows.md)). n8n 2.45.7's MCP Server Trigger serves Streamable HTTP with bearer auth; Open WebUI 0.12.5's MCP client speaks Streamable HTTP only. Current setup: [Household tools](../services/sputnik.md#household-tools).
-- **Wiki tools**: list, read, create and append, as SilverBullet account `sputnik` through its HTTP API ([mercurius-wiki](../../services/sputnik/workflows/mercurius-wiki.md)). Writes go straight to the page and the tool returns what it added; there is no delete or rewrite, and revisions are the undo. Writes that contain Space Lua or inline expressions are refused. Built 2026-10-30, not yet imported. SilverBullet has no server-side search, so the model works from the page list.
+- **Wiki tools**: list, read, read conventions, create and append, as SilverBullet account `sputnik` through its HTTP API ([mercurius-wiki](../../services/sputnik/workflows/mercurius-wiki.md)), live 2026-11-01. The model reads `meta/conventions.md` before every write; filing and style rules live there, not in the prompt. Writes go straight to the page and the tool returns what it added; there is no delete or rewrite, and revisions are the undo. Writes that contain Space Lua or inline expressions are refused. SilverBullet has no server-side search, so the model works from the page list.
 - **Document tools**: search and read, live 2026-10-30. Read-only by permission: they use Paperless user `sputnik`, which has View only (writes return 403) and sees documents with no owner or shared with it; documents you upload through the UI are owned by you, so share them for chat to see them. `read_document` does not truncate (n8n truncates only text and HTML responses); if a long document overflows the 32k context, raise `--ctx-size` or truncate in a Code Tool.
 - **Model**: `qwen3.6-35b-a3b`, resident (D18). It has one slot, shared with Paperless, so a chat waits behind a Paperless request in flight.
 
@@ -26,10 +26,18 @@ No chat or workflow gets both wiki/document tools and a web tool (search, URL fe
 
 Markdown images in model replies are fetched by the browser; a reply quoting a document could carry data out that way. Low risk for documents you file yourself; revisit before any untrusted feed (mail, web pages) reaches these tools.
 
+## Wiki editing and review
+
+Planned. Restructuring (splitting a page into linked sub-pages, merging, fixing links) needs a rewrite tool and a model with more context than the 32k Household model.
+
+1. **Tools.** `read_page` returns the page's ETag (as a sub-workflow); `replace_page(path, text)` overwrites with `If-Match` on that ETag, through the same Check as the other writes; `find_links(page)` fetches every page in n8n and returns those linking to `[[Page]]` or `[[Page#Section]]`. SilverBullet has no backlink API, and its rename only rewrites links in the browser. No delete: a move is a new page plus a stub, deleted by hand.
+2. **Wiki editor model.** A second Open WebUI model on `gpt-oss-120b` (131k context, loads on demand beside the household set) with the wiki tools plus the two above. The procedure lives in the wiki (`meta/skills/refactor.md`, linked from the conventions): read the page and its backlinks, propose a plan and wait for approval, create sub-pages, rewrite the parent, then fix `#Section` links. That order leaves duplicates, not losses, if it stops part-way. One page per refactor; check the revision diff.
+3. **Monthly review**, an n8n schedule at about 02:00 on the 1st, under the [GPU sharing rules](models.md#sharing-the-gpu). Code nodes fetch every page and compute sizes, the link graph, orphans, broken links and paths that break the conventions. `qwen3.5-122b` then takes one area at a time with the conventions and those facts and returns JSON suggestions: splits, merges, missing links, misplaced or stale content, gaps in the conventions. The job writes only a report page, `meta/reviews/<YYYY-MM>.md`, through `create_page`, and unloads the large model at the end (`ttl: 0` keeps it otherwise; check llama-swap's unload endpoint). You act on suggestions in the Wiki editor or by hand.
+4. Later, perhaps: approve suggestions on the report page and have them applied.
+
 ## Later
 
 - Email to the wiki and web clippings are deprioritised: chat with wiki write tools covers them for now ([intake](intake.md)).
 - A public, LAN-only space for guests (bin schedule, dog medication): a separate SilverBullet instance off the vault, so guests never share a server with the private wiki and it stays up while the vault is locked. Needs a name and a check of 2.12's read-only options.
-- Overnight wiki upkeep (summaries, links between pages) as an n8n workflow using the same tools, local models only. The Forgejo PR agent on the [#152](https://github.com/hsimah/the-loft/issues/152) harness is dropped: the wiki has no repo outside the vault.
 - Off-LAN access through Tailscale (D9).
 - Obsidian is dropped with the Forgejo sync.

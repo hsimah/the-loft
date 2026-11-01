@@ -61,7 +61,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] Vault egress: helarctos `:8080` only, for Paperless and paperless-gpt ([model egress](../services/mercurius.md#model-egress)). The hop is plain HTTP until Tailscale (D9).
 - [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../services/mercurius.md#second-pass-ocr)).
 - [ ] Paperless's built-in AI ([built-in AI](../services/mercurius.md#built-in-ai)): suggestions and chat work; slow.
-- [ ] Chat and n8n tools for the wiki and documents ([plan](mercurius.md#chat-and-n8n-access)): document search and read, the Household model and code interpreter off are live; wiki tools next.
+- [x] Chat and n8n tools for the wiki and documents ([plan](mercurius.md#chat-and-n8n-access)): document search and read, wiki read and append, the Household model and code interpreter off. Live 2026-11-01.
 - [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.
 
@@ -104,11 +104,11 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 
 - [ ] OCR history table, re-check job, `ocr-review` flags.
 - [ ] Vault linker job (summaries, tags, due and expiry dates).
-- [ ] Overnight wiki upkeep as an n8n workflow.
+- [ ] Wiki rewrite tools, Wiki editor model and monthly review report ([plan](mercurius.md#wiki-editing-and-review)).
 - [ ] Benchmark OCR models and backends on your own documents; tune the re-check interval.
 
 ## Next actions
 
-1. Wiki tools for chat ([plan](mercurius.md#chat-and-n8n-access)); the document tools are live.
+1. Wiki rewrite tools and the Wiki editor model ([plan](mercurius.md#wiki-editing-and-review)).
 2. Plan backups for space-needle and helarctos as a whole, then revisit Drive ([backups](backups.md)).
 3. Answer D9 (Tailscale).

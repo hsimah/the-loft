@@ -111,7 +111,7 @@ Open WebUI reaches llama-swap at `http://helarctos:8080/v1`, keyed with `LLAMA_S
 
 ## Household tools
 
-Open WebUI chats with the wiki and documents through n8n ([plan](../automation/mercurius.md#chat-and-n8n-access)). Documents are live (2026-10-30); the wiki tools are built ([mercurius-wiki](../../services/sputnik/workflows/mercurius-wiki.md)) but not yet imported.
+Open WebUI chats with the wiki and documents through n8n ([plan](../automation/mercurius.md#chat-and-n8n-access)). Documents are live since 2026-10-30, the wiki tools ([mercurius-wiki](../../services/sputnik/workflows/mercurius-wiki.md)) since 2026-11-01.
 
 - **n8n:** the `Paperless` workflow is an MCP Server Trigger at path `mercurius-documents` (bearer credential `Open WebUI MCP`) with two HTTP Request Tools, `search_documents` and `read_document`, calling `https://paperless.loft.hsimah.com/api` as the read-only Paperless user `sputnik` (credential `Paperless sputnik (read-only)`). Successful and manual executions are not saved.
 - **Open WebUI:** Admin → Settings → Integrations → External Tool Servers: MCP (Streamable HTTP) at `http://n8n:5678/mcp/mercurius-documents` (ID `mercurius-documents`) and `http://n8n:5678/mcp/mercurius-wiki` (ID `mercurius-wiki`), both Bearer with the `Open WebUI MCP` secret. Direct Integrations stays off, so users cannot attach their own tool servers.

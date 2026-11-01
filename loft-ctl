@@ -161,7 +161,7 @@ do_start() {
 
   info "Starting ${service}..."
   # shellcheck disable=SC2086
-  docker compose ${compose_args} up -d
+  docker compose ${compose_args} up -d || { error "Failed to start ${service}."; return 1; }
   info "Started ${service}."
 }
 
@@ -172,7 +172,7 @@ do_stop() {
 
   info "Stopping ${service}..."
   # shellcheck disable=SC2086
-  docker compose ${compose_args} down
+  docker compose ${compose_args} down || { error "Failed to stop ${service}."; return 1; }
   info "Stopped ${service}."
 }
 
@@ -183,11 +183,11 @@ do_rebuild() {
 
   info "Rebuilding ${service}..."
   # shellcheck disable=SC2086
-  docker compose ${compose_args} down
+  docker compose ${compose_args} down || { error "Failed to stop ${service}."; return 1; }
   # shellcheck disable=SC2086
   docker compose ${compose_args} pull 2>/dev/null || true
   # shellcheck disable=SC2086
-  docker compose ${compose_args} up -d --build
+  docker compose ${compose_args} up -d --build || { error "Failed to start ${service}."; return 1; }
   info "Rebuilt ${service}."
 }
 

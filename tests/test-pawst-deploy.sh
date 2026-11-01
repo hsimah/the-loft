@@ -60,7 +60,7 @@ assert_eq "$status" 0 "--no-verify skips the site check"
 assert_absent "$(cat "$WORK/curl-calls")" "Host:" "no local request"
 
 # ── refusals ─────────────────────────────────────────────────────────────────
-deploy pupyrus
+deploy nosuchapp
 assert_fails "$status" "rejects an unknown site"
 assert_missing "$WORK/curl-calls" "unknown site makes no requests"
 
@@ -98,7 +98,7 @@ chmod +x "$LC/bin/"*
 out="$(PATH="$LC/bin:$PATH" "$BASH" "$LC/loft-ctl" deploy pawst hsimah 2>&1)"
 assert_eq "$?" 0 "loft-ctl routes pawst deploys"
 assert_eq "$out" "sudo bash ${LC}/control-plane/pawst-deploy.sh hsimah" "loft-ctl runs pawst-deploy.sh under sudo"
-out="$(PATH="$LC/bin:$PATH" "$BASH" "$LC/loft-ctl" deploy pupyrus 2>&1)"
+out="$(PATH="$LC/bin:$PATH" "$BASH" "$LC/loft-ctl" deploy nosuchapp 2>&1)"
 assert_fails "$?" "loft-ctl rejects other apps"
 
 finish

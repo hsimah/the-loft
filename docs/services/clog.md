@@ -6,7 +6,7 @@
 Cloudflare → viking-prod tunnel → mushr:8080 (Caddy) → clog:8080 (Nginx) → clog-php (Unix socket) → SQLite
 ```
 
-- [Compose](../../services/clog/docker-compose.yml): Nginx is on an internal network shared only with Caddy (`172.30.93.0/29`, Caddy at `.2`). FPM and the CLI have `network_mode: none`. Only PHP mounts the database. Code is an immutable checksum-named release directory. UID/GID 1003, read-only roots, dropped capabilities.
+- [Compose](../../services/clog/docker-compose.yml): Nginx is on an internal network shared only with Caddy (`172.30.93.0/29`, Caddy at `.2`, Nginx fixed at `.3` so Docker cannot give Nginx the address Caddy needs). FPM and the CLI have `network_mode: none`. Only PHP mounts the database. Code is an immutable checksum-named release directory. UID/GID 1003, read-only roots, dropped capabilities.
 - [Nginx](../../services/clog/nginx.conf) trusts the client-IP header only from `172.30.93.2`; Caddy overwrites it with Cloudflare's client IP. If you change the subnet, change both Compose IPAM and Nginx.
 - PHP: two on-demand workers, 64 MiB per request; container limits 256 MiB (PHP) / 48 MiB (Nginx), **not enforced** on Viking (see [host page](../hosts/viking.md#constraints)).
 - Sessions expire after eight hours. SQLite must stay on local disk.

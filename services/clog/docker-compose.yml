@@ -80,7 +80,11 @@ services:
         target: /run/clog
         read_only: true
         bind: {create_host_path: false}
-    networks: [clog-prod]
+    networks:
+      clog-prod:
+        # Caddy holds .2 (Viking mushr override). Fixed so Docker cannot hand .2 to
+        # Nginx while Caddy is down and leave Caddy unable to start.
+        ipv4_address: 172.30.93.3
     depends_on:
       clog-php: {condition: service_healthy}
     healthcheck:

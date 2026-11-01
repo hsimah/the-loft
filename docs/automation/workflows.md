@@ -29,7 +29,7 @@ Not scheduled. Open WebUI has no search backend, so chat models cannot reach the
 Constraints:
 
 - **Web and private data never meet.** A model or chat with web tools gets no wiki or calendar tools, memories or knowledge bases, and vice versa. Enforced by Open WebUI settings ([how](mercurius.md#keeping-web-and-household-data-apart)). Fetched pages can carry prompt injection; arbitrary URL fetches and rendered markdown images are exfiltration channels.
-- **No LAN fetches.** Open WebUI's fetcher sits on `loft-proxy` with LAN DNS. Keep local-address fetching off: `ENABLE_LOCAL_WEB_FETCH` (the old name `ENABLE_RAG_LOCAL_WEB_FETCH` is a deprecated alias), default false in 0.12.4 (read in the source). While off, every address a fetched hostname resolves to must be globally routable, which rejects LAN, Tailscale and loopback addresses; redirects are checked the same way. Do not set either variable in Sputnik's `.env`. Confirm on the running container, then probe the real targets:
+- **No LAN fetches.** Open WebUI's fetcher sits on `loft-proxy` with LAN DNS. Keep local-address fetching off: `ENABLE_LOCAL_WEB_FETCH` (the old name `ENABLE_RAG_LOCAL_WEB_FETCH` is a deprecated alias), default false in 0.12.5 (read in the source). While off, every address a fetched hostname resolves to must be globally routable, which rejects LAN, Tailscale and loopback addresses; redirects are checked the same way. Do not set either variable in Sputnik's `.env`. Confirm on the running container, then probe the real targets:
 
   ```bash
   sudo docker exec open-webui env | grep -i LOCAL_WEB_FETCH    # expect no output

@@ -57,7 +57,7 @@
     },
     {
       "parameters": {
-        "toolDescription": "Read one wiki page as markdown by its path, e.g. Travel.md or Travel/Canada/Quebec/Montreal.md. Read an area page (Travel.md) for its Conventions section before writing under it.",
+        "toolDescription": "Read one wiki page as markdown by its path, e.g. Travel.md or Travel/Canada/Quebec/Montreal.md.",
         "url": "=https://wiki.loft.hsimah.com/home/.fs/{{ $fromAI('path', 'page path ending in .md', 'string') }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
@@ -94,7 +94,7 @@
     },
     {
       "parameters": {
-        "description": "Create a new wiki page. Fails if the page exists. text is the whole page in plain markdown, starting with a # title.",
+        "description": "Create a new wiki page. Fails if the page exists. Call read_conventions first. text is the whole page in plain markdown, starting with a # title.",
         "workflowId": {
           "__rl": true,
           "value": "",
@@ -165,7 +165,7 @@
     },
     {
       "parameters": {
-        "description": "Add text under a ## heading on a wiki page. Creates the section, or the page, if missing. Never removes or rewrites anything already there.",
+        "description": "Add text under a ## heading on a wiki page. Creates the section, or the page, if missing. Never removes or rewrites anything already there. Call read_conventions first.",
         "workflowId": {
           "__rl": true,
           "value": "",
@@ -233,6 +233,43 @@
         220
       ],
       "name": "append_to_page"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Read the household wiki conventions (meta/conventions.md): where pages go, how they are named and how they are written. Call it before every create_page or append_to_page, and follow it.",
+        "url": "https://wiki.loft.hsimah.com/home/.fs/meta/conventions.md",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Sync-Mode",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        220
+      ],
+      "name": "read_conventions",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "SilverBullet sputnik"
+        }
+      }
     }
   ],
   "connections": {
@@ -270,6 +307,17 @@
       ]
     },
     "append_to_page": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read_conventions": {
       "ai_tool": [
         [
           {

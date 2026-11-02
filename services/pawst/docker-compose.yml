@@ -1,5 +1,5 @@
-# Shared definition only: Fjord and Viking replace this service map with their
-# own environments (hosts/*/overrides/pawst). Content comes from deploy-pull.sh.
+# Shared definition only: Viking replaces this service map with its
+# own environment (hosts/viking/overrides/pawst). Content comes from deploy-pull.sh.
 services:
   pawst:
     image: nginx:1.30.6-alpine

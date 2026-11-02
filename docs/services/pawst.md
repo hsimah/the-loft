@@ -1,6 +1,6 @@
 # Pawst — static sites
 
-Production on Viking via its [override](../../hosts/viking/overrides/pawst/docker-compose.override.yml): non-root nginx, read-only root and content, internal network, no host ports. Fjord's [override](../../hosts/fjord/overrides/pawst/docker-compose.override.yml) runs dev/test.
+Production on Viking via its [override](../../hosts/viking/overrides/pawst/docker-compose.override.yml): non-root nginx, read-only root and content, internal network, no host ports.
 
 | Site | Content | Source |
 |---|---|---|

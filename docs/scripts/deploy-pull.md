@@ -1,6 +1,6 @@
 # deploy-pull.sh
 
-[deploy-pull.sh](../../control-plane/deploy-pull.sh) downloads a GitHub Release's single `.tar.gz` asset and rsyncs it into a directory. Used by [Pawst](../services/pawst.md) through `pawst-deploy.sh`, which supplies GitHub's digest for the chosen tag, and directly on Fjord.
+[deploy-pull.sh](../../control-plane/deploy-pull.sh) downloads a GitHub Release's single `.tar.gz` asset and rsyncs it into a directory. Used by [Pawst](../services/pawst.md) through `pawst-deploy.sh`, which supplies GitHub's digest for the chosen tag.
 
 ```bash
 sudo /srv/the-loft/control-plane/deploy-pull.sh <name> <owner/repo> <target_dir> <post_hook|''> <tag> <sha256>

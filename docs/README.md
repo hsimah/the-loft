@@ -6,7 +6,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 
 - [space-needle](hosts/space-needle.md) — primary server and storage
 - [viking](hosts/viking.md) — production web host (Pawst, Clog)
-- [fjord](hosts/fjord.md) — LAN-only dev/test and Bluetooth audio
+- [fjord](hosts/fjord.md) — Bluetooth Snapcast client
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
 - [woodstock](hosts/woodstock.md) — Upstairs audio and touch dashboard
 - [helarctos](hosts/helarctos.md) — CI runner and GPU inference
@@ -29,7 +29,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 ## Runbooks and scripts
 
 - [Triage](../DEBUG.md)
-- [Application platform](operations/application-platform.md) — Fjord/Viking conventions, promotion, network policy
+- [Application platform](operations/application-platform.md) — Viking conventions, promotion, network policy
 - [Viking restore](operations/viking-restore.md)
 - [OneDrive → Hubbl migration](operations/onedrive-migration.md) — temporary; delete when done
 - [Upgrades and backups](operations/upgrades.md)

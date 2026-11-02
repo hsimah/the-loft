@@ -8,7 +8,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 |------|----------|------|
 | [space-needle](docs/hosts/space-needle.md) | Minisforum MS-01 (i9, x86_64) | Trusted infrastructure, media and storage |
 | [viking](docs/hosts/viking.md) | Raspberry Pi 3 B+ | Production web host (DMZ) |
-| [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | LAN-only dev/test + Bluetooth Snapcast client |
+| [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | Bluetooth Snapcast client (monitored) |
 | [calavera](docs/hosts/calavera.md) | Surface Pro 2 | Downstairs Snapcast client + touch dashboard |
 | [woodstock](docs/hosts/woodstock.md) | Surface Pro (1st gen) | Upstairs Snapcast client + touch dashboard |
 | [helarctos](docs/hosts/helarctos.md) | Minisforum MS-S1 MAX (Strix Halo, 128 GB) | CI runner and local inference for the agent pipeline |
@@ -23,9 +23,9 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [hubbl](docs/services/hubbl.md) | space-needle | Immich photo library; the only space-needle service published on the tunnel |
 | [kennl](docs/services/kennl.md) | space-needle (forge), helarctos (runner) | Forgejo forge and Actions runner |
 | [mercurius](docs/services/mercurius.md) | space-needle | Household wiki and documents — SilverBullet and Paperless-ngx on an encrypted volume |
-| [mushr](docs/services/mushr.md) | space-needle, viking, fjord | Caddy + Cloudflare Tunnel + LAN DNS |
+| [mushr](docs/services/mushr.md) | space-needle, viking | Caddy + Cloudflare Tunnel + LAN DNS |
 | [pawpcorn](docs/services/pawpcorn.md) | space-needle | Plex |
-| [pawst](docs/services/pawst.md) | viking (prod), fjord (dev/test) | Blog `hsimah.com` |
+| [pawst](docs/services/pawst.md) | viking | Blog `hsimah.com` |
 | [snoot](docs/services/snoot.md) | all | Beszel agent |
 | [sputnik](docs/services/sputnik.md) | space-needle; helarctos (`gpu`) | Open WebUI + n8n on llama-swap models; llama-swap on the iGPU |
 | [stellarr](docs/services/stellarr.md) | space-needle | *arr stack, LazyLibrarian, Audiobookshelf; Transmission + slskd behind NordVPN |
@@ -50,7 +50,7 @@ Services are defined once and customized per host by Compose merge with `hosts/<
 
 Images are version-tagged or digest-pinned in Compose. Change the pin in Git, then `loft-ctl update <name>`. Read [upgrades](docs/operations/upgrades.md) before touching stateful services.
 
-Fjord runs dev/test; Viking runs production. Promote the same GitHub release artifact, never a Fjord filesystem. See the [application platform](docs/operations/application-platform.md).
+Viking runs production. Promote the same GitHub release artifact. See the [application platform](docs/operations/application-platform.md).
 
 ## CI
 

@@ -25,15 +25,6 @@ cfg() { # host service [public] [profiles]; prints effective config JSON
 }
 q() { jq -c "$2" <<< "$1"; } # json filter
 
-# ── fjord: no tunnel, no LAN proxy inheritance ───────────────────────────────
-c="$(cfg fjord mushr)"
-assert_eq "$(q "$c" '.services | keys')" '["mushr"]' "fjord runs only mushr"
-assert_eq "$(q "$c" '.services.mushr | has("build") or has("extra_hosts")')" false "fjord mushr has no build or extra_hosts"
-assert_eq "$(q "$c" '.networks | has("loft-proxy")')" false "fjord is not on loft-proxy"
-assert_eq "$(q "$c" '.services.mushr.environment | keys')" '["XDG_CONFIG_HOME","XDG_DATA_HOME"]' "fjord mushr gets only XDG paths"
-assert_eq "$(q "$c" '.services.mushr.ports[0].host_ip')" '"192.168.86.30"' "fjord binds its LAN address"
-assert_eq "$(q "$c" '.services.mushr.volumes | length')" 1 "fjord mushr has one volume"
-
 # ── viking: tunnel is opt-in and isolated ────────────────────────────────────
 c="$(cfg viking mushr)"
 assert_eq "$(q "$c" '.services | keys')" '["mushr"]' "viking has no tunnel by default"
@@ -51,7 +42,7 @@ assert_contains "$(cat "${ROOT}/services/clog/nginx.conf")" "set_real_ip_from ${
 assert_eq "$(q "$c" '.services["mushr-tunnel"].networks | has("clog-prod")')" false "tunnel is not on clog-prod"
 
 # ── pawst apps: separate, non-root, unpublished ──────────────────────────────
-for spec in fjord:2 viking:1; do
+for spec in viking:1; do
   host="${spec%:*}"
   apps="$(cfg "$host" pawst)"
   proxy="$(cfg "$host" mushr)"
@@ -92,7 +83,7 @@ assert_eq "$(jq -c '.acls == [] and .hosts.blanco == "100.92.100.36" and .grants
 # Commas in unquoted YAML flow lists split mount options into separate mounts:
 # Compose config accepts them, Docker rejects them. Hence the exact tmpfs.
 TMPFS='["/tmp:uid=1003,gid=1003,mode=1770"]'
-for host in fjord viking; do
+for host in viking; do
   c="$(cfg "$host" mushr "$([[ $host == viking ]] && echo public)")"
   assert_eq "$(q "$c" '.services.mushr | [.user, .cap_add, .cap_drop, .read_only,
     (.security_opt | index("no-new-privileges:true") != null), .tmpfs]')" \

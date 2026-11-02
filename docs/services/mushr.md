@@ -1,6 +1,6 @@
 # Mushr — proxy, tunnel and DNS
 
-On space-needle, [Compose](../../services/mushr/docker-compose.yml) runs Caddy (`mushr`, on `loft-proxy`), cloudflared (`mushr-tunnel`) and dnsmasq (`mushr-dns`, host network on `192.168.86.28`). Fjord and Viking use complete [Fjord](../../hosts/fjord/overrides/mushr/docker-compose.override.yml) and [Viking](../../hosts/viking/overrides/mushr/docker-compose.override.yml) overrides instead; see the [application platform](../operations/application-platform.md).
+On space-needle, [Compose](../../services/mushr/docker-compose.yml) runs Caddy (`mushr`, on `loft-proxy`), cloudflared (`mushr-tunnel`) and dnsmasq (`mushr-dns`, host network on `192.168.86.28`). Viking uses a complete [override](../../hosts/viking/overrides/mushr/docker-compose.override.yml) instead; see the [application platform](../operations/application-platform.md).
 
 ## Public hostnames must be first-level
 

@@ -62,13 +62,13 @@ jobs:
             --cap-drop ALL --security-opt no-new-privileges \
             --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
             -v "$PWD/services/pawst/nginx-unprivileged.conf:/etc/nginx/nginx.conf:ro" \
-            --entrypoint nginx nginx:1.30.4-alpine -t
+            --entrypoint nginx nginx:1.30.6-alpine -t
           docker run --rm --network none --read-only --user 1003:1003 \
             --cap-drop ALL --security-opt no-new-privileges \
             --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
             -v "$PWD/services/clog/nginx.conf:/etc/nginx/nginx.conf:ro" \
             -v "$PWD/services/clog/fastcgi.conf:/etc/nginx/clog-fastcgi.conf:ro" \
-            --entrypoint nginx nginx:1.30.4-alpine -t
+            --entrypoint nginx nginx:1.30.6-alpine -t
           docker run --rm --network none --read-only --user 1003:1003 \
             --cap-drop ALL --security-opt no-new-privileges \
             --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
@@ -84,7 +84,7 @@ jobs:
               --tmpfs /tmp:uid=1003,gid=1003,mode=1770 \
               -e XDG_DATA_HOME=/tmp/data -e XDG_CONFIG_HOME=/tmp/config \
               -v "$PWD/hosts/$host/overrides/mushr/Caddyfile:/etc/caddy/Caddyfile:ro" \
-              caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile
+              caddy:2.11.7-alpine caddy validate --config /etc/caddy/Caddyfile
           done
 
       - name: Validate the space-needle Caddyfile

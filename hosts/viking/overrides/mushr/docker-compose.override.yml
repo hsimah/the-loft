@@ -3,7 +3,7 @@
 # Requires Docker Compose >= 2.24.4 (!override).
 services: !override
   mushr:
-    image: caddy:2.11.4-alpine
+    image: caddy:2.11.7-alpine
     container_name: mushr
     user: "1003:1003"
     restart: unless-stopped

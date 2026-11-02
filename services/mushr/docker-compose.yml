@@ -6,7 +6,7 @@ services:
     # Locally built (Dockerfile.caddy = caddy + caddy-dns/cloudflare plugin).
     # Tag tracks the CADDY_VERSION build arg so rebuilds are traceable and the
     # previous build stays on disk under its own tag for rollback.
-    image: mushr-caddy:2.11.4
+    image: mushr-caddy:2.11.7
     container_name: mushr
     restart: unless-stopped
     logging:

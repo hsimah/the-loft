@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Runs inside the container. Prompt arrives on stdin; "$@" carries optional --resume arguments.
+set -uo pipefail
+
+claude_json_output="$(claude --print --output-format json --dangerously-skip-permissions "$@")"
+claude_exit_status=$?
+
+workspace_diff=""
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git add --all --intent-to-add
+  workspace_diff="$(git diff)"
+fi
+
+if ! jq --arg workspaceDiff "$workspace_diff" '. + {workspace_diff: $workspaceDiff}' <<<"$claude_json_output" 2>/dev/null; then
+  printf '%s\n' "$claude_json_output"
+fi
+
+exit "$claude_exit_status"

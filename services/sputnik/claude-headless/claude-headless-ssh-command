@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# SSH forced command for rodnik. The only accepted request is:
+#   run <workspace-name> <base64-prompt> [resume-session-id]
+set -euo pipefail
+
+readonly workspaces_root="$HOME/workspaces"
+readonly claude_state_directory="$HOME/claude-state"
+readonly claude_container_image="localhost/claude-headless:latest"
+readonly maximum_run_seconds=1800
+
+fail_with_json_error() {
+  jq --null-input --arg errorMessage "$1" '{is_error: true, result: $errorMessage}'
+  exit 64
+}
+
+readonly n8n_working_directory_prefix_pattern='^cd [^;]* ; (.*)$'
+
+requested_command="${SSH_ORIGINAL_COMMAND:-}"
+if [[ "$requested_command" =~ $n8n_working_directory_prefix_pattern ]]; then
+  requested_command="${BASH_REMATCH[1]}"
+fi
+
+read -r -a requested_arguments <<<"$requested_command"
+
+[[ "${requested_arguments[0]:-}" == "run" ]] \
+  || fail_with_json_error "usage: run <workspace-name> <base64-prompt> [resume-session-id]"
+(( ${#requested_arguments[@]} >= 3 && ${#requested_arguments[@]} <= 4 )) \
+  || fail_with_json_error "expected 2 or 3 arguments after 'run'"
+
+readonly workspace_name="${requested_arguments[1]}"
+readonly base64_encoded_prompt="${requested_arguments[2]}"
+readonly resume_session_id="${requested_arguments[3]:-}"
+
+[[ "$workspace_name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] \
+  || fail_with_json_error "invalid workspace name"
+readonly workspace_directory="$workspaces_root/$workspace_name"
+[[ -d "$workspace_directory" && ! -L "$workspace_directory" ]] \
+  || fail_with_json_error "workspace '$workspace_name' does not exist"
+
+[[ "$base64_encoded_prompt" =~ ^[A-Za-z0-9+/]+={0,2}$ ]] \
+  || fail_with_json_error "prompt must be base64-encoded"
+
+resume_arguments=()
+if [[ -n "$resume_session_id" ]]; then
+  [[ "$resume_session_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] \
+    || fail_with_json_error "invalid session id"
+  resume_arguments=(--resume "$resume_session_id")
+fi
+
+base64 --decode <<<"$base64_encoded_prompt" \
+  | podman run --rm --interactive \
+      --userns=keep-id \
+      --read-only \
+      --cap-drop=all \
+      --security-opt=no-new-privileges \
+      --pids-limit=512 \
+      --memory=4g \
+      --timeout="$maximum_run_seconds" \
+      --network=claude-internal \
+      --env HTTPS_PROXY=http://claude-egress-proxy:8888 \
+      --env HTTP_PROXY=http://claude-egress-proxy:8888 \
+      --secret=claude-code-oauth-token,type=env,target=CLAUDE_CODE_OAUTH_TOKEN \
+      --volume "$claude_state_directory:/claude-home" \
+      --volume "$workspace_directory:/workspace" \
+      "$claude_container_image" \
+      "${resume_arguments[@]}"

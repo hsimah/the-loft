@@ -97,7 +97,8 @@ services:
       - 192.168.86.28
     networks:
       - loft-proxy
-
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 networks:
   loft-proxy:
     external: true

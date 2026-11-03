@@ -1,0 +1,17 @@
+[Unit]
+Description=Allow-listed HTTPS egress proxy for sandboxed Claude Code runs
+
+[Container]
+Image=localhost/claude-egress-proxy:latest
+ContainerName=claude-egress-proxy
+Network=claude-internal.network
+Network=claude-egress.network
+ReadOnly=true
+DropCapability=ALL
+NoNewPrivileges=true
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

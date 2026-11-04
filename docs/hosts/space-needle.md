@@ -14,7 +14,7 @@ Minisforum MS-01, x86_64, Ubuntu 24.04, wired LAN `192.168.86.28`. Primary serve
 
 ```bash
 cd /srv/the-loft
-sudo bash setup.sh
+loft-ctl setup
 loft-ctl health
 loft-ctl update <service>
 ```

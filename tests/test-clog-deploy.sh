@@ -277,7 +277,7 @@ assert_contains "$out" "control-plane/clog-deploy.sh"$'\n'"--plan" "loft-ctl run
 SETUP="$WORK/setup-root"
 mkdir -p "$SETUP/control-plane"
 echo 'compose_args_for() { echo "-f $1"; }' > "$SETUP/control-plane/common.sh"
-section="$(sed -n '/^# ─── 11\. Deploy services/,/^# ─── 11a\./{//!p}' "${ROOT}/setup.sh")"
+section="$(sed -n '/^# ─── 11\. Deploy services/,/^# ─── 11a\./{//!p}' "${ROOT}/control-plane/setup.sh")"
 out="$(REPO_DIR="$SETUP" bash -c 'set -euo pipefail
 info() { echo "$*"; }
 warn() { echo "$*"; }

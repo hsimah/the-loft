@@ -33,7 +33,7 @@ sudo sshd -t
 ## 2. Provision without public ingress
 
 ```bash
-sudo env COMPOSE_PROFILES= bash /srv/the-loft/setup.sh
+sudo env COMPOSE_PROFILES= /srv/the-loft/loft-ctl setup
 ```
 
 Check littledog is 1003 with no Docker membership. On an already running host, stop ingress first: `sudo docker stop mushr-tunnel pawst`.

@@ -85,7 +85,7 @@ done
 assert_contains "$gpt" 'OPENAI_API_KEY: ${LLAMA_SWAP_API_KEY:-}' "the key comes from .env, not the repo"
 
 # ── Installation ─────────────────────────────────────────────────────────────
-setup="$(cat "${ROOT}/setup.sh")"
+setup="$(cat "${ROOT}/control-plane/setup.sh")"
 assert_contains "$setup" "com.docker.network.bridge.name=mercurius-llm mercurius-llm" "setup.sh creates the bridge the firewall matches"
 assert_contains "$(cat "$BOOT")" "mercurius-egress.nft" "the bootstrap installs the rules"
 assert_contains "$(cat "$BOOT")" "loft-mercurius-egress.service" "and the unit"

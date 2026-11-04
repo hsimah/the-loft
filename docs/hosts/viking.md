@@ -2,7 +2,7 @@
 
 Production web host, currently a Raspberry Pi 3 B+ (arm64, 1 GB, Debian 13). The hardware is replaceable; the role is not. [host.conf](../../hosts/viking/host.conf) runs Mushr (with the `public` tunnel profile), [Pawst](../services/pawst.md), [Clog](../services/clog.md), Snoot and Houstn (Glances only). Recovery: [Viking restore](../operations/viking-restore.md).
 
-Mutating `setup.sh`/`loft-ctl` runs require `/etc/loft/dmz-ready`, an operator attestation that the network boundary below is in place. Setup removes littledog from the Docker group here.
+Mutating `loft-ctl` runs, including setup, require `/etc/loft/dmz-ready`, an operator attestation that the network boundary below is in place. Setup removes littledog from the Docker group here.
 
 ## Network
 

@@ -271,7 +271,7 @@ assert_contains "$out" "unlock the vault first" "says so"
 
 # ── Manifests agree ──────────────────────────────────────────────────────────
 conf="$(cat "${ROOT}/hosts/space-needle/host.conf")"
-setup="$(cat "${ROOT}/setup.sh")"
+setup="$(cat "${ROOT}/control-plane/setup.sh")"
 script="$(cat "$SCRIPT")"
 assert_contains "$conf" 'BACKUP_ENABLED="false"' "backups are shelved on space-needle (setup.sh installs nothing)"
 assert_contains "$conf" "BACKUP_JOBS=(mercurius forgejo)" "the job list is kept for when it returns"

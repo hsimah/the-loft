@@ -19,7 +19,7 @@ dnsmasq answers `hubbl.hsimah.com` with `192.168.86.28`, so uploads from the LAN
 ## Setup
 
 1. Copy [.env.example](../../services/hubbl/.env.example). Generate `DB_PASSWORD` with `openssl rand -hex 32` **before** the first start — Postgres reads it only when initialising an empty `/opt/hubbl/db`, and changing it later locks the server out of its own database.
-2. `sudo bash setup.sh` to provision the directories, then `sudo loft-ctl start hubbl` and `loft-ctl health hubbl`.
+2. `loft-ctl setup` to provision the directories, then `sudo loft-ctl start hubbl` and `loft-ctl health hubbl`.
 3. Register the first account **before** publishing — Immich makes the first account the admin, and there is no way to close registration while the server has none. Do it over the LAN.
 4. Publish `hubbl.hsimah.com` on the tunnel in Cloudflare, pointing at Caddy over HTTPS. Confirm a test upload from the phone app on mobile data before trusting it with a backup; a LAN test resolves through dnsmasq and proves nothing about the tunnel.
 

@@ -1,8 +1,8 @@
 # Off-site backups
 
-**Shelved 2026-10-26: built and tested, not deployed.** `BACKUP_ENABLED="false"` in [host.conf](../../hosts/space-needle/host.conf), so setup.sh installs no timers, and the Homepage tile is off. No Google credential or repository exists yet. Backups will be planned for space-needle and helarctos as a whole before this returns; the design below (D10, D11) still stands. To turn it on, follow Setup, set `BACKUP_ENABLED="true"`, uncomment the tile, and run setup.sh.
+**Shelved 2026-10-26: built and tested, not deployed.** `BACKUP_ENABLED="false"` in [host.conf](../../hosts/space-needle/host.conf), so setup installs no timers, and the Homepage tile is off. No Google credential or repository exists yet. Backups will be planned for space-needle and helarctos as a whole before this returns; the design below (D10, D11) still stands. To turn it on, follow Setup, set `BACKUP_ENABLED="true"`, uncomment the tile, and run `loft-ctl setup`.
 
-Encrypted [restic](https://restic.readthedocs.io) snapshots of Mercurius (Paperless and the wiki) and Kennl's Forgejo go to Google Drive through rclone. restic encrypts on space-needle; Google sees opaque pack files and never holds a key. Script: [loft-backup.sh](../../control-plane/loft-backup.sh), installed by setup.sh as `loft-backup`. Settings (`BACKUP_*`) are in [host.conf](../../hosts/space-needle/host.conf). Plan for the remaining services: [automation plans](../automation/backups.md).
+Encrypted [restic](https://restic.readthedocs.io) snapshots of Mercurius (Paperless and the wiki) and Kennl's Forgejo go to Google Drive through rclone. restic encrypts on space-needle; Google sees opaque pack files and never holds a key. Script: [loft-backup.sh](../../control-plane/loft-backup.sh), installed by setup as `loft-backup`. Settings (`BACKUP_*`) are in [host.conf](../../hosts/space-needle/host.conf). Plan for the remaining services: [automation plans](../automation/backups.md).
 
 | Job | Repository | Backs up |
 |---|---|---|
@@ -48,7 +48,7 @@ Run from `/srv/the-loft` on space-needle, one at a time.
    ```
 
    Open: `sudo install -d -m 700 /etc/loft/restic`, then write the password to `/etc/loft/restic/open.pass` (mode 600). Vault, with the vault unlocked: `sudo install -d -m 700 /mercurius/backup`, then write it to `/mercurius/backup/restic.pass` (mode 600).
-4. **Install.** `sudo bash setup.sh` installs restic (0.16 or newer), rclone, the script and the timers.
+4. **Install.** `loft-ctl setup` installs restic (0.16 or newer), rclone, the script and the timers.
 5. **Create the repositories** (vault unlocked): `sudo loft-backup init`.
 6. **Monitors.** In Uptime Kuma add a Push monitor for each of `mercurius`, `forgejo` (heartbeat interval 26 h, retries 0) and `check` (8 days), and a status page listing them. Put the status page's slug in Houstn's `.env` as `HOMEPAGE_VAR_BACKUP_KUMA_SLUG`, then `sudo loft-ctl start houstn`. Write each push URL, without the query string, to `/etc/loft/backup-push` (root, mode 600), one `<job> <url>` per line.
 7. **First run**: `sudo systemctl start loft-backup`, then `journalctl -u loft-backup -n 40` and `sudo systemctl start loft-backup-check`.

@@ -36,5 +36,5 @@ sudo docker exec mushr wget -qO- http://127.0.0.1:8880/config/   # admin API is 
 - `loft-ctl rebuild` does down/pull/up but **no** health check; `update` does both.
 - `docker compose down -v` deletes named volumes, including Caddy's certificates. Bind mounts survive.
 - Image rollback may also need the matching database backup; see [upgrades](docs/operations/upgrades.md).
-- `setup.sh` restarts Docker, overwrites dotfiles and reapplies ownership. It is a provisioner, not a repair tool.
+- `loft-ctl setup` restarts Docker, overwrites dotfiles and reapplies ownership. It is a provisioner, not a repair tool.
 - Keep rollback images when pruning Docker storage.

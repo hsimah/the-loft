@@ -45,4 +45,13 @@ run stop web
 assert_fails "$status" "stop exits non-zero when compose down fails"
 assert_absent "$out" "Stopped web." "stop does not claim success"
 
+# setup hands off to the repo's setup.sh (which elevates itself).
+printf 'echo "setup ran"\n' > "$LC/control-plane/setup.sh"
+run setup
+assert_eq "$status" 0 "setup succeeds"
+assert_contains "$out" "setup ran" "setup runs setup.sh"
+run setup web
+assert_fails "$status" "setup rejects arguments"
+assert_absent "$out" "setup ran" "rejected setup does not provision"
+
 finish

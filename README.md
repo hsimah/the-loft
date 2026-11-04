@@ -1,6 +1,6 @@
 # the-loft
 
-Fleet configuration for The Loft: shared service definitions, per-host configuration and a setup/control plane. Details are in [`docs/`](docs/README.md). Provision a host with [setup.sh](docs/scripts/setup.md); operate it with [loft-ctl](docs/scripts/loft-ctl.md).
+Fleet configuration for The Loft: shared service definitions, per-host configuration and a setup/control plane. Details are in [`docs/`](docs/README.md). Provision a host with [`loft-ctl setup`](docs/scripts/setup.md); operate it with the rest of [loft-ctl](docs/scripts/loft-ctl.md).
 
 ## Fleet
 
@@ -35,15 +35,14 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 ```
 hosts/<hostname>/host.conf          # Per-host manifest (services, storage, health checks, public hostnames)
 hosts/<hostname>/overrides/...      # Per-host compose overrides
-hosts/<hostname>/bootstrap          # Optional host-specific provisioning, sourced by setup.sh
+hosts/<hostname>/bootstrap          # Optional host-specific provisioning, sourced by `loft-ctl setup`
 hosts/<hostname>/i3/...             # Optional i3 desktop config (when I3_ENABLED)
 services/<name>/docker-compose.yml  # Shared service definition
 services/<name>/.env.example        # Secret template
 control-plane/                      # Shared scripts
 docs/automation/                    # Proposed household AI services (planning notes)
 bashrc.d inputrc.d nanorc.d tmux.d  # Dotfiles installed for adminhabl
-setup.sh                            # Idempotent host provisioner
-loft-ctl                            # Day-to-day control
+loft-ctl                            # Host provisioning (setup) and day-to-day control
 ```
 
 Services are defined once and customized per host by Compose merge with `hosts/<hostname>/overrides/<service>/docker-compose.override.yml`. Prefer Compose profiles inside an existing service (e.g. houstn's `hub`/`metrics`) over new services.

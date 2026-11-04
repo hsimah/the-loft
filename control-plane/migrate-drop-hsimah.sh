@@ -30,7 +30,7 @@ warn() { echo -e "${YELLOW}[!]${NC} $*"; }
 error() { echo -e "${RED}[x]${NC} $*" >&2; }
 
 [[ $EUID -eq 0 ]] || { error "Must run as root (use sudo)."; exit 1; }
-id "$NEW_USER" &>/dev/null || { error "User $NEW_USER does not exist — run setup.sh first."; exit 1; }
+id "$NEW_USER" &>/dev/null || { error "User $NEW_USER does not exist — run loft-ctl setup first."; exit 1; }
 
 NEW_HOME="$(getent passwd "$NEW_USER" | cut -d: -f6)"
 

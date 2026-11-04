@@ -15,7 +15,7 @@ Minisforum MS-S1 MAX: Ryzen AI Max+ 395 (Radeon 8060S iGPU, gfx1151), 128 GB uni
 
 1. Update the BIOS/EC firmware. In the BIOS set the UMA frame buffer to its 1 GB minimum (AMD CBS → NBIO Common Options → GFX Configuration), the performance power profile, and power-on after AC loss. A firmware update resets these.
 2. Install from the Debian 13 amd64 netinst image over Wi-Fi. The installer's 6.12 kernel has no driver for the 10GbE ports; the MT7925 Wi-Fi works and its firmware is on the image. Hostname `helarctos`. Leave the root password empty so `adminhabl` gets sudo. Use guided partitioning, entire disk, all files in one partition. For software, select only SSH server and standard system utilities.
-3. Clone to `/srv/the-loft` and run `sudo bash setup.sh` with no `.env` files yet. It skips the services. The [bootstrap](../../hosts/helarctos/bootstrap) installs the trixie-backports kernel and firmware and the GTT parameters. Reboot, then confirm `uname -r` is 6.18 or newer; older kernels lack the driver or hang on shutdown.
+3. Clone to `/srv/the-loft` and run `/srv/the-loft/loft-ctl setup` with no `.env` files yet. It skips the services. The [bootstrap](../../hosts/helarctos/bootstrap) installs the trixie-backports kernel and firmware and the GTT parameters. Reboot, then confirm `uname -r` is 6.18 or newer; older kernels lack the driver or hang on shutdown.
 4. Create each service's `.env` from its example (Sputnik `COMPOSE_PROFILES=gpu`), then rerun setup.
 5. Wired: add a DHCP stanza for the 10GbE port to `/etc/network/interfaces` and connect it. Move the router reservation from the Wi-Fi MAC to that port's MAC, keeping the address. Once SSH works over the wire, remove the Wi-Fi stanza and the `WIFI_*` fields from host.conf, then rerun setup.
 

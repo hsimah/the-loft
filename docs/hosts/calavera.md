@@ -56,4 +56,4 @@ Reimaging erases the disk and interrupts Downstairs audio.
 2. Hostname `calavera`, user `adminhabl`, empty root password, SSH server + standard utilities only (setup installs i3/lightdm).
 3. Set up key SSH, install git, clone to `/srv/the-loft` per [fresh host](../scripts/setup.md#fresh-host).
 4. Create Howlr (as above), Houstn (`COMPOSE_PROFILES=metrics`) and Snoot (new Beszel system) `.env` files.
-5. `sudo bash setup.sh`, reboot, and verify SSH/sudo, kiosk, audio, metrics and screen wake/blank.
+5. `/srv/the-loft/loft-ctl setup`, reboot, and verify SSH/sudo, kiosk, audio, metrics and screen wake/blank.

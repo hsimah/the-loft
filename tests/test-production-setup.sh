@@ -15,7 +15,7 @@ mock gpasswd 'printf "gpasswd %s\n" "$*"; exit "$MOCK_REMOVE_STATUS"'
 mock usermod 'printf "usermod %s\n" "$*"'
 
 # From the line after the section's comment up to the next section header.
-SECTION="$(sed -n '/^# Ensure docker group memberships;/,/^# ─── 10a\./{//!p}' "${ROOT}/setup.sh")"
+SECTION="$(sed -n '/^# Ensure docker group memberships;/,/^# ─── 10a\./{//!p}' "${ROOT}/control-plane/setup.sh")"
 
 membership() { # production [groups] [gpasswd-status]; sets out and status
   out="$(PATH="$MOCK_BIN:$PATH" PRODUCTION_ROLE="$1" MOCK_GROUPS="${2-pack-member docker}" \

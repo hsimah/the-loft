@@ -47,7 +47,7 @@ If the earlier manual clone is still on disk, copy it in first — rclone compar
 ```bash
 sudo rsync -a --info=progress2 /path/to/existing/clone/ /mammoth/hubbl/staging/
 sudo chown -R littledog:pack-member /mammoth/hubbl/staging
-cd /srv/the-loft && sudo bash setup.sh      # installs the cron
+loft-ctl setup                              # installs the cron
 tail -f /var/log/loft/onedrive-pull.log
 ```
 
@@ -89,13 +89,13 @@ Only then:
 
 ```bash
 sed -i 's/^ONEDRIVE_PULL_ENABLED=.*/ONEDRIVE_PULL_ENABLED="false"/' hosts/space-needle/host.conf
-sudo bash setup.sh                                    # removes the cron
+loft-ctl setup                                        # removes the cron
 sed -i 's/^IMMICH_API_KEY=.*/IMMICH_API_KEY=/' services/hubbl/.env
 sudo shred -u /etc/loft/rclone/rclone.conf && sudo rmdir /etc/loft/rclone
 sudo rm -rf /mammoth/hubbl/staging
 ```
 
-`setup.sh` removes the cron unconditionally on every run, so the flag is what stops it; a hand-deleted cron file comes back.
+`loft-ctl setup` removes the cron unconditionally on every run, so the flag is what stops it; a hand-deleted cron file comes back.
 
 **Steps 3 and 4 are deliberately deferred.** The puller is being reused to fetch the rest of the OneDrive account for a planned document store, so the rclone credential stays on the host and the mechanism stays in the repository. Only the photo-side artefacts are disposable: the import key, and eventually `/mammoth/hubbl/staging`. Cancel the OneDrive account only once both fetches are done — tracked in [open work](../../plans/maintenance.md).
 

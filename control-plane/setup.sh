@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # setup.sh — idempotent setup for any host in The Loft fleet
-# Must be run as root on Debian/Ubuntu
+# Debian/Ubuntu; re-runs itself with sudo when not root
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # ─── Colors ───────────────────────────────────────────────────────────────────
 RED='\033[0;31m'
@@ -19,8 +19,7 @@ error() { echo -e "${RED}[ERROR]${NC} $*"; }
 info "Preflight checks..."
 
 if [[ $EUID -ne 0 ]]; then
-  error "This script must be run as root"
-  exit 1
+  exec sudo bash "${REPO_DIR}/control-plane/setup.sh" "$@"
 fi
 
 if ! command -v apt-get &>/dev/null; then

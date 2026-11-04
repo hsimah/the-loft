@@ -13,7 +13,7 @@ Everything the group stores, including Postgres with the OCR text and every wiki
 
 ## Isolation
 
-- **Locked means down.** Every bind uses `create_host_path: false`. With the vault locked, `/mercurius` is an empty directory on the root disk and Docker refuses to start the group. It cannot initialise an empty archive or wiki there. `setup.sh` skips Mercurius until the mount exists (`SERVICE_REQUIRES_MOUNT` in [host.conf](../../hosts/space-needle/host.conf)).
+- **Locked means down.** Every bind uses `create_host_path: false`. With the vault locked, `/mercurius` is an empty directory on the root disk and Docker refuses to start the group. It cannot initialise an empty archive or wiki there. `loft-ctl setup` skips Mercurius until the mount exists (`SERVICE_REQUIRES_MOUNT` in [host.conf](../../hosts/space-needle/host.conf)).
 - **No route out.** The group's own network and `mercurius-proxy` are both Docker `internal` networks. `mercurius-proxy` is shared only with Caddy, through space-needle's [Mushr override](../../hosts/space-needle/overrides/mushr/docker-compose.override.yml). Nothing in the group is on `loft-proxy`. The one exception is Paperless and paperless-gpt, which may reach llama-swap on helarctos and nothing else ([model egress](#model-egress)).
 - **SilverBullet has no route out.** `SB_SHELL_BACKEND=off` disables the server shell for every space, and the `-slim` image has no Runtime API. The HTTP proxy (`net.proxyFetch`) reaches only the group's internal network, where Paperless is `http://paperless:8000`. Libraries and plugs that fetch from the internet cannot be installed.
 - **Access.** `https://wiki.loft.hsimah.com` and `https://paperless.loft.hsimah.com`, LAN only; never on the tunnel.
@@ -51,7 +51,7 @@ Grow it later while it is online: `lvextend`, `cryptsetup resize mercurius`, the
 ## Setup
 
 1. Copy [.env.example](../../services/mercurius/.env.example) and generate `DB_PASSWORD` and `PAPERLESS_SECRET_KEY` with `openssl rand -hex 32` **before** the first start.
-2. `sudo bash setup.sh` creates the `mercurius-proxy` and `mercurius-llm` networks and installs the egress firewall. Then `loft-ctl start mushr` recreates Caddy on `mercurius-proxy`.
+2. `loft-ctl setup` creates the `mercurius-proxy` and `mercurius-llm` networks and installs the egress firewall. Then `loft-ctl start mushr` recreates Caddy on `mercurius-proxy`.
 3. With the vault unlocked: `loft-ctl start mercurius`, then `loft-ctl health mercurius`.
 4. Paperless: open `https://paperless.loft.hsimah.com` and create the first account, which becomes the superuser. Create the second under Settings → Users & Groups as a superuser too, and turn on two-factor for both.
 5. SilverBullet: open `https://wiki.loft.hsimah.com`. The setup wizard creates the first admin account, then the first space: `Home`, bound to the prefix `/home`. In the dashboard, create the second account and add it to `Home` with `write`; set each account's full name and email, which revisions are attributed to. Turn on revisions in **Managed** mode, with no remote.
@@ -65,9 +65,9 @@ Each space's history is a git repository in its folder on the vault, managed by 
 
 Paperless (`paperless`) and [paperless-gpt](https://github.com/icereed/paperless-gpt) (`paperless-gpt`, profile `ocr`) are the only Mercurius containers with a route out, and the route reaches llama-swap on helarctos (`192.168.86.21:8080`) and nothing else. SilverBullet, the database, Valkey, Gotenberg and Tika stay on internal networks.
 
-- **Bridge:** `mercurius-llm`, created by setup.sh with a fixed bridge name. Both containers also stay on the group's internal network, where Paperless is `http://paperless:8000`.
+- **Bridge:** `mercurius-llm`, created by `loft-ctl setup` with a fixed bridge name. Both containers also stay on the group's internal network, where Paperless is `http://paperless:8000`.
 - **Firewall:** [mercurius-egress.nft](../../hosts/space-needle/mercurius-egress.nft) allows that one address and port from the bridge and drops everything else, including DNS, IPv6 and traffic to space-needle itself. [loft-mercurius-egress.service](../../hosts/space-needle/loft-mercurius-egress.service) loads it before Docker starts; space-needle's [bootstrap](../../hosts/space-needle/bootstrap) installs both. It owns one nft table and never flushes Docker's rules.
-- **Start order:** the group references the external `mercurius-llm` bridge, so run `sudo bash setup.sh` (which creates it) before `loft-ctl start mercurius`.
+- **Start order:** the group references the external `mercurius-llm` bridge, so run `loft-ctl setup` (which creates it) before `loft-ctl start mercurius`.
 - **No DNS:** `helarctos` resolves through `extra_hosts`, pinned to the address the firewall allows. If helarctos's address changes, change both.
 - **No login:** paperless-gpt has none, so it has no Caddy route. Its page listens on `127.0.0.1:8081`; reach it with `ssh -L 8081:localhost:8081 adminhabl@space-needle`.
 

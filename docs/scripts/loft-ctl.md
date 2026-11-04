@@ -9,6 +9,7 @@
 | `rebuild <services> / --all` | `down`, `pull`, `up -d --build`; **no health check** |
 | `health [services]` | Container and URL checks ([contract](common-sh.md)) |
 | `update <services> / --all` | Git fetch + fast-forward (`--branch`, default `main`; `--no-pull` skips), rebuild, health |
+| `setup` | [Provision this host](setup.md); elevates with sudo; no arguments |
 | `deploy clog [--plan] [version]` | Latest or given [Clog](../services/clog.md#deploy-and-update) release on Viking |
 | `deploy pawst <site> [tag]` | Latest or given [Pawst](../services/pawst.md#deploy-and-roll-back) release on Viking |
 
@@ -20,4 +21,4 @@
 - Pull errors are suppressed (so local Caddy can rebuild), so a rebuild can silently reuse a cached image. Check the running version after upgrades.
 - Removing a service from `SERVICES` doesn't stop it; stop it first.
 - On Viking, start/rebuild/update require `/etc/loft/dmz-ready`. Precise production rollouts use merged Compose directly; see the [application platform](../operations/application-platform.md#adding-an-application).
-- Run as `adminhabl` (in the Docker group). It does not switch users.
+- Run as `adminhabl` (in the Docker group). Only `setup` and `deploy` escalate with sudo.

@@ -28,7 +28,7 @@ sudo speaker-test -D plughw:Audio,0 -c 2 -t wav -l 2   # with howlr stopped
 
 lightdm autologs `rodnik` (video/input/audio only; no sudo/Docker) into i3, which runs `loft-dashboard`: Firefox ESR kiosk on `I3_DASHBOARD_URL` in a restart loop. `I3_DPI=125` ≈ 130% scale. Chromium 150.x crashed here, hence Firefox. Config: [hosts/calavera/i3](../../hosts/calavera/i3).
 
-Bootstrap masks sleep, ignores the lid, removes auto-rotation and installs [loft-dashboard-power](../../control-plane/loft-dashboard-power.sh). It watches Snapserver's JSON-RPC over TCP (`192.168.86.28:1705`; MA's own WebSocket gave no events), seeding state from `Server.GetStatus` on connect, and wakes the screen when a stream in `I3_POWER_GROUPS` plays, blanking after 600 s idle with nothing playing. Stream IDs were read from Snapweb events; recheck them after changing MA groups.
+Bootstrap masks sleep, ignores the lid, removes auto-rotation and installs [loft-dashboard-power](../../control-plane/loft-dashboard-power.sh). It watches Snapserver's JSON-RPC over TCP (`192.168.86.28:1705`; MA's own WebSocket gave no events), seeding state from `Server.GetStatus` on connect and reconnecting if an hour of silence and a ping go unanswered (a Snapserver restart can leave a half-open socket; restart the unit to recover sooner), and wakes the screen when a stream in `I3_POWER_GROUPS` plays, blanking after 600 s idle with nothing playing. Stream IDs were read from Snapweb events; recheck them after changing MA groups.
 
 ```bash
 systemctl status loft-dashboard-power lightdm

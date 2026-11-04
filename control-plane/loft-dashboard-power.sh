@@ -23,6 +23,11 @@ SNAP_HOST="${LOFT_POWER_SNAP_HOST:-192.168.86.28}"
 SNAP_PORT="${LOFT_POWER_SNAP_PORT:-1705}"
 IDLE_SECS="${LOFT_POWER_IDLE_SECS:-600}"
 POLL_SECS=15
+# A server restart can leave the socket open with no FIN/RST, so read never
+# fails. Ping once after PING_SECS without traffic; reconnect at STALE_SECS.
+PING_SECS=3600
+STALE_SECS=3660
+PING='{"id":2,"jsonrpc":"2.0","method":"Server.GetRPCVersion"}'
 RECONNECT_MAX_SECS=30
 STREAM_PREFIX="Music Assistant - "
 
@@ -95,31 +100,44 @@ handle_message() { # json-line
     else empty end | @tsv' <<< "$1" 2> /dev/null)
 }
 
-# Read messages from one connection until it closes, polling idle every
-# POLL_SECS. A read that times out mid-line keeps its partial input.
+# Read messages from one connection until it closes, goes silent for
+# STALE_SECS or a write fails, checking idle every POLL_SECS. A read that
+# times out mid-line keeps its partial input.
 session() { # in-fd out-fd
-  local in="$1" out="$2" line partial="" last=$SECONDS wait status
-  printf '%s\n' '{"id":1,"jsonrpc":"2.0","method":"Server.GetStatus"}' >&"$out"
+  local in="$1" out="$2" line partial="" last=$SECONDS heard=$SECONDS pinged=$SECONDS wait status
+  printf '%s\n' '{"id":1,"jsonrpc":"2.0","method":"Server.GetStatus"}' >&"$out" 2> /dev/null || return 0
   while true; do
     wait=$(( POLL_SECS - (SECONDS - last) ))
     (( wait < 1 )) && wait=1
     if IFS= read -r -t "$wait" -u "$in" line; then
+      heard=$SECONDS
       handle_message "${partial}${line}"
       partial=""
     else
       status=$?
       (( status > 128 )) || return 0
+      [[ -z "$line" ]] || heard=$SECONDS
       partial+="$line"
     fi
     if (( SECONDS - last >= POLL_SECS )); then
       idle_check
       last=$SECONDS
+      if (( SECONDS - heard >= STALE_SECS )); then
+        log "nothing from Snapserver in ${STALE_SECS}s"
+        return 0
+      fi
+      if (( SECONDS - heard >= PING_SECS && pinged <= heard )); then
+        printf '%s\n' "$PING" >&"$out" 2> /dev/null || return 0
+        pinged=$SECONDS
+      fi
     fi
   done
 }
 
 main() {
   local groups backoff=1
+  # A write to a reset socket must fail the printf, not kill the daemon.
+  trap '' PIPE
   groups="$(printf '%s\n' "${!STATES[@]}" | sort | paste -sd, -)"
   if [[ -z "$groups" ]]; then
     log "WARNING: LOFT_POWER_GROUPS is empty; the screen will blank on idle but never wake on playback"

@@ -117,4 +117,17 @@ assert_contains "$out" '[syncgroupzewbtz9n]="stopped"' "later notifications upda
 assert_contains "$out" '[syncgroup28jexljs]="idle"' "falls back to stream status without playbackStatus"
 assert_absent "$out" "syncgroupbkmvcshl" "unwatched streams are not tracked"
 
+# A half-open connection (server restarted, no FIN/RST): reads only time out.
+mkfifo "$WORK/silent"
+display On 0
+POLL_SECS=1 PING_SECS=1 STALE_SECS=3
+exec 7<> "$WORK/silent" 8> "$WORK/outbound"
+out="$(session 7 8; echo returned)"
+exec 7<&- 8>&-
+assert_contains "$out" "nothing from Snapserver in 3s" "logs a silent connection"
+assert_contains "$out" "returned" "a silent connection ends the session"
+assert_eq "$(jq -r .method "$WORK/outbound" | paste -sd, -)" "Server.GetStatus,Server.GetRPCVersion" \
+  "pings once while silent"
+POLL_SECS=15 PING_SECS=3600 STALE_SECS=3660
+
 finish

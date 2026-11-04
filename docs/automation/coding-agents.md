@@ -1,13 +1,22 @@
 # Coding agents
 
-Local coding is deferred; household work has the GPU (D18). Tracked in [#155](https://github.com/hsimah/the-loft/issues/155): Forgejo ([Kennl](../services/kennl.md)) on space-needle, runner and llama-swap on helarctos, the listory pipeline being ported ([#152](https://github.com/hsimah/the-loft/issues/152)), model choice in [#149](https://github.com/hsimah/the-loft/issues/149), and personas and evals in [#156](https://github.com/hsimah/the-loft/issues/156). The issues are canonical; this page records only what the household work shares with it.
+Live: Forgejo ([Kennl](../services/kennl.md)) label events trigger an n8n workflow, which runs Claude Code through user `rodnik` on space-needle. Local models do no coding; household work has the GPU (D18). Background: [#155](https://github.com/hsimah/the-loft/issues/155).
 
-## Shared with household work
+## Runner
 
-| Shared piece | Effect |
-|---|---|
-| llama-swap and GTT | Household models are resident; a coder must fit beside them (D18, [models](models.md#sharing-the-gpu)) |
-| Overnight window | Household batch runs overnight; coding, if it returns, runs overnight or when llama-swap is idle |
+- **Entry:** n8n SSHes in as `rodnik` with the key in [n8n_rodnik_ed25519.pub](../../services/sputnik/claude-headless/n8n_rodnik_ed25519.pub). Its [forced command](../../services/sputnik/claude-headless/claude-headless-ssh-command) accepts only `implement`, `rework` and `review` for a repository and a `claude/*` branch.
+- **Git on the host:** the forced command clones, checks out, commits and pushes as `rodnik`. Claude edits files only inside the sandbox. `review` pushes nothing.
+- **Sandbox:** rootless Podman ([Containerfile](../../services/sputnik/claude-headless/Containerfile.claude-headless)), reaching only the Anthropic API, through a tinyproxy allowlist ([hosts](../../services/sputnik/claude-headless/tinyproxy-allowed-hosts)).
+- **Models:** Sonnet for `implement` and `rework`, Opus for `review`. Each run is capped at 30 minutes.
+- **Provisioning:** [provision-rodnik.sh](../../services/sputnik/claude-headless/provision-rodnik.sh), run as root on space-needle.
+
+## Repositories
+
+Every Forgejo repository is agent-ready; nothing runs until someone puts an agent label on an issue.
+
+- **Trigger:** one Forgejo system webhook (Site Administration → Webhooks) sends issue label events from every repository to n8n.
+- **Labels and access:** [kennl-agent-ready.sh](../../control-plane/kennl-agent-ready.sh) copies the label set from `hsimah-services/listory` and gives `rodnik` write access. It is idempotent: run `--dry-run --all`, then `--all`, after adding repositories.
+- **New repositories:** create them from the `hsimah/template` template repository with **Labels** ticked. Templates do not copy collaborators, so add `rodnik` or re-run the script.
 
 ## Rules shared with household work
 

@@ -8,12 +8,14 @@
 #   control-plane/kennl-agent-ready.sh [--dry-run] (--all | OWNER/REPO...)
 #
 # --all covers every repository the token can see, except pull mirrors and
-# archived ones. The token (Settings → Applications; scopes read/write
-# repository, and read user for --all; an admin token sees every repository)
+# archived ones. The token (Settings → Applications; scopes read/write issue
+# for labels, read/write repository for collaborators, read user; an admin
+# token sees every repository)
 # comes from KENNL_TOKEN or a prompt. KENNL_URL, KENNL_LABEL_SOURCE
 # (default hsimah-services/listory) and KENNL_AGENT_USER (default rodnik)
 # override the defaults.
 set -euo pipefail
+shopt -s inherit_errexit
 
 URL="${KENNL_URL:-https://kennl.loft.hsimah.com}"
 SOURCE="${KENNL_LABEL_SOURCE:-hsimah-services/listory}"
@@ -45,7 +47,8 @@ paged() { # path [jq filter for the array in each page] → one JSON array
   local path="$1" filter="${2:-.}" page=1 batch out='[]' sep='?'
   [[ "$path" == *\?* ]] && sep='&'
   while :; do
-    batch="$(api "${path}${sep}limit=50&page=${page}" | jq -c "$filter")"
+    batch="$(api "${path}${sep}limit=50&page=${page}")" || die "GET ${path} failed (token scopes?)"
+    batch="$(jq -c "$filter" <<< "$batch")"
     out="$(jq -c --argjson b "$batch" '. + $b' <<< "$out")"
     [[ "$(jq length <<< "$batch")" -eq 50 ]] || break
     page=$((page + 1))
@@ -59,7 +62,8 @@ source_labels="$(paged "repos/${SOURCE}/labels" "[.[] | ${norm}]")"
 [[ "$(jq length <<< "$source_labels")" -gt 0 ]] || die "${SOURCE} has no labels"
 
 if $all; then
-  mapfile -t repos < <(paged repos/search '[.data[] | select((.mirror or .archived) | not) | .full_name]' | jq -r '.[]')
+  repos_json="$(paged repos/search '[.data[] | select((.mirror or .archived) | not) | .full_name]')"
+  mapfile -t repos < <(jq -r '.[]' <<< "$repos_json")
 else
   repos=("$@")
 fi

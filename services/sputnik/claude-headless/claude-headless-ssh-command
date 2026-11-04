@@ -19,6 +19,8 @@ readonly maximum_run_seconds=1800
 readonly forgejo_ssh_host_alias="kennl"
 readonly commit_author_name="rodnik"
 readonly commit_author_email="rodnik@noreply.kennl.loft.hsimah.com"
+readonly implementation_model="sonnet"
+readonly review_model="opus"
 
 readonly n8n_working_directory_prefix_pattern='^cd [^;]* ; (.*)$'
 readonly repository_pattern='^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$'
@@ -75,6 +77,7 @@ run_claude_in_sandbox() {
         --network=claude-internal \
         --env HTTPS_PROXY=http://claude-egress-proxy:8888 \
         --env HTTP_PROXY=http://claude-egress-proxy:8888 \
+        --env ANTHROPIC_MODEL="$claude_model" \
         --secret=claude-code-oauth-token,type=env,target=CLAUDE_CODE_OAUTH_TOKEN \
         --volume "$claude_state_directory:/claude-home" \
         --volume "$workspace_directory:/workspace:$workspace_mount_mode" \
@@ -105,6 +108,7 @@ emit_result() {
   fi
   jq --null-input \
     --arg mode "$requested_mode" \
+    --arg model "$claude_model" \
     --arg repository "$repository_full_name" \
     --arg branch "$branch_name" \
     --arg baseBranch "$default_branch_name" \
@@ -115,6 +119,7 @@ emit_result() {
     '{
       is_error: ($outcome | IN("claude-error", "unparseable-result", "push-failed")),
       mode: $mode,
+      model: $model,
       repository: $repository,
       branch: $branch,
       base_branch: $baseBranch,
@@ -143,6 +148,11 @@ readonly base64_encoded_prompt="${requested_arguments[3]}"
 
 [[ "$requested_mode" == implement || "$requested_mode" == rework || "$requested_mode" == review ]] \
   || fail_with_json_error "unknown mode '$requested_mode'"
+if [[ "$requested_mode" == review ]]; then
+  readonly claude_model="$review_model"
+else
+  readonly claude_model="$implementation_model"
+fi
 [[ "$repository_full_name" =~ $repository_pattern && "$repository_full_name" != *..* ]] \
   || fail_with_json_error "invalid repository name"
 [[ "$branch_name" =~ $agent_branch_pattern && "$branch_name" != *..* ]] \

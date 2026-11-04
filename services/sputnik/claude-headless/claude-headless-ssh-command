@@ -1,70 +1,231 @@
 #!/usr/bin/env bash
-# SSH forced command for rodnik. The only accepted request is:
-#   run <workspace-name> <base64-prompt> [resume-session-id]
+# SSH forced command for rodnik. Accepted requests:
+#   implement <owner/repository> <claude/branch> <base64-prompt>   new branch from the default branch, commit, push
+#   rework    <owner/repository> <claude/branch> <base64-prompt>   existing branch, commit, push
+#   review    <owner/repository> <claude/branch> <base64-prompt>   existing branch, read-only, nothing pushed
+#
+# All git that talks to Forgejo runs here on the host. Claude only edits files inside the sandbox.
+# For implement and rework, Claude's final message must be one JSON object:
+#   {"status": "done", "commit_message": "type: summary\n\nbody"}
+#   {"status": "needs-human", "reason": "what is missing"}
 set -euo pipefail
 
+readonly mirrors_root="$HOME/mirrors"
 readonly workspaces_root="$HOME/workspaces"
+readonly locks_root="$HOME/locks"
 readonly claude_state_directory="$HOME/claude-state"
 readonly claude_container_image="localhost/claude-headless:latest"
 readonly maximum_run_seconds=1800
+readonly forgejo_ssh_host_alias="kennl"
+readonly commit_author_name="rodnik"
+readonly commit_author_email="rodnik@noreply.kennl.loft.hsimah.com"
+
+readonly n8n_working_directory_prefix_pattern='^cd [^;]* ; (.*)$'
+readonly repository_pattern='^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$'
+readonly agent_branch_pattern='^claude/[A-Za-z0-9][A-Za-z0-9._-]*$'
+readonly base64_pattern='^[A-Za-z0-9+/]+={0,2}$'
+
+workspace_directory=""
 
 fail_with_json_error() {
-  jq --null-input --arg errorMessage "$1" '{is_error: true, result: $errorMessage}'
+  jq --null-input --arg errorMessage "$1" '{is_error: true, outcome: "rejected", result: $errorMessage}'
   exit 64
 }
 
-readonly n8n_working_directory_prefix_pattern='^cd [^;]* ; (.*)$'
+host_git() {
+  git -c core.hooksPath=/dev/null -c core.fsmonitor=false -c protocol.ext.allow=never "$@"
+}
+
+remove_workspace() {
+  if [[ -n "$workspace_directory" && "$workspace_directory" == "$workspaces_root"/* ]]; then
+    rm -rf -- "$workspace_directory"
+  fi
+}
+
+update_mirror() {
+  local target_repository="$1" target_mirror_directory="$2"
+  local mirror_lock_file="$locks_root/mirror--${target_repository//\//--}.lock"
+  (
+    flock --timeout 120 9 || exit 1
+    if [[ -d "$target_mirror_directory" ]]; then
+      host_git -C "$target_mirror_directory" fetch --quiet --prune origin
+    else
+      mkdir -p "$(dirname "$target_mirror_directory")"
+      host_git clone --quiet --mirror "$forgejo_ssh_host_alias:$target_repository.git" "$target_mirror_directory"
+    fi
+  ) 9>"$mirror_lock_file"
+}
+
+mirror_has_branch() {
+  local target_mirror_directory="$1" candidate_branch="$2"
+  host_git -C "$target_mirror_directory" rev-parse --verify --quiet "refs/heads/$candidate_branch" >/dev/null
+}
+
+run_claude_in_sandbox() {
+  local workspace_mount_mode="$1" encoded_prompt="$2"
+  base64 --decode <<<"$encoded_prompt" \
+    | podman run --rm --interactive \
+        --userns=keep-id \
+        --read-only \
+        --cap-drop=all \
+        --security-opt=no-new-privileges \
+        --pids-limit=512 \
+        --memory=4g \
+        --timeout="$maximum_run_seconds" \
+        --network=claude-internal \
+        --env HTTPS_PROXY=http://claude-egress-proxy:8888 \
+        --env HTTP_PROXY=http://claude-egress-proxy:8888 \
+        --secret=claude-code-oauth-token,type=env,target=CLAUDE_CODE_OAUTH_TOKEN \
+        --volume "$claude_state_directory:/claude-home" \
+        --volume "$workspace_directory:/workspace:$workspace_mount_mode" \
+        --volume "$workspace_directory/.git:/workspace/.git:ro" \
+        "$claude_container_image"
+}
+
+claude_run_succeeded() {
+  jq -e '.is_error == false' >/dev/null 2>&1 <<<"$1"
+}
+
+extract_claude_outcome_object() {
+  local claude_json_output="$1"
+  jq -r '.result // ""' <<<"$claude_json_output" 2>/dev/null \
+    | sed -e '/^[[:space:]]*```/d' \
+    | jq -c 'select(type == "object")' 2>/dev/null \
+    | tail -n 1 \
+    || true
+}
+
+emit_result() {
+  local outcome="$1" pushed_commit="$2" reason="$3" claude_json_output="$4"
+  local claude_json_value
+  if jq -e . >/dev/null 2>&1 <<<"$claude_json_output"; then
+    claude_json_value="$claude_json_output"
+  else
+    claude_json_value="$(jq --null-input --arg rawOutput "$claude_json_output" '{is_error: true, result: $rawOutput}')"
+  fi
+  jq --null-input \
+    --arg mode "$requested_mode" \
+    --arg repository "$repository_full_name" \
+    --arg branch "$branch_name" \
+    --arg baseBranch "$default_branch_name" \
+    --arg outcome "$outcome" \
+    --arg pushedCommit "$pushed_commit" \
+    --arg reason "$reason" \
+    --argjson claude "$claude_json_value" \
+    '{
+      is_error: ($outcome | IN("claude-error", "unparseable-result", "push-failed")),
+      mode: $mode,
+      repository: $repository,
+      branch: $branch,
+      base_branch: $baseBranch,
+      outcome: $outcome,
+      pushed_commit: (if $pushedCommit == "" then null else $pushedCommit end),
+      reason: (if $reason == "" then null else $reason end),
+      result: $claude.result,
+      session_id: $claude.session_id,
+      workspace_diff: $claude.workspace_diff
+    }'
+}
 
 requested_command="${SSH_ORIGINAL_COMMAND:-}"
 if [[ "$requested_command" =~ $n8n_working_directory_prefix_pattern ]]; then
   requested_command="${BASH_REMATCH[1]}"
 fi
-
 read -r -a requested_arguments <<<"$requested_command"
 
-[[ "${requested_arguments[0]:-}" == "run" ]] \
-  || fail_with_json_error "usage: run <workspace-name> <base64-prompt> [resume-session-id]"
-(( ${#requested_arguments[@]} >= 3 && ${#requested_arguments[@]} <= 4 )) \
-  || fail_with_json_error "expected 2 or 3 arguments after 'run'"
+(( ${#requested_arguments[@]} == 4 )) \
+  || fail_with_json_error "usage: implement|rework|review <owner/repository> <claude/branch> <base64-prompt>"
 
-readonly workspace_name="${requested_arguments[1]}"
-readonly base64_encoded_prompt="${requested_arguments[2]}"
-readonly resume_session_id="${requested_arguments[3]:-}"
+readonly requested_mode="${requested_arguments[0]}"
+readonly repository_full_name="${requested_arguments[1]}"
+readonly branch_name="${requested_arguments[2]}"
+readonly base64_encoded_prompt="${requested_arguments[3]}"
 
-[[ "$workspace_name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] \
-  || fail_with_json_error "invalid workspace name"
-readonly workspace_directory="$workspaces_root/$workspace_name"
-[[ -d "$workspace_directory" && ! -L "$workspace_directory" ]] \
-  || fail_with_json_error "workspace '$workspace_name' does not exist"
-readonly workspace_git_directory="$workspace_directory/.git"
-[[ -d "$workspace_git_directory" && ! -L "$workspace_git_directory" ]] \
-  || fail_with_json_error "workspace '$workspace_name' must be a git clone with its own .git directory"
-
-[[ "$base64_encoded_prompt" =~ ^[A-Za-z0-9+/]+={0,2}$ ]] \
+[[ "$requested_mode" == implement || "$requested_mode" == rework || "$requested_mode" == review ]] \
+  || fail_with_json_error "unknown mode '$requested_mode'"
+[[ "$repository_full_name" =~ $repository_pattern && "$repository_full_name" != *..* ]] \
+  || fail_with_json_error "invalid repository name"
+[[ "$branch_name" =~ $agent_branch_pattern && "$branch_name" != *..* ]] \
+  && git check-ref-format --branch "$branch_name" >/dev/null 2>&1 \
+  || fail_with_json_error "branch must look like claude/<name>"
+[[ "$base64_encoded_prompt" =~ $base64_pattern ]] \
   || fail_with_json_error "prompt must be base64-encoded"
 
-resume_arguments=()
-if [[ -n "$resume_session_id" ]]; then
-  [[ "$resume_session_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] \
-    || fail_with_json_error "invalid session id"
-  resume_arguments=(--resume "$resume_session_id")
+mkdir -p "$mirrors_root" "$workspaces_root" "$locks_root"
+
+readonly branch_lock_file="$locks_root/branch--${repository_full_name//\//--}--${branch_name//\//--}.lock"
+exec {branch_lock_descriptor}>"$branch_lock_file"
+flock --nonblock "$branch_lock_descriptor" \
+  || fail_with_json_error "another run is already working on $repository_full_name $branch_name"
+
+readonly mirror_directory="$mirrors_root/$repository_full_name.git"
+update_mirror "$repository_full_name" "$mirror_directory" \
+  || fail_with_json_error "could not fetch $repository_full_name from Forgejo"
+
+default_branch_name="$(host_git -C "$mirror_directory" symbolic-ref --short HEAD)"
+readonly default_branch_name
+
+if [[ "$requested_mode" == implement ]]; then
+  ! mirror_has_branch "$mirror_directory" "$branch_name" \
+    || fail_with_json_error "branch $branch_name already exists on Forgejo"
+  readonly checkout_start_point="origin/$default_branch_name"
+else
+  mirror_has_branch "$mirror_directory" "$branch_name" \
+    || fail_with_json_error "branch $branch_name does not exist on Forgejo"
+  readonly checkout_start_point="origin/$branch_name"
 fi
 
-base64 --decode <<<"$base64_encoded_prompt" \
-  | podman run --rm --interactive \
-      --userns=keep-id \
-      --read-only \
-      --cap-drop=all \
-      --security-opt=no-new-privileges \
-      --pids-limit=512 \
-      --memory=4g \
-      --timeout="$maximum_run_seconds" \
-      --network=claude-internal \
-      --env HTTPS_PROXY=http://claude-egress-proxy:8888 \
-      --env HTTP_PROXY=http://claude-egress-proxy:8888 \
-      --secret=claude-code-oauth-token,type=env,target=CLAUDE_CODE_OAUTH_TOKEN \
-      --volume "$claude_state_directory:/claude-home" \
-      --volume "$workspace_directory:/workspace" \
-      --volume "$workspace_git_directory:/workspace/.git:ro" \
-      "$claude_container_image" \
-      "${resume_arguments[@]}"
+workspace_directory="$workspaces_root/${repository_full_name//\//--}--${branch_name//\//--}--$(date +%s)-$$"
+trap remove_workspace EXIT
+
+host_git clone --quiet --local "$mirror_directory" "$workspace_directory"
+host_git -C "$workspace_directory" switch --quiet --create "$branch_name" "$checkout_start_point"
+host_git -C "$workspace_directory" remote set-url origin "$forgejo_ssh_host_alias:$repository_full_name.git"
+
+if [[ "$requested_mode" == review ]]; then
+  claude_json_output="$(run_claude_in_sandbox ro "$base64_encoded_prompt")" || true
+  if claude_run_succeeded "$claude_json_output"; then
+    emit_result "reviewed" "" "" "$claude_json_output"
+  else
+    emit_result "claude-error" "" "" "$claude_json_output"
+  fi
+  exit 0
+fi
+
+claude_json_output="$(run_claude_in_sandbox rw "$base64_encoded_prompt")" || true
+
+if ! claude_run_succeeded "$claude_json_output"; then
+  emit_result "claude-error" "" "" "$claude_json_output"
+  exit 0
+fi
+
+claude_outcome_object="$(extract_claude_outcome_object "$claude_json_output")"
+[[ -n "$claude_outcome_object" ]] || claude_outcome_object='{}'
+claude_status="$(jq -r '.status // ""' <<<"$claude_outcome_object")"
+
+case "$claude_status" in
+  needs-human)
+    emit_result "needs-human" "" "$(jq -r '.reason // ""' <<<"$claude_outcome_object")" "$claude_json_output"
+    ;;
+  done)
+    commit_message="$(jq -r '.commit_message // ""' <<<"$claude_outcome_object")"
+    if [[ -z "$(host_git -C "$workspace_directory" status --porcelain)" ]]; then
+      emit_result "no-changes" "" "Claude reported done but changed no files" "$claude_json_output"
+    elif [[ -z "${commit_message//[[:space:]]/}" ]]; then
+      emit_result "unparseable-result" "" "Claude reported done without a commit_message" "$claude_json_output"
+    else
+      host_git -C "$workspace_directory" add --all
+      host_git -C "$workspace_directory" \
+        -c user.name="$commit_author_name" -c user.email="$commit_author_email" \
+        commit --quiet --file=- <<<"$commit_message"
+      if host_git -C "$workspace_directory" push --quiet origin "HEAD:refs/heads/$branch_name" 2>/dev/null; then
+        emit_result "pushed" "$(host_git -C "$workspace_directory" rev-parse HEAD)" "" "$claude_json_output"
+      else
+        emit_result "push-failed" "" "git push to $branch_name was rejected" "$claude_json_output"
+      fi
+    fi
+    ;;
+  *)
+    emit_result "unparseable-result" "" "Claude's final message was not the expected JSON object" "$claude_json_output"
+    ;;
+esac

@@ -36,6 +36,9 @@ readonly resume_session_id="${requested_arguments[3]:-}"
 readonly workspace_directory="$workspaces_root/$workspace_name"
 [[ -d "$workspace_directory" && ! -L "$workspace_directory" ]] \
   || fail_with_json_error "workspace '$workspace_name' does not exist"
+readonly workspace_git_directory="$workspace_directory/.git"
+[[ -d "$workspace_git_directory" && ! -L "$workspace_git_directory" ]] \
+  || fail_with_json_error "workspace '$workspace_name' must be a git clone with its own .git directory"
 
 [[ "$base64_encoded_prompt" =~ ^[A-Za-z0-9+/]+={0,2}$ ]] \
   || fail_with_json_error "prompt must be base64-encoded"
@@ -62,5 +65,6 @@ base64 --decode <<<"$base64_encoded_prompt" \
       --secret=claude-code-oauth-token,type=env,target=CLAUDE_CODE_OAUTH_TOKEN \
       --volume "$claude_state_directory:/claude-home" \
       --volume "$workspace_directory:/workspace" \
+      --volume "$workspace_git_directory:/workspace/.git:ro" \
       "$claude_container_image" \
       "${resume_arguments[@]}"

@@ -1,14 +1,33 @@
 #!/usr/bin/env bash
 # Runs inside the container. Prompt arrives on stdin; "$@" carries optional --resume arguments.
+# /workspace/.git is mounted read-only, so nothing here may write to the repository.
 set -uo pipefail
 
-claude_json_output="$(claude --print --output-format json --dangerously-skip-permissions "$@")"
+export GIT_OPTIONAL_LOCKS=0
+
+readonly read_only_repository_instructions="The repository's .git directory is mounted read-only. \
+Make your changes by editing files in the working tree. Do not run git commands that write to the \
+repository (add, commit, checkout, stash, reset, config and similar); they will fail. Your changes \
+are collected as a diff after you finish."
+
+collect_workspace_diff() {
+  if git rev-parse --verify --quiet HEAD >/dev/null; then
+    git diff --no-ext-diff --no-textconv HEAD
+  fi
+
+  local untracked_file_path
+  while IFS= read -r -d '' untracked_file_path; do
+    git diff --no-index --no-ext-diff --no-textconv -- /dev/null "$untracked_file_path" || true
+  done < <(git ls-files --others --exclude-standard -z)
+}
+
+claude_json_output="$(claude --print --output-format json --dangerously-skip-permissions \
+  --append-system-prompt "$read_only_repository_instructions" "$@")"
 claude_exit_status=$?
 
 workspace_diff=""
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  git add --all --intent-to-add
-  workspace_diff="$(git diff)"
+  workspace_diff="$(collect_workspace_diff)"
 fi
 
 if ! jq --arg workspaceDiff "$workspace_diff" '. + {workspace_diff: $workspaceDiff}' <<<"$claude_json_output" 2>/dev/null; then

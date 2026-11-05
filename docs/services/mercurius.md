@@ -39,7 +39,7 @@ Run from `/srv/the-loft`, one at a time:
 
 1. `sudo lvcreate -L 250G -n mercurius ubuntu-vg`
 2. `sudo cryptsetup luksFormat --type luks2 /dev/ubuntu-vg/mercurius`. Use a long passphrase and store it in the password manager.
-3. `sudo cryptsetup luksAddKey /dev/ubuntu-vg/mercurius`: a second, recovery passphrase (`openssl rand -base64 30`) for the printed recovery sheet in the safe ([backups plan](../automation/backups.md#key-custody-d11)).
+3. `sudo cryptsetup luksAddKey /dev/ubuntu-vg/mercurius`: a second, recovery passphrase (`openssl rand -base64 30`), kept in the password manager and on the printed [vault key sheet](../operations/backups.md#recovery-sheet). Current slots: 0 everyday, 2 recovery. Retake the header backup (step 4) after any keyslot change.
 4. `sudo cryptsetup luksHeaderBackup /dev/ubuntu-vg/mercurius --header-backup-file /root/mercurius-luks-header.img`. A damaged header makes the volume unrecoverable even with the passphrase. Copy it to the USB stick in the safe, then `sudo shred -u` it on the host: with either passphrase it opens the vault.
 5. `sudo cryptsetup open /dev/ubuntu-vg/mercurius mercurius`, then `sudo mkfs.xfs -L mercurius /dev/mapper/mercurius`.
 6. `sudo control-plane/mercurius-vault.sh unlock` mounts it and creates the directories.

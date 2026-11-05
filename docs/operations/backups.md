@@ -109,7 +109,27 @@ On space-needle, restore into an unlocked, newly created vault ([Mercurius](../s
 
 ## Recovery sheet
 
-Print this, fill it in, keep it in the safe with the LUKS recovery passphrase and header USB stick. Both of you must be able to find it.
+Print these, fill them in by hand, and keep them in the safe with the LUKS header USB stick. Both of you must be able to find them. The vault key sheet is live now; the backup sheet waits for backups to return.
+
+```
+THE LOFT — VAULT KEY SHEET                             Filed: ____________
+
+Mercurius vault: LUKS2 on space-needle, /dev/ubuntu-vg/mercurius, mounted at /mercurius
+Everyday passphrase (keyslot 0): in the password manager, entry ________________
+Recovery passphrase (keyslot 2):
+  ______________________________________________
+Header backup: mercurius-luks-header.img on the USB stick in this safe
+  (taken __________; retake after any keyslot change)
+
+Unlock normally: sudo control-plane/mercurius-vault.sh unlock   (from /srv/the-loft)
+Header damaged ("not a valid LUKS device"): first try it without writing:
+  sudo cryptsetup open --header <stick>/mercurius-luks-header.img \
+    /dev/ubuntu-vg/mercurius mercurius
+then, only if that works, restore it permanently:
+  sudo cryptsetup luksHeaderRestore /dev/ubuntu-vg/mercurius \
+    --header-backup-file <stick>/mercurius-luks-header.img
+Either passphrase plus the header file opens the vault: guard both.
+```
 
 ```
 THE LOFT — BACKUP RECOVERY SHEET                       Filed: ____________

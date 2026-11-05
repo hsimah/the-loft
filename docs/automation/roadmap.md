@@ -45,7 +45,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] Encrypted volume and its unlock procedure ([runbook](../services/mercurius.md)).
 - [x] Compose group: Paperless-ngx, Postgres, Valkey, Tika, Gotenberg on internal networks only; Caddy joins `mercurius-proxy`.
 - [x] Deploy: create the volume, start Paperless (as Plutus), accounts with two-factor, egress probe.
-- [ ] Move the LUKS header backup to the USB stick in the safe; recovery sheet filed. **Urgent** ([maintenance](../../plans/maintenance.md)).
+- [ ] LUKS header on the USB stick (done 2026-11-04); vault key sheet filed in the safe. **Urgent** ([maintenance](../../plans/maintenance.md)).
 - [ ] Phone and scanner upload path; consume folder.
 - [ ] Retarget the OneDrive puller to vault staging; triage.
 - [ ] Exporter + Postgres dump into the vault restic repository: built and shelved; restore test deferred.

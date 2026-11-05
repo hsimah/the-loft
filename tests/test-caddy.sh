@@ -7,7 +7,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${ROOT}/tests/lib/assert.sh"
 
-# Fleet host names double as internal TLDs (foo.space-needle, bar.fjord).
+# Fleet host names double as internal TLDs (foo.space-needle).
 # Anything under one of those is LAN-only and never reaches Cloudflare.
 internal_tlds() { ls "${ROOT}/hosts"; }
 

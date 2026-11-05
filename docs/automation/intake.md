@@ -29,7 +29,7 @@ A message is processed only when both hold; anything else is moved to `rejected`
 1. `From` is on an allowlist (your addresses).
 2. The intake account's `Authentication-Results` header shows DKIM pass for that sender's domain.
 
-Forwarded content is still untrusted text. Models that read it have no tools, and their output lands in a review queue (Paperless inbox, wiki PR, proposed calendar, Mealie draft).
+Forwarded content is still untrusted text. Models that read it have no tools, and their output lands in a review queue (Paperless inbox, wiki `inbox/`, proposed calendar, Mealie draft).
 
 ## Consumers
 

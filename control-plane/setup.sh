@@ -185,7 +185,7 @@ if [[ -f "$SSHD_CONFIG" ]]; then
   if grep -q "^AllowUsers adminhabl$" "$SSHD_CONFIG"; then
     info "SSH AllowUsers already configured"
   elif grep -q "^AllowUsers" "$SSHD_CONFIG"; then
-    # Replace any existing AllowUsers line (e.g. the legacy hsimah entry)
+    # Replace any existing AllowUsers line
     sed -i 's/^AllowUsers.*/AllowUsers adminhabl/' "$SSHD_CONFIG"
     info "Updated AllowUsers to adminhabl in sshd_config"
     SSHD_CHANGED=true
@@ -457,7 +457,7 @@ EOF
 chmod 644 /etc/cron.d/loft-wifi-watchdog
 info "Installed WiFi watchdog cron job (${WIFI_IFACE} → ${WIFI_DHCP_UNIT}, every ${WIFI_WATCHDOG_MINUTES} min, fw-recovery=${WIFI_FW_RECOVERY})"
 
-# OneDrive migration puller — TEMPORARY, opt-in per host.
+# OneDrive puller — TEMPORARY, opt-in per host, while OneDrive is retired.
 #
 # Removed unconditionally first, so flipping ONEDRIVE_PULL_ENABLED to "false"
 # and re-running setup.sh actually stops the pulls. Without that, disabling in
@@ -608,11 +608,6 @@ if [[ "${I3_ENABLED:-false}" == "true" ]]; then
     echo "  lightdm: enabled"
   else
     warn "  lightdm: not enabled"
-  fi
-  if systemctl is-enabled nftables &>/dev/null; then
-    echo "  nftables: enabled"
-  else
-    warn "  nftables: not enabled"
   fi
 fi
 

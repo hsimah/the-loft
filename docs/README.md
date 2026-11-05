@@ -31,7 +31,7 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [Triage](../DEBUG.md)
 - [Application platform](operations/application-platform.md) — Viking conventions, promotion, network policy
 - [Viking restore](operations/viking-restore.md)
-- [OneDrive → Hubbl migration](operations/onedrive-migration.md) — temporary; delete when done
+- [OneDrive retirement](operations/onedrive-migration.md) — temporary; delete with OneDrive
 - [Upgrades and backups](operations/upgrades.md)
 - [Off-site backups](operations/backups.md) — restic to Google Drive; built, shelved
 - [loft-ctl](scripts/loft-ctl.md) and [loft-ctl setup](scripts/setup.md), [health helpers](scripts/common-sh.md)

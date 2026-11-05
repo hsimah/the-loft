@@ -2,8 +2,6 @@
 
 [Compose](../../services/mercurius/docker-compose.yml) runs the household wiki and document archive on space-needle, all on one encrypted volume. [SilverBullet](https://docs.silverbullet.md) (`silverbullet`) holds plans, trips, places, projects, lists and notes about documents as plain markdown. [Paperless-ngx](https://docs.paperless-ngx.com) (`paperless`) stores financial, medical and personal records, with Postgres (`mercurius-db`), Valkey (`mercurius-redis`), and Gotenberg and Tika (`mercurius-gotenberg`, `mercurius-tika`) for email and office files. Named for the Roman god of commerce and communication, and the planet Mercury. Plan and later work: [automation plans](../automation/mercurius.md).
 
-Deployed on space-needle 2026-10-29, replacing the separate Plutus and wiki-only Mercurius; egress probes confirmed.
-
 | Path | Contents |
 |---|---|
 | `/dev/ubuntu-vg/mercurius` | 250 GB LVM volume on the NVMe, LUKS2 |
@@ -42,7 +40,7 @@ Run from `/srv/the-loft`, one at a time:
 1. `sudo lvcreate -L 250G -n mercurius ubuntu-vg`
 2. `sudo cryptsetup luksFormat --type luks2 /dev/ubuntu-vg/mercurius`. Use a long passphrase and store it in the password manager.
 3. `sudo cryptsetup luksAddKey /dev/ubuntu-vg/mercurius`: a second, recovery passphrase (`openssl rand -base64 30`) for the printed recovery sheet in the safe ([backups plan](../automation/backups.md#key-custody-d11)).
-4. `sudo cryptsetup luksHeaderBackup /dev/ubuntu-vg/mercurius --header-backup-file /root/mercurius-luks-header.img`. A damaged header makes the volume unrecoverable even with the passphrase. Copy it to the USB stick in the safe, then `sudo shred -u` it on the host: with either passphrase it opens the vault. Renaming the LV does not change the header, so the `plutus-luks-header.img` already in the safe is still this volume's.
+4. `sudo cryptsetup luksHeaderBackup /dev/ubuntu-vg/mercurius --header-backup-file /root/mercurius-luks-header.img`. A damaged header makes the volume unrecoverable even with the passphrase. Copy it to the USB stick in the safe, then `sudo shred -u` it on the host: with either passphrase it opens the vault.
 5. `sudo cryptsetup open /dev/ubuntu-vg/mercurius mercurius`, then `sudo mkfs.xfs -L mercurius /dev/mapper/mercurius`.
 6. `sudo control-plane/mercurius-vault.sh unlock` mounts it and creates the directories.
 

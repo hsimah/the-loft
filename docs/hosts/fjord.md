@@ -1,6 +1,6 @@
 # fjord
 
-Raspberry Pi 3 B+, arm64, `192.168.86.30`, no media volume. A Howlr client playing to a Bluetooth speaker. [host.conf](../../hosts/fjord/host.conf) runs Howlr (client), Snoot and Houstn metrics. **Not yet validated live.**
+Raspberry Pi 3 B+, arm64, `192.168.86.30`, no media volume. A Howlr client playing to a Bluetooth speaker. [host.conf](../../hosts/fjord/host.conf) runs Howlr (client), Snoot and Houstn metrics.
 
 Confirm which network manager the OS uses. The Wi-Fi watchdog defaults to `dhcpcd`; set `WIFI_DHCP_UNIT` in host.conf if it differs, then rerun setup.
 

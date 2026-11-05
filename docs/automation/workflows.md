@@ -1,22 +1,22 @@
 # Custom AI workflows
 
-**n8n already runs.** Sputnik's `agent` profile runs n8n on space-needle with no workflows yet, against llama-swap ([Sputnik](../services/sputnik.md)). Item 5 is therefore conventions, not a new tool.
+**n8n runs** in Sputnik's `agent` profile on space-needle, against llama-swap ([Sputnik](../services/sputnik.md)). Live workflows: the wiki and document tools for chat ([Household tools](../services/sputnik.md#household-tools)) and the Forgejo coding runner ([coding agents](coding-agents.md)).
 
 ## Plan
 
 - **Keep n8n on space-needle** as the orchestrator. Its state and credentials live with the fleet's storage; helarctos stays compute-only.
-- **Model calls go to llama-swap** through an OpenAI credential (`helarctos llama-swap`, base `http://helarctos:8080/v1`). Ollama is retired (D21).
+- **Model calls go to llama-swap** through an OpenAI credential (`helarctos llama-swap`, base `http://helarctos:8080/v1`). Ollama is retired (D21). The exception is the [coding runner](coding-agents.md), which runs Claude Code.
 - **Workflows as code**: export each workflow to `services/sputnik/workflows/<name>.json` with a `.md` beside it.
 - **Backups**: n8n data plus `N8N_ENCRYPTION_KEY` ([backups](backups.md), [#108](https://github.com/hsimah/the-loft/issues/108)).
 
-Planned workflows: wiki and document tools for chat ([Mercurius](mercurius.md#chat-and-n8n-access)), then the [intake](intake.md) router, wiki inbox filing, calendar extraction and [reports](janus.md#reports), recipe imports.
+Planned workflows: the [intake](intake.md) router, wiki inbox filing, calendar extraction and [reports](janus.md#reports), recipe imports.
 
 ## Chat
 
-Done (D0, 2026-10-25): Open WebUI at `https://sputnik.loft.hsimah.com` uses llama-swap only; current state is on the [Sputnik page](../services/sputnik.md#chat-on-the-gpu). Remaining:
+Done (D0, 2026-10-25): Open WebUI at `https://sputnik.loft.hsimah.com` uses llama-swap only; current state is on the [Sputnik page](../services/sputnik.md#chat-on-the-gpu). Wiki and document tools are live ([Mercurius](mercurius.md#chat-and-n8n-access)). Remaining:
 
-- Next: wiki and document tools through n8n ([Mercurius](mercurius.md#chat-and-n8n-access)). Chats and answers that quote documents are stored outside the vault, an accepted risk. Later: the calendar.
-- Later: [web search and research](#web-search-and-research).
+- The calendar.
+- [Web search and research](#web-search-and-research).
 
 ### Web search and research
 

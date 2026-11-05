@@ -13,7 +13,7 @@ flowchart LR
   p3 --> p7[7 AI upkeep]
 ```
 
-Recipes can run in parallel with phases 4–5 once phase 3 is done; only their email path waits for intake. Local coding ([#155](https://github.com/hsimah/the-loft/issues/155)) is deferred; household work has the GPU (D18).
+Recipes can run in parallel with phases 4–5 once phase 3 is done; only their email path waits for intake. Coding runs on Claude Code ([coding agents](coding-agents.md)); household work has the GPU (D18).
 
 ## Phase 0 — Prep
 
@@ -23,14 +23,14 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] Names ([names](names.md)).
 - [ ] Check Google Drive quota and create the rclone Drive client (`drive.file`).
 - [ ] Tailscale on both phones and laptops: route, split DNS and grants on space-needle, which is already enrolled ([plan](tailscale.md)).
-- [x] Write the backup recovery sheet template ([runbook](../operations/backups.md#recovery-sheet)); print it, fill it in and file it.
+- [x] Write the backup recovery sheet template ([runbook](../operations/backups.md#recovery-sheet)). Filling it in and filing it is in phase 2.
 
 ## Phase 1 — Mercurius
 
 [Mercurius](mercurius.md) · decisions D2, D3, D19.
 
 - [x] Compose, host.conf dirs and health URL, Caddy LAN route (the loft wildcard already resolves).
-- [x] Deploy; accounts and the `home` space; Forgejo repo with SilverBullet's deploy key ([setup](../services/mercurius.md#setup)).
+- [x] Deploy; accounts and the `home` space ([setup](../services/mercurius.md#setup)).
 - [ ] restic job for the wiki: built and shelved ([backups](backups.md)).
 - [x] Service page in `docs/services/`, README rows.
 - [x] Merge with Paperless onto the encrypted volume: one group, `wiki.` and `paperless.` hostnames, git sync off, revisions kept. Live 2026-10-29 ([service page](../services/mercurius.md)).
@@ -43,9 +43,9 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 [Documents](documents.md) · decisions D4, D5, D6.
 
 - [x] Encrypted volume and its unlock procedure ([runbook](../services/mercurius.md)).
-- [x] Compose group: Paperless-ngx, Postgres, Valkey, Tika, Gotenberg on internal networks only; Caddy joins `plutus-proxy`.
+- [x] Compose group: Paperless-ngx, Postgres, Valkey, Tika, Gotenberg on internal networks only; Caddy joins `mercurius-proxy`.
 - [x] Deploy: create the volume, start Paperless (as Plutus), accounts with two-factor, egress probe.
-- [ ] Move the LUKS header backup to the USB stick in the safe; recovery sheet filed.
+- [ ] Move the LUKS header backup to the USB stick in the safe; recovery sheet filed. **Urgent** ([maintenance](../../plans/maintenance.md)).
 - [ ] Phone and scanner upload path; consume folder.
 - [ ] Retarget the OneDrive puller to vault staging; triage.
 - [ ] Exporter + Postgres dump into the vault restic repository: built and shelved; restore test deferred.
@@ -62,7 +62,7 @@ Decisions D0, D1, D9, D10, D11 ([decisions](decisions.md)).
 - [x] paperless-gpt second-pass OCR, on demand by tag ([runbook](../services/mercurius.md#second-pass-ocr)).
 - [ ] Paperless's built-in AI ([built-in AI](../services/mercurius.md#built-in-ai)): suggestions and chat work; slow.
 - [x] Chat and n8n tools for the wiki and documents ([plan](mercurius.md#chat-and-n8n-access)): document search and read, wiki read and append, the Household model and code interpreter off. Live 2026-11-01.
-- [x] Ollama retired; n8n has no workflows yet (Open WebUI moved in phase 0).
+- [x] Ollama retired (Open WebUI moved in phase 0).
 - [ ] ntfy as a Houstn `notify` profile.
 
 **Done when** a new scan gets vision-model OCR and suggestions, and the egress probe passes.

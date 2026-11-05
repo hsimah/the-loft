@@ -4,13 +4,13 @@ Pieces used by more than one use case. Build each once, in the first phase that 
 
 | Piece | Where | Used by | State |
 |---|---|---|---|
-| llama-swap ([models](models.md)) | helarctos, Sputnik `gpu` | Coding, chat, vault, wiki, calendar, recipes, n8n | Live: coding evaluation models, Open WebUI chat, Paperless OCR, AI and embeddings |
-| n8n ([workflows](workflows.md)) | space-needle, Sputnik `agent` | Intake, calendar, reports, recipes, wiki inbox | Live, no workflows yet |
+| llama-swap ([models](models.md)) | helarctos, Sputnik `gpu` | Chat, vault, wiki, calendar, recipes, n8n | Live: Open WebUI chat, Paperless OCR, AI and embeddings |
+| n8n ([workflows](workflows.md)) | space-needle, Sputnik `agent` | Chat tools, coding runner; later intake, calendar, reports, recipes, wiki inbox | Live: chat tools and coding runner |
 | Media worker ([workflows](workflows.md#shell-steps)) | helarctos, Sputnik profile | Recipe reels, voice notes | Proposed |
 | Intake mailbox ([intake](intake.md)) | Google account | Vault, wiki, calendar, recipes | Proposed |
 | ntfy | space-needle, as a Houstn `notify` profile | Vault review flags, reminders, reports, intake rejects; Uptime Kuma can use it too | Proposed |
 | Forgejo ([Kennl](../services/kennl.md)) | space-needle | Coding | Live |
-| Agent harness ([#152](https://github.com/hsimah/the-loft/issues/152)) | helarctos runner | Coding | In progress |
+| Coding runner ([coding agents](coding-agents.md)) | space-needle, user `rodnik` | Coding | Live |
 | Off-site backups ([backups](backups.md)) | space-needle → Google Drive | Vault, wiki, calendar, recipes, n8n, Forgejo | Mercurius (vault) and Forgejo built but shelved; the rest proposed; first slice of [#108](https://github.com/hsimah/the-loft/issues/108) |
 | Tailscale (D9, [plan](tailscale.md)) | Phones, laptops, space-needle | Off-LAN access to every household app | Viking management only; space-needle enrolled, no phones |
 | Mushr ([Caddy, DNS](../services/mushr.md)) | space-needle | Every UI | Live |

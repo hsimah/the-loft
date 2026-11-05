@@ -45,7 +45,6 @@ At home, phones with Tailscale on still reach `192.168.86.28` through the tailne
 ## Then
 
 - helarctos: enrol with its own tag, grant space-needle (`tag:monitoring`) → helarctos `tcp:8080`, and move llama-swap's consumers to its tailnet address ([maintenance](../../plans/maintenance.md), Model traffic). Consumers on helarctos itself, such as the Kennl runner, must still reach it.
-- Replace the "LAN only until Tailscale" notes in the Mercurius, Janus and documents pages once phones are on.
 - ntfy on iOS: instant delivery from a self-hosted server goes through ntfy.sh's upstream relay (message ID only, unverified). Check when ntfy is built.
 
 ## Open questions

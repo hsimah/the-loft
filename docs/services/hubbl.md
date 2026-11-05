@@ -1,12 +1,12 @@
 # Hubbl — photo library
 
-[Compose](../../services/hubbl/docker-compose.yml) runs Immich on space-needle: server (`hubbl`), machine learning (`hubbl-ml`), Valkey (`hubbl-redis`) and Immich's own Postgres (`hubbl-db`). Photos arrive via the [OneDrive migration](../operations/onedrive-migration.md).
+[Compose](../../services/hubbl/docker-compose.yml) runs Immich on space-needle: server (`hubbl`), machine learning (`hubbl-ml`), Valkey (`hubbl-redis`) and Immich's own Postgres (`hubbl-db`). The library so far is the [OneDrive](../operations/onedrive-migration.md) photo import; phone backup through the Immich app is not set up yet.
 
 | Host path | Contents |
 |---|---|
 | `/mammoth/hubbl/library` | Originals, thumbnails and transcodes Immich owns |
 | `/opt/hubbl/db` | Postgres — asset, album and face metadata |
-| `/mammoth/hubbl/staging` | **Temporary** OneDrive drain target; delete after import |
+| `/mammoth/hubbl/staging` | **Temporary** copy of the imported OneDrive photos; reclaim once unneeded |
 
 The library and the database are one unit. Immich addresses files under `/data` by content hash and resolves them through Postgres, so restoring one without the other gives a catalogue pointing at absent files. Dump with `pg_dumpall`; never copy `/opt/hubbl/db` from under a running cluster, and never reorganise the library from the host side.
 
@@ -49,4 +49,4 @@ The `hubbl-redis` and `hubbl-db` digests are upstream's own, part of the release
 - **Slow first pass:** face detection and smart search run over every asset on CPU. Check `hubbl-ml` logs for progress.
 - **Apparent duplicates:** Immich deduplicates by checksum, so re-running an import is safe. Genuine source duplicates resolve in Immich's duplicate view, not in staging.
 
-Deployed on space-needle 2026-10-03; the OneDrive library imported 2026-10-04 (31,430 assets, 147 albums). Pins come from the upstream v3.2.4 release compose.
+Pins come from the upstream v3.2.4 release compose.

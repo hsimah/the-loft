@@ -6,10 +6,10 @@
 # /etc/cron.d/loft-onedrive-pull. Configuration is sourced from
 # /etc/default/loft-onedrive-pull (ONEDRIVE_PULL_* — all from host.conf).
 #
-# This is migration scaffolding, not a permanent fleet service: it exists to
-# drain a OneDrive account into /mammoth/hubbl/staging so the photos can be
-# imported into Hubbl. Set ONEDRIVE_PULL_ENABLED="false" in host.conf and
-# re-run setup.sh to remove the cron entry once OneDrive is off.
+# Scaffolding for retiring OneDrive, not a permanent fleet service: each fetch
+# drains a OneDrive folder into its own staging directory for import. Disabled
+# between fetches (ONEDRIVE_PULL_ENABLED="false"); delete it once OneDrive is
+# cancelled.
 #
 #   docs/operations/onedrive-migration.md
 set -uo pipefail

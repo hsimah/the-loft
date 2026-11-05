@@ -23,8 +23,6 @@ sudo bluetoothctl
 
 Then set `BT_SPEAKER_MAC` in host.conf (the speaker is an NH-69), rerun setup and rebuild Howlr. Fjord owns the speaker: it stays connected and reconnects within a minute, so phones cannot pair with it directly. Play to it through MA. Volume is controlled by MA through Snapcast's software mixer, so set the speaker's own volume high.
 
-**Wi-Fi and Bluetooth share one radio and antenna on the Pi 3 B+.** On 2.4 GHz, A2DP stutters under network load. Keep Fjord on 5 GHz (`iw dev wlan0 link` should show a frequency of 5xxx). If it shows 2.4 GHz, lock the band in the network manager's profile.
-
 ```bash
 bluetoothctl info <MAC> | grep -E 'Connected|Trusted'
 journalctl -u bluealsa --since "1 hour ago"

@@ -30,7 +30,7 @@ The one case no repository test can see is publishing a hostname in the Cloudfla
 - A tunnel hostname pointing at an `https://` origin also needs **Origin Server Name** set to that hostname. cloudflared otherwise sends the origin's internal name (`mushr`) as SNI, Caddy has no certificate for it, and the handshake fails as a 502 with the Caddyfile looking perfect. The HTTP Host Header override is a different layer and does not substitute for it.
 - Caddy's admin API is `127.0.0.1:8880` inside the container; the host publishes only 80/443. The tunnel waits for Caddy's healthcheck.
 - `caddy-data`/`caddy-config` volumes hold certificates. Don't delete them to fix TLS errors; reissuing can hit rate limits.
-- [Dockerfile.caddy](../../services/mushr/Dockerfile.caddy) adds the Cloudflare DNS plugin. The image is local and can't be pulled — build it before taking Caddy down.
+- [Dockerfile.caddy](../../services/mushr/Dockerfile.caddy) adds the Cloudflare DNS plugin. The image is local and can't be pulled; `loft-ctl rebuild mushr` builds it before taking Caddy down.
 
 ## Operations
 

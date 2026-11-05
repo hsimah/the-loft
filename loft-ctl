@@ -38,7 +38,7 @@ usage() {
   echo "Commands:"
   echo "  start   <service ...| --all>   Start containers"
   echo "  stop    <service ...| --all>   Stop containers"
-  echo "  rebuild <service ...| --all>   Full rebuild (down + up, fresh mounts)"
+  echo "  rebuild <service ...| --all>   Full rebuild (pull + build, then down + up, fresh mounts)"
   echo "  health  [service ...]          Run health checks (defaults to --all)"
   echo "  update  <service ...| --all>   Pull config, rebuild, health check"
   echo "  setup                          Provision this host (elevates with sudo)"
@@ -189,12 +189,16 @@ do_rebuild() {
   compose_args=$(compose_args_for "$service") || return 1
 
   info "Rebuilding ${service}..."
+  # Pull and build while the old containers still run, so a registry or build
+  # failure leaves the service up. Local builds (mushr-caddy) are not pulled.
+  # shellcheck disable=SC2086
+  docker compose ${compose_args} pull --ignore-buildable || { error "Failed to pull ${service}; still running."; return 1; }
+  # shellcheck disable=SC2086
+  docker compose ${compose_args} build || { error "Failed to build ${service}; still running."; return 1; }
   # shellcheck disable=SC2086
   docker compose ${compose_args} down || { error "Failed to stop ${service}."; return 1; }
   # shellcheck disable=SC2086
-  docker compose ${compose_args} pull 2>/dev/null || true
-  # shellcheck disable=SC2086
-  docker compose ${compose_args} up -d --build || { error "Failed to start ${service}."; return 1; }
+  docker compose ${compose_args} up -d || { error "Failed to start ${service}."; return 1; }
   info "Rebuilt ${service}."
 }
 

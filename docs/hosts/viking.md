@@ -19,5 +19,4 @@ Snoot and Glances are privileged host-monitoring exceptions (host network, Docke
 ## Constraints
 
 - Docker memory limits are **not enforced**: the boot line has `cgroup_disable=memory`.
-- Space-needle dnsmasq still has a stale `viking → 192.168.86.26`; use the Tailscale IP.
 - `/var/backups/loft/viking-hardening-*.tar.gz` are local root-only copies of the hardening config, not full backups.

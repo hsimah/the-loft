@@ -61,5 +61,8 @@ cat <<NEXT_STEPS
 Provisioned $runner_user. Remaining manual steps:
   1. Store the subscription token as a Podman secret:
        sudo machinectl shell $runner_user@ /bin/bash -c 'read -rs token && printf %s "\$token" | podman secret create claude-code-oauth-token -'
-  2. Clone each workspace into $runner_home/workspaces/<workspace-name> as $runner_user.
+  2. Give $runner_user a key for Forgejo: ssh-keygen -t ed25519 as $runner_user, add the public
+     key to its Forgejo account, and add a "Host kennl" block to $runner_home/.ssh/config
+     (HostName kennl.loft.hsimah.com, Port 2222, User git, IdentitiesOnly yes). The forced
+     command clones and pushes through that alias; repositories are whatever the account can reach.
 NEXT_STEPS

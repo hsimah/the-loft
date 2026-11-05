@@ -1,9 +1,12 @@
 ARG CADDY_VERSION=2.11.7
+# image-updates.sh does not track this; check github.com/caddy-dns/cloudflare/tags.
+ARG CADDY_DNS_CLOUDFLARE_VERSION=v0.2.4
 
 FROM caddy:${CADDY_VERSION}-builder AS builder
+ARG CADDY_DNS_CLOUDFLARE_VERSION
 
 RUN xcaddy build \
-    --with github.com/caddy-dns/cloudflare
+    --with github.com/caddy-dns/cloudflare@${CADDY_DNS_CLOUDFLARE_VERSION}
 
 FROM caddy:${CADDY_VERSION}-alpine
 

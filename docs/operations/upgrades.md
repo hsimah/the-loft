@@ -40,5 +40,5 @@ Reverting a pin does not revert migrated data; restore the matching backup with 
 - **Snapclient, NordVPN**: digest-pinned `latest`. Never use the VPN's `v3.12.3` tag; it fails authentication.
 - **Lidarr**: nightly, because its DB schema is ahead of stable. Moving to stable is a migration, not a tag change.
 - **Uptime Kuma 1.x**: deliberately held.
-- **Caddy**: local build with an unpinned Cloudflare module; keep the previous image for rollback.
+- **Caddy**: local build; the Cloudflare module is pinned in [Dockerfile.caddy](../../services/mushr/Dockerfile.caddy) and not checked by image-updates.sh. Keep the previous image for rollback.
 - **Jackett**: `AUTO_UPDATE=true`, so the tag is not the whole version.

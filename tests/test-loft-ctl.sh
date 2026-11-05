@@ -40,6 +40,24 @@ run rebuild web
 assert_fails "$status" "rebuild exits non-zero when compose up fails"
 assert_absent "$out" "Rebuilt web." "rebuild does not claim success"
 
+# A failed pull or build stops the rebuild before the running service is taken down.
+mock docker "echo \"\$*\" >> '$WORK/calls'; "'case " $* " in *" $FAIL_ON "*) echo "pull access denied" >&2; exit 1 ;; esac; exit 0'
+for step in pull build; do
+  : > "$WORK/calls"
+  FAIL_ON=$step run rebuild web
+  assert_fails "$status" "rebuild exits non-zero when compose $step fails"
+  assert_contains "$out" "still running" "rebuild reports the $step failure"
+  assert_absent "$(cat "$WORK/calls")" " down" "rebuild does not stop the service after a failed $step"
+done
+
+: > "$WORK/calls"
+FAIL_ON=none run rebuild web
+assert_eq "$status" 0 "rebuild succeeds when compose succeeds"
+assert_eq "$(grep -oE ' (pull|build|down|up)( |$)' "$WORK/calls" | tr -d ' ' | paste -sd' ')" "pull build down up" \
+  "rebuild pulls and builds before down"
+assert_contains "$(cat "$WORK/calls")" "pull --ignore-buildable" "rebuild skips pulling local builds"
+mock docker 'case " $* " in *" $FAIL_ON "*) echo "Address already in use" >&2; exit 1 ;; esac; exit 0'
+
 export FAIL_ON=down
 run stop web
 assert_fails "$status" "stop exits non-zero when compose down fails"

@@ -59,7 +59,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "fjord:192.168.86.30"
-      - "viking:192.168.86.26"
+      - "viking:100.119.43.53"
       - "calavera:192.168.86.35"
     networks:
       - loft-proxy

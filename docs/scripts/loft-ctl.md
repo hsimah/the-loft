@@ -6,7 +6,7 @@
 |---|---|
 | `start <services> / --all` | Compose `up -d` |
 | `stop <services> / --all` | Compose `down` (volumes kept) |
-| `rebuild <services> / --all` | `down`, `pull`, `up -d --build`; **no health check** |
+| `rebuild <services> / --all` | `pull` (skipping local builds) and `build` while running, then `down`, `up -d`; **no health check** |
 | `health [services]` | Container and URL checks ([contract](common-sh.md)) |
 | `update <services> / --all` | Git fetch + fast-forward (`--branch`, default `main`; `--no-pull` skips), rebuild, health |
 | `setup` | [Provision this host](setup.md); elevates with sudo; no arguments |
@@ -17,8 +17,7 @@
 
 ## Limits
 
-- Rebuild stops the group **before** pulling/building. Pull first for large images or Caddy.
-- Pull errors are suppressed (so local Caddy can rebuild), so a rebuild can silently reuse a cached image. Check the running version after upgrades.
+- A failed pull or build stops the rebuild and leaves the group running.
 - Removing a service from `SERVICES` doesn't stop it; stop it first.
 - On Viking, start/rebuild/update require `/etc/loft/dmz-ready`. Precise production rollouts use merged Compose directly; see the [application platform](../operations/application-platform.md#adding-an-application).
 - Run as `adminhabl` (in the Docker group). Only `setup` and `deploy` escalate with sudo.

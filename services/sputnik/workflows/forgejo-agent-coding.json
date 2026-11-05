@@ -1,0 +1,560 @@
+{
+  "name": "Forgejo agent: Do some coding",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "forgejo-issue-label",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "0c161563-014c-43c3-a57a-854cd1485a31",
+      "name": "Forgejo issue label",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        64
+      ],
+      "webhookId": "9c531271-47d5-4f20-bcf3-1919e854cffa",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "0Et7rMVRVOjIntve",
+          "name": "Forgejo webhook (inbound)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ownerLogin = 'hsimah';\nconst forgejoApiBaseUrl = 'https://kennl.loft.hsimah.com/api/v1';\n\nconst labelEvent = $input.first().json.body ?? {};\nconst issue = labelEvent.issue ?? {};\nconst labelNames = (issue.labels ?? []).map((label) => label.name);\n\nconst isReadyLabelEventFromOwner =\n  labelEvent.action === 'label_updated' &&\n  !issue.pull_request &&\n  issue.state === 'open' &&\n  labelNames.includes('agent:ready') &&\n  !labelNames.includes('agent:working') &&\n  labelEvent.sender?.login === ownerLogin &&\n  issue.user?.login === ownerLogin;\n\nif (!isReadyLabelEventFromOwner) {\n  return [];\n}\n\nreturn [\n  {\n    json: {\n      ownerLogin,\n      forgejoApiBaseUrl,\n      repositoryFullName: labelEvent.repository.full_name,\n      issueNumber: issue.number,\n      branchName: `claude/issue-${issue.number}`,\n    },\n  },\n];\n"
+      },
+      "id": "d4a9d7aa-7f85-4fec-a985-6d450be1f4af",
+      "name": "Read label event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/issues/{{ $('Read label event').first().json.issueNumber }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "f34cbc89-7deb-4c13-bba7-64fe51c1711f",
+      "name": "Get issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        112,
+        64
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/issues/{{ $('Read label event').first().json.issueNumber }}/timeline",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "since",
+              "value": "={{ new Date(Date.now() - 15 * 60 * 1000).toISOString() }}"
+            },
+            {
+              "name": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "35484318-14d5-4943-8255-610bfa1127d8",
+      "name": "Get recent issue timeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        64
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const labelEvent = $('Read label event').first().json;\nconst issue = $('Get issue').first().json;\nconst recentTimelineEvents = $input.all().map((item) => item.json);\nconst currentLabelNames = (issue.labels ?? []).map((label) => label.name);\n\nconst latestReadyLabelEvent = recentTimelineEvents\n  .filter((timelineEvent) => timelineEvent.type === 'label' && timelineEvent.label?.name === 'agent:ready')\n  .at(-1);\nconst latestReadyLabeller = latestReadyLabelEvent?.user?.login;\n\nconst gateFailures = [];\nif (issue.state !== 'open') {\n  gateFailures.push('issue is not open');\n}\nif (issue.user?.login !== labelEvent.ownerLogin) {\n  gateFailures.push(`issue was written by ${issue.user?.login}`);\n}\nif (!currentLabelNames.includes('agent:ready')) {\n  gateFailures.push('agent:ready is no longer on the issue');\n}\nif (currentLabelNames.includes('agent:working')) {\n  gateFailures.push('issue is already being worked on');\n}\nif (latestReadyLabeller !== labelEvent.ownerLogin) {\n  gateFailures.push(`agent:ready was last added by ${latestReadyLabeller ?? 'nobody in the last 15 minutes'}`);\n}\n\nif (gateFailures.length > 0) {\n  console.log(`Gate stopped #${labelEvent.issueNumber}: ${gateFailures.join('; ')}`);\n  return [];\n}\n\nreturn [\n  {\n    json: {\n      ...labelEvent,\n      issueTitle: issue.title,\n      issueBody: issue.body ?? '',\n      claimedLabelNames: [...currentLabelNames.filter((labelName) => labelName !== 'agent:ready'), 'agent:working'],\n    },\n  },\n];\n"
+      },
+      "id": "ea5d0520-05c1-45dd-ac88-03f27a4afcc7",
+      "name": "Check gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/issues/{{ $('Read label event').first().json.issueNumber }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ labels: $json.claimedLabelNames }) }}",
+        "options": {}
+      },
+      "id": "87cbce56-3ef8-4d2f-8eeb-ab527b5fa215",
+      "name": "Claim issue (agent:working)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        832,
+        64
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const gatePassed = $('Check gate').first().json;\nconst labelsAfterClaim = $input.all().map((item) => item.json);\nconst workingLabel = labelsAfterClaim.find((label) => label.name === 'agent:working');\n\nif (!workingLabel) {\n  throw new Error('agent:working was not applied to the issue. Check the label exists in the organisation.');\n}\n\nconst implementPrompt = `Implement issue #${gatePassed.issueNumber} in ${gatePassed.repositoryFullName}.\nFollow CLAUDE.md if the repository has one. The issue below is the whole task.\n\n<issue>\nTitle: ${gatePassed.issueTitle}\n\n${gatePassed.issueBody}\n</issue>\n\nMake the smallest change that satisfies the issue. Only edit files: the repository's .git is read-only,\nand the host commits and pushes your changes when you finish.\n\nWhen you are finished, reply with ONLY one JSON object and nothing else:\n{\"status\": \"done\", \"commit_message\": \"<type>: <summary>\\\\n\\\\n<what changed and how you checked it>\"}\n\nIf the issue is ambiguous, or too large for one small change, change nothing and reply with ONLY:\n{\"status\": \"needs-human\", \"reason\": \"<what is missing or unclear>\"}`;\n\nconst encodedPrompt = Buffer.from(implementPrompt, 'utf8').toString('base64');\nconst maximumEncodedPromptLength = 100000;\nif (encodedPrompt.length > maximumEncodedPromptLength) {\n  throw new Error(`Issue #${gatePassed.issueNumber} is too long to send (${encodedPrompt.length} base64 characters).`);\n}\n\nreturn [\n  {\n    json: {\n      ...gatePassed,\n      workingLabelId: workingLabel.id,\n      sshCommand: `implement ${gatePassed.repositoryFullName} ${gatePassed.branchName} ${encodedPrompt}`,\n    },\n  },\n];\n"
+      },
+      "id": "547ad70c-bf14-4267-8dc6-e4a87cb3de4c",
+      "name": "Build implement request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "={{ $json.sshCommand }}"
+      },
+      "id": "2e085a82-8e4e-4aed-ace9-f9d44d73345d",
+      "name": "Run Claude: implement",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        64
+      ],
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "w2wSGI0SEDlidCS8",
+          "name": "SSH Private Key account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const implementRequest = $('Build implement request').first().json;\nconst sshOutput = $input.first().json;\n\nlet runResult;\ntry {\n  runResult = JSON.parse(sshOutput.stdout);\n} catch {\n  const sshFailureDetail = sshOutput.stderr || sshOutput.error?.message || sshOutput.message || 'no output from rodnik';\n  runResult = { is_error: true, outcome: 'ssh-error', reason: String(sshFailureDetail).slice(0, 2000) };\n}\n\nlet commitMessage = '';\ntry {\n  const resultWithoutFences = String(runResult.result ?? '').replace(/^\\s*```.*$/gm, '');\n  commitMessage = JSON.parse(resultWithoutFences).commit_message ?? '';\n} catch {\n  commitMessage = '';\n}\n\nconst [commitSubject = '', ...commitBodyLines] = commitMessage.split('\\n');\nconst commitBodyWithoutClosingLines = commitBodyLines\n  .filter((line) => !/^\\s*(closes|fixes|resolves)\\s+#\\d+\\s*$/i.test(line))\n  .join('\\n')\n  .trim();\nconst shortPushedCommit = (runResult.pushed_commit ?? '').slice(0, 7);\n\nconst pullRequestTitle = commitSubject.trim() || `Implement #${implementRequest.issueNumber}: ${implementRequest.issueTitle}`;\nconst pullRequestBody = [\n  `Closes #${implementRequest.issueNumber}`,\n  commitBodyWithoutClosingLines,\n  `---\\nImplemented by Claude on rodnik (\\`${shortPushedCommit}\\`).`,\n]\n  .filter(Boolean)\n  .join('\\n\\n');\n\nconst wasRejectedBeforeClaudeRan = runResult.outcome === 'rejected';\nconst failureReason = runResult.reason ?? (wasRejectedBeforeClaudeRan ? runResult.result : '') ?? '';\nconst claudeOutputExcerpt =\n  !wasRejectedBeforeClaudeRan && runResult.outcome !== 'needs-human' && runResult.result\n    ? `<details><summary>Claude's final message</summary>\\n\\n\\`\\`\\`\\n${String(runResult.result).slice(0, 4000)}\\n\\`\\`\\`\\n</details>`\n    : '';\nconst failureComment = [\n  `Agent work stopped: **${runResult.outcome ?? 'unknown'}**.`,\n  failureReason,\n  claudeOutputExcerpt,\n  'Update the issue or fix the setup, then add `agent:ready` again to retry.',\n]\n  .filter(Boolean)\n  .join('\\n\\n');\n\nreturn [\n  {\n    json: {\n      ...implementRequest,\n      outcome: runResult.outcome ?? 'unknown',\n      wasPushed: runResult.outcome === 'pushed',\n      baseBranch: runResult.base_branch,\n      pullRequestTitle,\n      pullRequestBody,\n      failureComment,\n    },\n  },\n];\n"
+      },
+      "id": "65294596-f07c-419d-8951-f5f7a66ac12f",
+      "name": "Read implement result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "ebc820c3-65fe-4f12-9b38-c6a3a96994ae",
+              "leftValue": "={{ $json.wasPushed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c924eb18-f640-4102-ada7-a9a2dabdc404",
+      "name": "Pushed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/pulls",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ head: $('Read implement result').first().json.branchName, base: $('Read implement result').first().json.baseBranch, title: $('Read implement result').first().json.pullRequestTitle, body: $('Read implement result').first().json.pullRequestBody }) }}",
+        "options": {}
+      },
+      "id": "6ad5e612-5e8c-4ef6-baf1-4128d038ee06",
+      "name": "Open pull request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2032,
+        -144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/issues/{{ $json.number }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ labels: [\"agent:review\"] }) }}",
+        "options": {}
+      },
+      "id": "a0480cfe-35f4-4911-816c-265bb0599c2e",
+      "name": "Label PR agent:review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2272,
+        -144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/issues/{{ $('Read label event').first().json.issueNumber }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: 'Opened #' + $('Open pull request').first().json.number + '.' }) }}",
+        "options": {}
+      },
+      "id": "1e7b215f-a77d-4d81-9565-9209b238d2b1",
+      "name": "Comment PR link on issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2512,
+        -144
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/issues/{{ $('Read label event').first().json.issueNumber }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $('Read implement result').first().json.failureComment }) }}",
+        "options": {}
+      },
+      "id": "09513494-028e-442c-98cf-b833ca9e1e6b",
+      "name": "Comment failure on issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2032,
+        256
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/issues/{{ $('Read label event').first().json.issueNumber }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ labels: [\"agent:needs-human\"] }) }}",
+        "options": {}
+      },
+      "id": "32f50568-dffd-424c-8478-0feb72adbade",
+      "name": "Label issue agent:needs-human",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2272,
+        256
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ $('Read label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read label event').first().json.repositoryFullName }}/issues/{{ $('Read label event').first().json.issueNumber }}/labels/{{ $('Read implement result').first().json.workingLabelId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "85ce5aa3-8f7a-494e-9056-2acdc4f918e6",
+      "name": "Remove agent:working",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2752,
+        64
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Forgejo issue label": {
+      "main": [
+        [
+          {
+            "node": "Read label event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read label event": {
+      "main": [
+        [
+          {
+            "node": "Get issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get issue": {
+      "main": [
+        [
+          {
+            "node": "Get recent issue timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get recent issue timeline": {
+      "main": [
+        [
+          {
+            "node": "Check gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check gate": {
+      "main": [
+        [
+          {
+            "node": "Claim issue (agent:working)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim issue (agent:working)": {
+      "main": [
+        [
+          {
+            "node": "Build implement request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build implement request": {
+      "main": [
+        [
+          {
+            "node": "Run Claude: implement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Claude: implement": {
+      "main": [
+        [
+          {
+            "node": "Read implement result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read implement result": {
+      "main": [
+        [
+          {
+            "node": "Pushed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open pull request": {
+      "main": [
+        [
+          {
+            "node": "Label PR agent:review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Label PR agent:review": {
+      "main": [
+        [
+          {
+            "node": "Comment PR link on issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comment PR link on issue": {
+      "main": [
+        [
+          {
+            "node": "Remove agent:working",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comment failure on issue": {
+      "main": [
+        [
+          {
+            "node": "Label issue agent:needs-human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Label issue agent:needs-human": {
+      "main": [
+        [
+          {
+            "node": "Remove agent:working",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pushed?": {
+      "main": [
+        [
+          {
+            "node": "Open pull request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Comment failure on issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b7f181bb-347d-4832-b54c-44fa1b9d0e72",
+  "meta": {
+    "instanceId": "01bb4c68c6421a0ec676d1bbfa63e87d40f4f167550d0209d039755b4b415e67"
+  },
+  "nodeGroups": [],
+  "id": "BNpohqiCoagWQ2kE",
+  "tags": []
+}

@@ -1,0 +1,497 @@
+{
+  "name": "Forgejo agent: Do some rework",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "forgejo-pull-request-rework",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "43d22a7f-cee3-4619-bdef-9d6f944bc445",
+      "name": "Forgejo pull request label",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        16
+      ],
+      "webhookId": "2a59ca41-82da-440e-a13b-5c7c590c895b",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "0Et7rMVRVOjIntve",
+          "name": "Forgejo webhook (inbound)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ownerLogin = 'hsimah';\nconst runnerLogin = 'rodnik';\nconst forgejoApiBaseUrl = 'https://kennl.loft.hsimah.com/api/v1';\nconst trustedLabellers = [ownerLogin, runnerLogin];\n\nconst labelEvent = $input.first().json.body ?? {};\nconst pullRequest = labelEvent.pull_request ?? {};\nconst labelNames = (pullRequest.labels ?? []).map((label) => label.name);\n\nconst isReworkRequestFromTrustedLabeller =\n  labelEvent.action === 'label_updated' &&\n  Number.isInteger(pullRequest.number) &&\n  labelNames.includes('agent:changes') &&\n  !labelNames.includes('agent:working') &&\n  trustedLabellers.includes(labelEvent.sender?.login);\n\nif (!isReworkRequestFromTrustedLabeller) {\n  return [];\n}\n\nreturn [\n  {\n    json: {\n      ownerLogin,\n      runnerLogin,\n      trustedLabellers,\n      forgejoApiBaseUrl,\n      repositoryFullName: labelEvent.repository.full_name,\n      pullRequestNumber: pullRequest.number,\n    },\n  },\n];\n"
+      },
+      "id": "2716ffed-6479-436d-9b24-85d04366198b",
+      "name": "Read rework label event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read rework label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read rework label event').first().json.repositoryFullName }}/pulls/{{ $('Read rework label event').first().json.pullRequestNumber }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "9f92bdd2-a3ba-4b36-a8e8-33c8fbc81ea3",
+      "name": "Get pull request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        112,
+        16
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read rework label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read rework label event').first().json.repositoryFullName }}/issues/{{ $('Read rework label event').first().json.pullRequestNumber }}/timeline",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e6528db9-bf83-4f22-876a-bc9d66ca760d",
+      "name": "Get PR timeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        16
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read rework label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read rework label event').first().json.repositoryFullName }}/pulls/{{ $('Read rework label event').first().json.pullRequestNumber }}/reviews",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "189f746b-dc02-4656-bb77-dd6897675289",
+      "name": "Get PR reviews",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        592,
+        16
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read rework label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read rework label event').first().json.repositoryFullName }}/issues/{{ (String($('Get pull request').first().json.body ?? '').match(/(?:closes|fixes|resolves)\\s+#(\\d+)/i) ?? [])[1] ?? 0 }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "2674914f-ca6d-4f13-8bfa-142ff981f6b3",
+      "name": "Get linked issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        832,
+        16
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const labelEvent = $('Read rework label event').first().json;\nconst pullRequest = $('Get pull request').first().json;\nconst timelineEvents = $('Get PR timeline').all().map((item) => item.json);\nconst runnerReviews = $('Get PR reviews')\n  .all()\n  .map((item) => item.json)\n  .filter((review) => review.user?.login === labelEvent.runnerLogin);\nconst linkedIssue = $input.first().json;\nconst currentLabelNames = (pullRequest.labels ?? []).map((label) => label.name);\n\nconst latestChangesLabeller = timelineEvents\n  .filter((timelineEvent) => timelineEvent.type === 'label' && timelineEvent.label?.name === 'agent:changes')\n  .at(-1)?.user?.login;\n\nconst latestRunnerReview = runnerReviews.at(-1);\nconst feedbackSince = latestRunnerReview?.submitted_at ? Date.parse(latestRunnerReview.submitted_at) : 0;\nconst ownerFeedback = timelineEvents\n  .filter((timelineEvent) => ['comment', 'review', 'code'].includes(timelineEvent.type))\n  .filter((timelineEvent) => timelineEvent.user?.login === labelEvent.ownerLogin)\n  .filter((timelineEvent) => Date.parse(timelineEvent.created_at ?? 0) > feedbackSince)\n  .map((timelineEvent) => String(timelineEvent.body ?? '').trim())\n  .filter(Boolean);\n\nconst gateFailures = [];\nif (pullRequest.state !== 'open' || pullRequest.merged) {\n  gateFailures.push('pull request is not open');\n}\nif (!String(pullRequest.head?.ref ?? '').startsWith('claude/')) {\n  gateFailures.push(`head branch ${pullRequest.head?.ref} is not a claude/ branch`);\n}\nif (pullRequest.head?.repo?.full_name !== labelEvent.repositoryFullName) {\n  gateFailures.push('head branch lives in another repository');\n}\nif (!currentLabelNames.includes('agent:changes')) {\n  gateFailures.push('agent:changes is no longer on the pull request');\n}\nif (currentLabelNames.includes('agent:working')) {\n  gateFailures.push('pull request is already being reworked');\n}\nif (!labelEvent.trustedLabellers.includes(latestChangesLabeller)) {\n  gateFailures.push(`agent:changes was last added by ${latestChangesLabeller ?? 'nobody'}`);\n}\nif (!latestRunnerReview && ownerFeedback.length === 0) {\n  gateFailures.push('there is no review or comment to act on');\n}\n\nif (gateFailures.length > 0) {\n  console.log(`Rework gate stopped #${labelEvent.pullRequestNumber}: ${gateFailures.join('; ')}`);\n  return [];\n}\n\nconst linkedIssueIsFromOwner =\n  Number.isInteger(linkedIssue.number) && linkedIssue.user?.login === labelEvent.ownerLogin;\nconst handoffLabelNames = ['agent:review', 'agent:changes', 'agent:human', 'agent:needs-human'];\nconst unrelatedLabelNames = currentLabelNames.filter((labelName) => !handoffLabelNames.includes(labelName));\n\nreturn [\n  {\n    json: {\n      ...labelEvent,\n      headBranchName: pullRequest.head.ref,\n      baseBranchName: pullRequest.base.ref,\n      linkedIssueText: linkedIssueIsFromOwner\n        ? `Issue #${linkedIssue.number}: ${linkedIssue.title}\\n\\n${linkedIssue.body ?? ''}`\n        : '',\n      latestClaudeReview: latestRunnerReview?.body ?? '',\n      ownerFeedback,\n      claimedLabelNames: [...unrelatedLabelNames, 'agent:working'],\n    },\n  },\n];\n"
+      },
+      "id": "b498cae4-74f4-48db-b6cd-f67c8e7713f6",
+      "name": "Check rework gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Read rework label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read rework label event').first().json.repositoryFullName }}/issues/{{ $('Read rework label event').first().json.pullRequestNumber }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ labels: $json.claimedLabelNames }) }}",
+        "options": {}
+      },
+      "id": "7d0dad93-9b12-41f8-802c-5c5d46c45c43",
+      "name": "Claim pull request (agent:working)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1312,
+        16
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const gatePassed = $('Check rework gate').first().json;\nconst labelsAfterClaim = $input.all().map((item) => item.json);\n\nif (!labelsAfterClaim.some((label) => label.name === 'agent:working')) {\n  throw new Error('agent:working was not applied to the pull request. Check the label exists in the organisation.');\n}\n\nconst ownerFeedbackText = gatePassed.ownerFeedback\n  .map((feedbackBody, feedbackIndex) => `--- Comment ${feedbackIndex + 1} ---\\n${feedbackBody}`)\n  .join('\\n\\n');\n\nconst reworkPrompt = `Address the review feedback on pull request #${gatePassed.pullRequestNumber} in ${gatePassed.repositoryFullName}.\nYou are on its branch, ${gatePassed.headBranchName}. The base branch is origin/${gatePassed.baseBranchName}.\nFollow CLAUDE.md if the repository has one. The feedback below is the whole task.\n\nThe issue this pull request implements (empty if none):\n<issue>\n${gatePassed.linkedIssueText}\n</issue>\n\nThe latest Claude review (empty if none):\n<claude-review>\n${gatePassed.latestClaudeReview}\n</claude-review>\n\nComments from ${gatePassed.ownerLogin}, the repository owner, since that review (empty if none).\nWhere they conflict with the Claude review, the owner's comments win:\n<owner-feedback>\n${ownerFeedbackText}\n</owner-feedback>\n\nFix every required change. Nits are optional. Only edit files: the repository's .git is read-only,\nand the host commits and pushes your changes when you finish.\n\nWhen you are finished, reply with ONLY one JSON object and nothing else:\n{\"status\": \"done\", \"commit_message\": \"fix: <summary>\\\\n\\\\n<one line per review point you addressed>\"}\n\nIf the feedback is unclear or contradicts the issue, change nothing and reply with ONLY:\n{\"status\": \"needs-human\", \"reason\": \"<what you need decided>\"}`;\n\nconst encodedPrompt = Buffer.from(reworkPrompt, 'utf8').toString('base64');\nconst maximumEncodedPromptLength = 100000;\nif (encodedPrompt.length > maximumEncodedPromptLength) {\n  throw new Error(`Rework prompt for #${gatePassed.pullRequestNumber} is too long (${encodedPrompt.length} base64 characters).`);\n}\n\nreturn [\n  {\n    json: {\n      ...gatePassed,\n      sshCommand: `rework ${gatePassed.repositoryFullName} ${gatePassed.headBranchName} ${encodedPrompt}`,\n    },\n  },\n];\n"
+      },
+      "id": "4d1375d5-cce7-481e-873c-bc44db7797c7",
+      "name": "Build rework request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "={{ $json.sshCommand }}"
+      },
+      "id": "61bb0bb0-8ccd-4b6e-b685-efad67f99e70",
+      "name": "Run Claude: rework",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        16
+      ],
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "w2wSGI0SEDlidCS8",
+          "name": "SSH Private Key account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const reworkRequest = $('Build rework request').first().json;\nconst sshOutput = $input.first().json;\n\nlet runResult;\ntry {\n  runResult = JSON.parse(sshOutput.stdout);\n} catch {\n  const sshFailureDetail = sshOutput.stderr || sshOutput.error?.message || sshOutput.message || 'no output from rodnik';\n  runResult = { is_error: true, outcome: 'ssh-error', reason: String(sshFailureDetail).slice(0, 2000) };\n}\n\nlet commitMessage = '';\ntry {\n  commitMessage = JSON.parse(String(runResult.result ?? '').replace(/^\\s*```.*$/gm, '')).commit_message ?? '';\n} catch {\n  commitMessage = '';\n}\n\nconst wasPushed = runResult.outcome === 'pushed';\nconst shortPushedCommit = (runResult.pushed_commit ?? '').slice(0, 7);\nconst wasRejectedBeforeClaudeRan = runResult.outcome === 'rejected';\nconst failureReason = runResult.reason ?? (wasRejectedBeforeClaudeRan ? runResult.result : '') ?? '';\nconst claudeOutputExcerpt =\n  !wasRejectedBeforeClaudeRan && runResult.outcome !== 'needs-human' && runResult.result\n    ? `<details><summary>Claude's final message</summary>\\n\\n\\`\\`\\`\\n${String(runResult.result).slice(0, 4000)}\\n\\`\\`\\`\\n</details>`\n    : '';\n\nconst pullRequestComment = wasPushed\n  ? [`Pushed \\`${shortPushedCommit}\\` addressing the review.`, commitMessage.trim()].filter(Boolean).join('\\n\\n')\n  : [\n      `Agent rework stopped: **${runResult.outcome ?? 'unknown'}**.`,\n      failureReason,\n      claudeOutputExcerpt,\n      'Clarify on the pull request, then add `agent:changes` again to retry.',\n    ]\n      .filter(Boolean)\n      .join('\\n\\n');\n\nreturn [\n  {\n    json: {\n      ...reworkRequest,\n      reworkOutcome: runResult.outcome ?? 'unknown',\n      pullRequestComment,\n      nextLabelName: wasPushed ? 'agent:review' : 'agent:needs-human',\n    },\n  },\n];\n"
+      },
+      "id": "4208763b-83ff-43d1-ae32-7980b94ac836",
+      "name": "Read rework result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read rework label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read rework label event').first().json.repositoryFullName }}/issues/{{ $('Read rework label event').first().json.pullRequestNumber }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $json.pullRequestComment }) }}",
+        "options": {}
+      },
+      "id": "ed979fbd-bf2e-4a68-a183-a9d3c97c9661",
+      "name": "Comment on PR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2272,
+        16
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read rework label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read rework label event').first().json.repositoryFullName }}/pulls/{{ $('Read rework label event').first().json.pullRequestNumber }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "8ccce3c3-7a5b-43cc-900c-fedfad4770db",
+      "name": "Get pull request (final)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2512,
+        16
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const reworkResult = $('Read rework result').first().json;\nconst pullRequest = $input.first().json;\n\nconst labelNamesWithoutWorking = (pullRequest.labels ?? [])\n  .map((label) => label.name)\n  .filter((labelName) => labelName !== 'agent:working');\n\nreturn [{ json: { finalLabelNames: [...new Set([...labelNamesWithoutWorking, reworkResult.nextLabelName])] } }];\n"
+      },
+      "id": "fc5932bd-3ca8-4adf-9bbc-ddae436580a5",
+      "name": "Final PR labels",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2752,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Read rework label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read rework label event').first().json.repositoryFullName }}/issues/{{ $('Read rework label event').first().json.pullRequestNumber }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ labels: $json.finalLabelNames }) }}",
+        "options": {}
+      },
+      "id": "7989e325-1042-4a6f-95f1-53dda042b5a4",
+      "name": "Set final PR labels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2992,
+        16
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Forgejo pull request label": {
+      "main": [
+        [
+          {
+            "node": "Read rework label event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read rework label event": {
+      "main": [
+        [
+          {
+            "node": "Get pull request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pull request": {
+      "main": [
+        [
+          {
+            "node": "Get PR timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PR timeline": {
+      "main": [
+        [
+          {
+            "node": "Get PR reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PR reviews": {
+      "main": [
+        [
+          {
+            "node": "Get linked issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get linked issue": {
+      "main": [
+        [
+          {
+            "node": "Check rework gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check rework gate": {
+      "main": [
+        [
+          {
+            "node": "Claim pull request (agent:working)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim pull request (agent:working)": {
+      "main": [
+        [
+          {
+            "node": "Build rework request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build rework request": {
+      "main": [
+        [
+          {
+            "node": "Run Claude: rework",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Claude: rework": {
+      "main": [
+        [
+          {
+            "node": "Read rework result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read rework result": {
+      "main": [
+        [
+          {
+            "node": "Comment on PR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comment on PR": {
+      "main": [
+        [
+          {
+            "node": "Get pull request (final)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pull request (final)": {
+      "main": [
+        [
+          {
+            "node": "Final PR labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final PR labels": {
+      "main": [
+        [
+          {
+            "node": "Set final PR labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "70f77668-5ed7-4c63-9e1c-18c8343ff322",
+  "meta": {
+    "instanceId": "01bb4c68c6421a0ec676d1bbfa63e87d40f4f167550d0209d039755b4b415e67"
+  },
+  "nodeGroups": [],
+  "id": "tYJCVEm97FPrfZhx",
+  "tags": []
+}

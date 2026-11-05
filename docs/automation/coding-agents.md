@@ -4,7 +4,7 @@ Live: Forgejo ([Kennl](../services/kennl.md)) label events trigger an n8n workfl
 
 ## Runner
 
-- **Entry:** n8n SSHes in as `rodnik` with the key in [n8n_rodnik_ed25519.pub](../../services/sputnik/claude-headless/n8n_rodnik_ed25519.pub). Its [forced command](../../services/sputnik/claude-headless/claude-headless-ssh-command) accepts only `implement`, `rework` and `review` for a repository and a `claude/*` branch.
+- **Entry:** the [forgejo-agent](../../services/sputnik/workflows/forgejo-agent.md) n8n workflows SSH in as `rodnik` with the key in [n8n_rodnik_ed25519.pub](../../services/sputnik/claude-headless/n8n_rodnik_ed25519.pub). `rodnik`'s [forced command](../../services/sputnik/claude-headless/claude-headless-ssh-command) accepts only `implement`, `rework` and `review` for a repository and a `claude/*` branch.
 - **Git on the host:** the forced command clones, checks out, commits and pushes as `rodnik`. Claude edits files only inside the sandbox. `review` pushes nothing.
 - **Sandbox:** rootless Podman ([Containerfile](../../services/sputnik/claude-headless/Containerfile.claude-headless)), reaching only the Anthropic API, through a tinyproxy allowlist ([hosts](../../services/sputnik/claude-headless/tinyproxy-allowed-hosts)).
 - **Models:** Sonnet for `implement` and `rework`, Opus for `review`. Each run is capped at 30 minutes.

@@ -1,0 +1,705 @@
+{
+  "name": "Forgejo agent: Do some review",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "forgejo-pull-request-label",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "bc49f42b-6ffc-48a3-92bc-d2b79db43b1f",
+      "name": "Forgejo pull request label",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        256
+      ],
+      "webhookId": "15193705-4863-41c7-8841-fed59c18203f",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "0Et7rMVRVOjIntve",
+          "name": "Forgejo webhook (inbound)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ownerLogin = 'hsimah';\nconst runnerLogin = 'rodnik';\nconst forgejoApiBaseUrl = 'https://kennl.loft.hsimah.com/api/v1';\nconst maximumReviewRounds = 3;\nconst trustedLabellers = [ownerLogin, runnerLogin];\n\nconst labelEvent = $input.first().json.body ?? {};\nconst pullRequest = labelEvent.pull_request ?? {};\nconst labelNames = (pullRequest.labels ?? []).map((label) => label.name);\n\nconst isReviewRequestFromTrustedLabeller =\n  labelEvent.action === 'label_updated' &&\n  Number.isInteger(pullRequest.number) &&\n  labelNames.includes('agent:review') &&\n  !labelNames.includes('agent:reviewing') &&\n  trustedLabellers.includes(labelEvent.sender?.login);\n\nif (!isReviewRequestFromTrustedLabeller) {\n  return [];\n}\n\nreturn [\n  {\n    json: {\n      ownerLogin,\n      runnerLogin,\n      trustedLabellers,\n      forgejoApiBaseUrl,\n      maximumReviewRounds,\n      repositoryFullName: labelEvent.repository.full_name,\n      pullRequestNumber: pullRequest.number,\n    },\n  },\n];\n"
+      },
+      "id": "6d840985-4c60-428d-a30c-e29eb4415999",
+      "name": "Read PR label event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/pulls/{{ $('Read PR label event').first().json.pullRequestNumber }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "e89743fb-1805-4fb9-a6c0-39e0a5732f34",
+      "name": "Get pull request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        112,
+        256
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/issues/{{ $('Read PR label event').first().json.pullRequestNumber }}/timeline",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a715fb7f-eae6-4503-ad63-0e6e0464bc89",
+      "name": "Get PR timeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        256
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/pulls/{{ $('Read PR label event').first().json.pullRequestNumber }}/reviews",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9f7c59af-753b-47b4-bb9d-62b3fa5fe2e7",
+      "name": "Get PR reviews",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        592,
+        256
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/issues/{{ (String($('Get pull request').first().json.body ?? '').match(/(?:closes|fixes|resolves)\\s+#(\\d+)/i) ?? [])[1] ?? 0 }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "efb0c51f-8a04-4dd0-863c-79b2625f8e27",
+      "name": "Get linked issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        832,
+        256
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const labelEvent = $('Read PR label event').first().json;\nconst pullRequest = $('Get pull request').first().json;\nconst timelineEvents = $('Get PR timeline').all().map((item) => item.json);\nconst earlierRunnerReviews = $('Get PR reviews')\n  .all()\n  .map((item) => item.json)\n  .filter((review) => review.user?.login === labelEvent.runnerLogin);\nconst linkedIssue = $input.first().json;\nconst currentLabelNames = (pullRequest.labels ?? []).map((label) => label.name);\n\nconst latestReviewLabeller = timelineEvents\n  .filter((timelineEvent) => timelineEvent.type === 'label' && timelineEvent.label?.name === 'agent:review')\n  .at(-1)?.user?.login;\n\nconst gateFailures = [];\nif (pullRequest.state !== 'open' || pullRequest.merged) {\n  gateFailures.push('pull request is not open');\n}\nif (!String(pullRequest.head?.ref ?? '').startsWith('claude/')) {\n  gateFailures.push(`head branch ${pullRequest.head?.ref} is not a claude/ branch`);\n}\nif (pullRequest.head?.repo?.full_name !== labelEvent.repositoryFullName) {\n  gateFailures.push('head branch lives in another repository');\n}\nif (!currentLabelNames.includes('agent:review')) {\n  gateFailures.push('agent:review is no longer on the pull request');\n}\nif (currentLabelNames.includes('agent:reviewing')) {\n  gateFailures.push('pull request is already being reviewed');\n}\nif (!labelEvent.trustedLabellers.includes(latestReviewLabeller)) {\n  gateFailures.push(`agent:review was last added by ${latestReviewLabeller ?? 'nobody'}`);\n}\n\nif (gateFailures.length > 0) {\n  console.log(`Review gate stopped #${labelEvent.pullRequestNumber}: ${gateFailures.join('; ')}`);\n  return [];\n}\n\nconst reviewRound = earlierRunnerReviews.length + 1;\nconst reviewRoundsExhausted = reviewRound > labelEvent.maximumReviewRounds;\nconst linkedIssueIsFromOwner =\n  Number.isInteger(linkedIssue.number) && linkedIssue.user?.login === labelEvent.ownerLogin;\nconst handoffLabelNames = ['agent:review', 'agent:changes', 'agent:human', 'agent:needs-human'];\nconst unrelatedLabelNames = currentLabelNames.filter((labelName) => !handoffLabelNames.includes(labelName));\n\nreturn [\n  {\n    json: {\n      ...labelEvent,\n      headBranchName: pullRequest.head.ref,\n      baseBranchName: pullRequest.base.ref,\n      pullRequestTitle: pullRequest.title,\n      reviewRound,\n      reviewRoundsExhausted,\n      linkedIssueText: linkedIssueIsFromOwner\n        ? `Issue #${linkedIssue.number}: ${linkedIssue.title}\\n\\n${linkedIssue.body ?? ''}`\n        : '',\n      earlierReviewBodies: earlierRunnerReviews.map((review) => review.body ?? ''),\n      claimedLabelNames: reviewRoundsExhausted\n        ? [...unrelatedLabelNames, 'agent:needs-human']\n        : [...unrelatedLabelNames, 'agent:reviewing'],\n    },\n  },\n];\n"
+      },
+      "id": "13d4823d-d98c-4179-8eb5-ff52023c5ce4",
+      "name": "Check review gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/issues/{{ $('Read PR label event').first().json.pullRequestNumber }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ labels: $json.claimedLabelNames }) }}",
+        "options": {}
+      },
+      "id": "5cd4d2f8-4d50-42a4-8486-5e92bf7593cf",
+      "name": "Claim pull request (agent:reviewing)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1312,
+        256
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const gatePassed = $('Check review gate').first().json;\n\nif (gatePassed.reviewRoundsExhausted) {\n  return [{ json: { ...gatePassed, runReview: false } }];\n}\n\nconst labelsAfterClaim = $input.all().map((item) => item.json);\nif (!labelsAfterClaim.some((label) => label.name === 'agent:reviewing')) {\n  throw new Error('agent:reviewing was not applied to the pull request. Check the label exists in the organisation.');\n}\n\nconst earlierReviewsText = gatePassed.earlierReviewBodies\n  .map((reviewBody, reviewIndex) => `--- Review ${reviewIndex + 1} ---\\n${reviewBody}`)\n  .join('\\n\\n');\n\nconst reviewPrompt = `Review pull request #${gatePassed.pullRequestNumber} in ${gatePassed.repositoryFullName} \\\n(round ${gatePassed.reviewRound} of ${gatePassed.maximumReviewRounds}).\nYou are on its branch, ${gatePassed.headBranchName}. The base branch is origin/${gatePassed.baseBranchName}.\nThe workspace is read-only: you review, you do not change anything.\n\nRead CLAUDE.md if the repository has one. See the change with:\n  git log origin/${gatePassed.baseBranchName}..HEAD\n  git diff origin/${gatePassed.baseBranchName}...HEAD\n\nThe issue this pull request implements (empty if none):\n<issue>\n${gatePassed.linkedIssueText}\n</issue>\n\nYour earlier reviews of this pull request, oldest first (empty on the first round). Check each required change was addressed:\n<earlier-reviews>\n${earlierReviewsText}\n</earlier-reviews>\n\nRequest changes only for bugs, requirements of the issue that are not met, or CLAUDE.md violations.\nMention nits, but do not block on them.\n\nReply with ONLY one JSON object and nothing else, either:\n{\"verdict\": \"approve\", \"review\": \"<markdown: a short summary of what you checked>\"}\nor:\n{\"verdict\": \"changes\", \"review\": \"<markdown: a numbered list of the required changes>\"}`;\n\nconst encodedPrompt = Buffer.from(reviewPrompt, 'utf8').toString('base64');\nconst maximumEncodedPromptLength = 100000;\nif (encodedPrompt.length > maximumEncodedPromptLength) {\n  throw new Error(`Review prompt for #${gatePassed.pullRequestNumber} is too long (${encodedPrompt.length} base64 characters).`);\n}\n\nreturn [\n  {\n    json: {\n      ...gatePassed,\n      runReview: true,\n      sshCommand: `review ${gatePassed.repositoryFullName} ${gatePassed.headBranchName} ${encodedPrompt}`,\n    },\n  },\n];\n"
+      },
+      "id": "78ed870c-bea8-4275-8974-4187cd63d6c0",
+      "name": "Build review request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "da5bebff-6b24-4c83-9139-17aeb923a2cf",
+              "leftValue": "={{ $json.runReview }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6a3ab04f-5e50-4183-96bf-7e91bff371cb",
+      "name": "Review rounds left?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "={{ $json.sshCommand }}"
+      },
+      "id": "fa916b59-7cf4-495f-aa7e-859c1d85dfd4",
+      "name": "Run Claude: review",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        64
+      ],
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "w2wSGI0SEDlidCS8",
+          "name": "SSH Private Key account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const reviewRequest = $('Build review request').first().json;\nconst sshOutput = $input.first().json;\n\nlet runResult;\ntry {\n  runResult = JSON.parse(sshOutput.stdout);\n} catch {\n  const sshFailureDetail = sshOutput.stderr || sshOutput.error?.message || sshOutput.message || 'no output from rodnik';\n  runResult = { is_error: true, outcome: 'ssh-error', reason: String(sshFailureDetail).slice(0, 2000) };\n}\n\nlet verdictObject = {};\ntry {\n  verdictObject = JSON.parse(String(runResult.result ?? '').replace(/^\\s*```.*$/gm, '')) ?? {};\n} catch {\n  verdictObject = {};\n}\n\nconst verdict = runResult.outcome === 'reviewed' ? verdictObject.verdict : undefined;\nconst hasValidVerdict = (verdict === 'approve' || verdict === 'changes') && Boolean(verdictObject.review);\nconst nextLabelName = !hasValidVerdict ? 'agent:needs-human' : verdict === 'approve' ? 'agent:human' : 'agent:changes';\n\nconst verdictHeading = verdict === 'approve' ? 'ready for you' : 'changes needed';\nconst reviewBody = hasValidVerdict\n  ? `**Claude review, round ${reviewRequest.reviewRound} of ${reviewRequest.maximumReviewRounds}: ${verdictHeading}**\\n\\n${verdictObject.review}`\n  : '';\n\nconst wasRejectedBeforeClaudeRan = runResult.outcome === 'rejected';\nconst failureReason =\n  runResult.reason ??\n  (wasRejectedBeforeClaudeRan ? runResult.result : runResult.outcome === 'reviewed' ? 'The review was not the expected JSON verdict.' : '') ??\n  '';\nconst claudeOutputExcerpt =\n  !wasRejectedBeforeClaudeRan && runResult.result\n    ? `<details><summary>Claude's final message</summary>\\n\\n\\`\\`\\`\\n${String(runResult.result).slice(0, 4000)}\\n\\`\\`\\`\\n</details>`\n    : '';\nconst failureComment = [\n  `Agent review stopped: **${runResult.outcome ?? 'unknown'}**.`,\n  failureReason,\n  claudeOutputExcerpt,\n  'Add `agent:review` again to retry.',\n]\n  .filter(Boolean)\n  .join('\\n\\n');\n\nreturn [\n  {\n    json: {\n      ...reviewRequest,\n      reviewOutcome: runResult.outcome ?? 'unknown',\n      verdict: verdict ?? null,\n      hasValidVerdict,\n      nextLabelName,\n      reviewBody,\n      failureComment,\n      reviewersToRequest: verdict === 'approve' && hasValidVerdict ? [reviewRequest.ownerLogin] : [],\n    },\n  },\n];\n"
+      },
+      "id": "b915ba2e-5e38-4a0d-b223-3b89c535609b",
+      "name": "Read review result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "bacdfd92-78f6-4f81-90c8-2f0a79a73822",
+              "leftValue": "={{ $json.hasValidVerdict }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e536ac7e-705b-49b2-aac6-9a69f964d117",
+      "name": "Valid verdict?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2512,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/pulls/{{ $('Read PR label event').first().json.pullRequestNumber }}/reviews",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: 'COMMENT', body: $('Read review result').first().json.reviewBody }) }}",
+        "options": {}
+      },
+      "id": "9c50f645-4cff-4dba-87a2-8c99ea77780d",
+      "name": "Post review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2752,
+        -144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/pulls/{{ $('Read PR label event').first().json.pullRequestNumber }}/requested_reviewers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ reviewers: $('Read review result').first().json.reviewersToRequest }) }}",
+        "options": {}
+      },
+      "id": "62cb5c34-fb8e-4036-b43b-19be033cc0d3",
+      "name": "Request your review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2992,
+        -144
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/issues/{{ $('Read PR label event').first().json.pullRequestNumber }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $('Read review result').first().json.failureComment }) }}",
+        "options": {}
+      },
+      "id": "889e4ae8-703e-4d0d-95f1-dcab0f633085",
+      "name": "Comment review failure on PR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2752,
+        256
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/pulls/{{ $('Read PR label event').first().json.pullRequestNumber }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "82146242-a643-4912-ba94-9009df5b71ab",
+      "name": "Get pull request (final)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3232,
+        64
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const reviewResult = $('Read review result').first().json;\nconst pullRequest = $input.first().json;\n\nconst labelNamesWithoutReviewing = (pullRequest.labels ?? [])\n  .map((label) => label.name)\n  .filter((labelName) => labelName !== 'agent:reviewing');\n\nreturn [{ json: { finalLabelNames: [...new Set([...labelNamesWithoutReviewing, reviewResult.nextLabelName])] } }];\n"
+      },
+      "id": "e551bb51-bf6b-454b-929f-2b2ee8f1c125",
+      "name": "Final PR labels",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3472,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/issues/{{ $('Read PR label event').first().json.pullRequestNumber }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ labels: $json.finalLabelNames }) }}",
+        "options": {}
+      },
+      "id": "21f5bb36-4676-4b24-922c-5e17c56cf17d",
+      "name": "Set final PR labels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3712,
+        64
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read PR label event').first().json.forgejoApiBaseUrl }}/repos/{{ $('Read PR label event').first().json.repositoryFullName }}/issues/{{ $('Read PR label event').first().json.pullRequestNumber }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: 'Stopped after ' + $json.maximumReviewRounds + ' Claude review rounds without approval. Over to you.' }) }}",
+        "options": {}
+      },
+      "id": "1d2c1f38-c570-4ae2-be9c-0f5c81146e72",
+      "name": "Comment rounds exhausted on PR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2032,
+        464
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LBABDeGEQWxe1Kl7",
+          "name": "Forgejo credential (rodnik)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Forgejo pull request label": {
+      "main": [
+        [
+          {
+            "node": "Read PR label event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read PR label event": {
+      "main": [
+        [
+          {
+            "node": "Get pull request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pull request": {
+      "main": [
+        [
+          {
+            "node": "Get PR timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PR timeline": {
+      "main": [
+        [
+          {
+            "node": "Get PR reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PR reviews": {
+      "main": [
+        [
+          {
+            "node": "Get linked issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get linked issue": {
+      "main": [
+        [
+          {
+            "node": "Check review gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check review gate": {
+      "main": [
+        [
+          {
+            "node": "Claim pull request (agent:reviewing)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim pull request (agent:reviewing)": {
+      "main": [
+        [
+          {
+            "node": "Build review request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build review request": {
+      "main": [
+        [
+          {
+            "node": "Review rounds left?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Claude: review": {
+      "main": [
+        [
+          {
+            "node": "Read review result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read review result": {
+      "main": [
+        [
+          {
+            "node": "Valid verdict?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post review": {
+      "main": [
+        [
+          {
+            "node": "Request your review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request your review": {
+      "main": [
+        [
+          {
+            "node": "Get pull request (final)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comment review failure on PR": {
+      "main": [
+        [
+          {
+            "node": "Get pull request (final)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pull request (final)": {
+      "main": [
+        [
+          {
+            "node": "Final PR labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final PR labels": {
+      "main": [
+        [
+          {
+            "node": "Set final PR labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Review rounds left?": {
+      "main": [
+        [
+          {
+            "node": "Run Claude: review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Comment rounds exhausted on PR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid verdict?": {
+      "main": [
+        [
+          {
+            "node": "Post review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Comment review failure on PR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1e0e8be2-451b-4dbd-ab61-b113a6ad5e62",
+  "meta": {
+    "instanceId": "01bb4c68c6421a0ec676d1bbfa63e87d40f4f167550d0209d039755b4b415e67"
+  },
+  "nodeGroups": [],
+  "id": "nfLbdKQy5PEMMu0M",
+  "tags": []
+}

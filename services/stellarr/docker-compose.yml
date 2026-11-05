@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
 
   transmission:
-    image: lscr.io/linuxserver/transmission:4.1.3-r0-ls364
+    image: lscr.io/linuxserver/transmission:4.1.4-r0-ls368
     container_name: transmission
     logging:
       driver: json-file
@@ -58,7 +58,7 @@ services:
       - vpn
 
   slskd:
-    image: slskd/slskd:0.26.1
+    image: slskd/slskd:0.26.2
     container_name: slskd
     user: "${PUID}:${PGID}"
     logging:
@@ -113,7 +113,7 @@ services:
         max-file: "3"
 
   audiobookshelf:
-    image: ghcr.io/advplyr/audiobookshelf:2.37.1
+    image: ghcr.io/advplyr/audiobookshelf:2.37.2
     container_name: audiobookshelf
     user: "${PUID}:${PGID}"
     environment:
@@ -139,7 +139,7 @@ services:
       start_period: 60s
 
   radarr:
-    image: lscr.io/linuxserver/radarr:6.4.4.10685-ls322
+    image: lscr.io/linuxserver/radarr:6.4.4.10685-ls325
     container_name: radarr
     logging:
       driver: json-file
@@ -184,13 +184,13 @@ services:
 
   lidarr:
     # Pinned to a *nightly* build on purpose, not the stable line. The
-    # database schema here (3.1.2) is ahead of stable (3.1.0.4875-ls36),
-    # and Lidarr refuses to open a database written by a newer build — so
-    # moving to stable is a downgrade that would fail to start. This is the
-    # build that was already running, now frozen instead of drifting.
-    # Getting onto the stable line means exporting the library and
-    # rebuilding the database: a separate project.
-    image: lscr.io/linuxserver/lidarr:nightly-3.1.6.5102-ls221
+    # database schema is ahead of stable, and Lidarr refuses to open a
+    # database written by a newer build — so moving to stable is a
+    # downgrade that would fail to start. Back up /opt/lidarr before any
+    # bump: rolling back means restoring it. Getting onto the stable line
+    # means exporting the library and rebuilding the database: a separate
+    # project.
+    image: lscr.io/linuxserver/lidarr:nightly-3.2.1.5182-ls223
     container_name: lidarr
     logging:
       driver: json-file
@@ -212,7 +212,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   bazarr:
-    image: lscr.io/linuxserver/bazarr:v1.6.2-ls368
+    image: lscr.io/linuxserver/bazarr:v1.6.2-ls371
     container_name: bazarr
     logging:
       driver: json-file
@@ -232,7 +232,7 @@ services:
       - loft-proxy
 
   jackett:
-    image: lscr.io/linuxserver/jackett:v0.24.2875-ls9
+    image: lscr.io/linuxserver/jackett:v0.24.3014-ls27
     container_name: jackett
     logging:
       driver: json-file

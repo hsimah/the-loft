@@ -18,6 +18,8 @@ Gluetun connects to NordVPN over WireGuard and needs only the account's NordLynx
 curl -fsS -u "token:<access-token>" https://api.nordvpn.com/v1/users/services/credentials | jq -r .nordlynx_private_key
 ```
 
+Lidarr's Slskd client uses the `api_keys` entry in `/opt/slskd/slskd.yml`; it needs `role: administrator` (the default `readonly` gets 403 on `/api/v0/options`).
+
 Gluetun's firewall blocks all non-VPN egress; `FIREWALL_OUTBOUND_SUBNETS` lets replies reach the LAN. slskd shows `Connecting` and Lidarr reports "Could not connect to Slskd" whenever the tunnel is down.
 
 ## LazyLibrarian

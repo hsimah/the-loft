@@ -8,7 +8,6 @@ Items needing live evidence or a decision. None of these are done unless stated.
 | Backups | No backup runs off-host. Plan space-needle and helarctos as a whole, with every service's configuration and `.env`. The Mercurius (vault) and Forgejo Drive job is built and tested but shelved 2026-10-26 ([runbook](../docs/operations/backups.md)). Needing encrypted off-host copies and a tested restore: Clog SQLite, Pawst content/state, Viking `/etc/loft` secrets, service `.env` files, and every other space-needle service |
 | Viking | Enable the memory cgroup (`cgroup_disable=memory` is on the boot line, so Compose memory limits are not enforced), then reboot and recheck. Enroll a second admin. Verify Cloudflare edge HTTPS redirect and IPv6 denial probes |
 | Clog | Scheduled backups; capacity measurement on the Pi; account reset/recovery in the app |
-| Fjord | Confirm its network manager; the watchdog defaults to dhcpcd. Howlr Bluetooth client: confirm 5 GHz Wi-Fi |
 | Woodstock | Test Wi-Fi firmware recovery |
 | Audiobookshelf | Verify Android, a second phone and cross-device progress sync |
 | Stellarr | Hardlink-safe imports need a shared-parent mount migration |

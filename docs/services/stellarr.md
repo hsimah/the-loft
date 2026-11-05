@@ -1,14 +1,24 @@
 # Stellarr — media acquisition and audiobooks
 
-[Compose](../../services/stellarr/docker-compose.yml) runs Radarr, Sonarr, Lidarr, Bazarr, Jackett, Transmission, slskd, NordVPN, LazyLibrarian and Audiobookshelf on space-needle.
+[Compose](../../services/stellarr/docker-compose.yml) runs Radarr, Sonarr, Lidarr, Bazarr, Jackett, Transmission, slskd, Gluetun (NordVPN WireGuard), LazyLibrarian and Audiobookshelf on space-needle.
 
 Only **Transmission and slskd** use `network_mode: service:vpn`. Everything else joins `loft-proxy` and does not go through the VPN. Apps and Caddy reach the download clients at `host.docker.internal:9091` and `:5030`.
 
 ## Configuration and storage
 
-[.env.example](../../services/stellarr/.env.example): VPN token, `PUID`/`PGID`, timezone, Soulseek credentials. Config lives in `/opt/<product>`. Downloads mount as `/downloads`; libraries mount separately as `/movies`, `/tv`, `/music`, `/audiobooks`. slskd completes into `/mammoth/downloads/complete/lidarr`.
+[.env.example](../../services/stellarr/.env.example): NordLynx key, `PUID`/`PGID`, timezone, Soulseek credentials. Config lives in `/opt/<product>`. Downloads mount as `/downloads`; libraries mount separately as `/movies`, `/tv`, `/music`, `/audiobooks`. slskd completes into `/mammoth/downloads/complete/lidarr`.
 
 **Imports are copies, not hardlinks**: separate container mounts break hardlinks even on one XFS volume ([Servarr guide](https://github.com/Servarr/Wiki/blob/master/docker-guide.md)). Torrent retention is manual.
+
+## VPN
+
+Gluetun connects to NordVPN over WireGuard and needs only the account's NordLynx private key in `NORDVPN_WIREGUARD_KEY`. Get it with an access token (Nord Account → NordVPN → Manual setup):
+
+```bash
+curl -fsS -u "token:<access-token>" https://api.nordvpn.com/v1/users/services/credentials | jq -r .nordlynx_private_key
+```
+
+Gluetun's firewall blocks all non-VPN egress; `FIREWALL_OUTBOUND_SUBNETS` lets replies reach the LAN. slskd shows `Connecting` and Lidarr reports "Could not connect to Slskd" whenever the tunnel is down.
 
 ## LazyLibrarian
 
@@ -54,6 +64,7 @@ loft-ctl rebuild stellarr
 loft-ctl health stellarr
 sudo docker logs stellarr-vpn --tail 50
 sudo docker exec transmission curl -fsS https://ipinfo.io/ip   # must not be the home IP
+sudo docker inspect -f '{{.State.Health.Status}}' stellarr-vpn
 ```
 
 A working UI does not prove VPN protection. Recreating the VPN container requires recreating Transmission and slskd too. Back up `/opt/{radarr,sonarr,lidarr,bazarr,jackett,transmission,slskd,lazylibrarian,audiobookshelf}` before upgrades; pin exceptions are in [upgrades](../operations/upgrades.md#rollback-and-pin-exceptions).

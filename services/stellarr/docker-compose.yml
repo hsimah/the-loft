@@ -1,30 +1,29 @@
 services:
   vpn:
-    # UPSTREAM ARCHIVED (github.com/bubuntux/nordvpn, read-only since
-    # 2025-11-22). Replacement tracked in README "Image pinning".
-    #
-    # Pinned by digest to the :latest/:master build, NOT to the v3.12.3
-    # version tag. The semver tags predate master and ship an older nordvpn
-    # client that the service now refuses to authenticate ("A new version of
-    # NordVPN is available!" → "Invalid Username or password", container
-    # exits). Confirmed on 2026-07-27: v3.12.3 is digest 9d688a7f and fails
-    # to log in; :latest is ac521b5a and works. Do not "upgrade" this to a
-    # version tag — it is a downgrade.
-    image: ghcr.io/bubuntux/nordvpn:latest@sha256:ac521b5a8d1387780d812a0ed46dd23aa3ee5e47d6d9f9eace39213ea1f56509
+    # Gluetun on NordVPN WireGuard (NordLynx). The key is the account's
+    # NordLynx private key, fetched once from the NordVPN API with the access
+    # token (docs/services/stellarr.md#vpn); the token itself is not used here.
+    image: qmcgaw/gluetun:v3.41.3
     container_name: stellarr-vpn
     cap_add:
       - NET_ADMIN
-      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
     logging:
       driver: json-file
       options:
         max-size: "20m"
         max-file: "5"
     environment:
-      - TOKEN=${NORDVPN_TOKEN}
-      - CONNECT=NETHERLANDS
-      - TECHNOLOGY=NordLynx
-      - NETWORK=192.168.86.0/24
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${NORDVPN_WIREGUARD_KEY}
+      - SERVER_COUNTRIES=Netherlands
+      # Replies to LAN clients reaching the published UI ports.
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.86.0/24
+      # Refresh the built-in server list so a stale pin can't strand it.
+      - UPDATER_PERIOD=24h
+      - TZ=${TZ}
     ports:
       # Transmission
       - 9091:9091

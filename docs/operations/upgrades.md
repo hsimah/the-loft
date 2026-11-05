@@ -37,7 +37,7 @@ Commit the pin, then `loft-ctl update <service>` (or `--no-pull` if already chec
 
 Reverting a pin does not revert migrated data; restore the matching backup with the service stopped. Old images may have been pruned.
 
-- **Snapclient, NordVPN**: digest-pinned `latest`. Never use the VPN's `v3.12.3` tag; it fails authentication.
+- **Snapclient**: digest-pinned `latest`.
 - **Lidarr**: nightly, because its DB schema is ahead of stable. Moving to stable is a migration, not a tag change.
 - **Uptime Kuma 1.x**: deliberately held.
 - **Caddy**: local build; the Cloudflare module is pinned in [Dockerfile.caddy](../../services/mushr/Dockerfile.caddy) and not checked by image-updates.sh. Keep the previous image for rollback.

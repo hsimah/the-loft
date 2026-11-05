@@ -4,7 +4,7 @@ Items needing live evidence or a decision. None of these are done unless stated.
 
 | Area | Work |
 |---|---|
-| Vault keys | **Urgent.** Keyslots and header backup done 2026-11-04 (slot 0 everyday, slot 2 recovery; header on the USB stick). Left: print and fill in the [vault key sheet](../docs/operations/backups.md#recovery-sheet) and file it in the safe with the stick; put `N8N_ENCRYPTION_KEY` in the password manager |
+| Vault keys | **Urgent.** Keyslots and header backup done 2026-11-04 (slot 0 everyday, slot 2 recovery; header on the USB stick). Left: print and fill in the [vault key sheet](../docs/operations/backups.md#recovery-sheet) and file it in the safe with the stick (`N8N_ENCRYPTION_KEY` is in the password manager) |
 | Backups | No backup runs off-host. Plan space-needle and helarctos as a whole, with every service's configuration and `.env`. The Mercurius (vault) and Forgejo Drive job is built and tested but shelved 2026-10-26 ([runbook](../docs/operations/backups.md)). Needing encrypted off-host copies and a tested restore: Clog SQLite, Pawst content/state, Viking `/etc/loft` secrets, service `.env` files, and every other space-needle service |
 | Viking | Enable the memory cgroup (`cgroup_disable=memory` is on the boot line, so Compose memory limits are not enforced), then reboot and recheck. Remove the stale `address=/viking/192.168.86.26` dnsmasq entry. Enroll a second admin. Verify Cloudflare edge HTTPS redirect and IPv6 denial probes |
 | Clog | Scheduled backups; capacity measurement on the Pi; account reset/recovery in the app |

@@ -12,7 +12,6 @@ Items needing live evidence or a decision. None of these are done unless stated.
 | Woodstock | Test Wi-Fi firmware recovery |
 | Audiobookshelf | Verify Android, a second phone and cross-device progress sync |
 | Stellarr | Hardlink-safe imports need a shared-parent mount migration |
-| Identities | Record actual littledog UID/GID and Plex runtime identity; the Plex example uses 1004 while fresh setup uses 1003 |
 | Beszel | Confirm hub-side resolution and per-system tokens |
 | Exposure | Check live Cloudflare hostnames, Plex Remote Access/router state and granted Google scopes |
 | Images | Find maintained Snapclient/VPN images (not the old `v3.12.3` VPN tag; Fjord's Debian-built snapclient is a candidate for the other clients once proven); check Jackett self-update |

@@ -4,7 +4,7 @@
 
 ## Configuration and data
 
-[.env.example](../../services/pawpcorn/.env.example). The example's `PLEX_UID`/`PLEX_GID` are 1004/1003, but fresh setup makes littledog 1003; check `id littledog` and existing ownership before choosing.
+[.env.example](../../services/pawpcorn/.env.example). Plex runs as littledog:pack-member (1003:1003), like every other service.
 
 - `/opt/pawpcorn/config`: DB, metadata, watch state.
 - `/mammoth/pawpcorn/transcode`: scratch.

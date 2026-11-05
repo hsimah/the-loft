@@ -154,6 +154,12 @@ if [[ -n "$LITTLEDOG_EXTRA_GROUPS" ]]; then
   usermod -aG "$LITTLEDOG_EXTRA_GROUPS" littledog
 fi
 
+# littledog runs containers only and never gets sudo, even if added by hand.
+if id -nG littledog | tr ' ' '\n' | grep -qx sudo; then
+  gpasswd -d littledog sudo
+  warn "Removed littledog from sudo"
+fi
+
 # adminhabl — admin account
 if ! id adminhabl &>/dev/null; then
   useradd -m -s /bin/bash adminhabl

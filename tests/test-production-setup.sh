@@ -44,4 +44,19 @@ membership true "pack-member docker" 1
 assert_fails "$status" "failed removal stops setup"
 assert_absent "$out" "usermod" "nothing runs after a failed removal"
 
+# littledog never keeps sudo, on any host.
+SUDO_SECTION="$(sed -n '/^# littledog runs containers only/,/^fi$/p' "${ROOT}/control-plane/setup.sh")"
+no_sudo() { # groups
+  out="$(PATH="$MOCK_BIN:$PATH" MOCK_GROUPS="$1" MOCK_REMOVE_STATUS=0 bash -c "set -euo pipefail
+warn() { echo \"\$*\"; }
+$SUDO_SECTION" 2>&1)"
+  status=$?
+}
+no_sudo "littledog sudo docker pack-member"
+assert_eq "$status" 0 "sudo removal succeeds"
+assert_contains "$out" "gpasswd -d littledog sudo" "setup removes littledog from sudo"
+no_sudo "littledog docker pack-member"
+assert_eq "$status" 0 "sudo removal is idempotent"
+assert_absent "$out" "gpasswd" "no removal when littledog lacks sudo"
+
 finish

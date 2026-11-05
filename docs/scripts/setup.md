@@ -10,7 +10,7 @@ loft-ctl setup
 |---|---|
 | Hostname | Selects host.conf; unknown hosts fail |
 | Storage fields | Adds fstab entry and mounts; never formats or rewrites an existing entry |
-| Users | Creates `pack-member`/`littledog` as 1003 if absent; adds groups. On `PRODUCTION_ROLE=true`, removes littledog from Docker |
+| Users | Creates `pack-member`/`littledog` as 1003 if absent; adds groups. Removes littledog from `sudo` everywhere and, on `PRODUCTION_ROLE=true`, from Docker |
 | SSH fields | Restricts SSH to adminhabl; optionally disables passwords |
 | `CONFIG_DIRS` / `MEDIA_DIRS` | Creates dirs; resets top-level owner to littledog:pack-member, mode 755/775 |
 | `SERVICES` + `.env` | Validates and starts each service with host overrides; skips a service whose Compose config fails. A missing `.env` fails only where Compose reads it (`env_file`) or requires a variable (`${VAR?}`); otherwise the service starts with empty values |

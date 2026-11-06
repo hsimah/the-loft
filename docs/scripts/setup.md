@@ -28,12 +28,14 @@ Kiosk wallpaper: supply `/home/rodnik/Pictures/wallpaper.webp` by hand; `Mod+Shi
 ## Fresh host
 
 1. Install a minimal OS with user `adminhabl` and key SSH. Pis: Raspberry Pi OS Lite 64-bit. Surfaces: see [Calavera reimage](../hosts/calavera.md#reimage).
-2. Give adminhabl read access to `hsimah/the-loft` and clone it:
+2. Add adminhabl's key to `hsimah/the-loft` on [kennl](../services/kennl.md), add a `~/.ssh/config` block for `kennl.loft.hsimah.com` (`Port 2222`, `User git`, `IdentityFile`, `IdentitiesOnly yes`; without it ssh offers no key), then clone:
 
    ```bash
    sudo install -d -o adminhabl -g adminhabl /srv/the-loft
-   git clone git@github.com:hsimah/the-loft.git /srv/the-loft
+   git clone ssh://git@kennl.loft.hsimah.com:2222/hsimah/the-loft.git /srv/the-loft
    ```
+
+   Viking cannot reach kennl; it clones the GitHub mirror `git@github.com:hsimah/the-loft.git` instead.
 
 3. Create each service's `.env` from its example (Houstn `COMPOSE_PROFILES=metrics`, [Snoot](../services/snoot.md) with a new Beszel system).
 4. Run `/srv/the-loft/loft-ctl setup` (the alias arrives with the dotfiles setup installs). Keep the first SSH session open while testing a new key login and `sudo`.

@@ -11,7 +11,7 @@
     "tags": [],
     "capabilities": {
       "file_context": true,
-      "vision": false,
+      "vision": true,
       "file_upload": true,
       "web_search": true,
       "image_generation": true,
@@ -26,6 +26,9 @@
     "toolIds": [
       "server:mcp:mercurius-documents",
       "server:mcp:mercurius-wiki"
+    ],
+    "filterIds": [
+      "image_ocr"
     ]
   },
   "params": {

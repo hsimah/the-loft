@@ -15,6 +15,9 @@ layout:
   Photos:
     style: row
     columns: 3
+  Home:
+    style: row
+    columns: 3
   Downloads:
     style: row
     columns: 3

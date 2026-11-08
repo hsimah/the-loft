@@ -173,6 +173,14 @@
         container: hubbl
         server: my-docker
 
+- Home:
+    - Capcom:
+        icon: home-assistant.svg
+        href: https://capcom.loft.hsimah.com
+        description: Home Assistant
+        container: capcom
+        server: my-docker
+
 - Downloads:
     - LazyLibrarian:
         icon: lazylibrarian.svg

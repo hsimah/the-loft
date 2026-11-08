@@ -170,8 +170,8 @@ else
 fi
 usermod -aG sudo,docker,pack-member adminhabl 2>/dev/null || true
 
-# rodnik — i3 display service account (i3 hosts only)
-if [[ "${I3_ENABLED:-false}" == "true" ]]; then
+# rodnik — kiosk display account (i3 and niri hosts only)
+if [[ "${I3_ENABLED:-false}" == "true" || "${NIRI_ENABLED:-false}" == "true" ]]; then
   if ! id rodnik &>/dev/null; then
     useradd -m -s /bin/bash rodnik
     info "Created user rodnik"
@@ -563,7 +563,7 @@ echo ""
 
 info "Users:"
 VERIFY_USERS=(littledog adminhabl)
-[[ "${I3_ENABLED:-false}" == "true" ]] && VERIFY_USERS+=(rodnik)
+[[ "${I3_ENABLED:-false}" == "true" || "${NIRI_ENABLED:-false}" == "true" ]] && VERIFY_USERS+=(rodnik)
 for user in "${VERIFY_USERS[@]}"; do
   if id "$user" &>/dev/null; then
     echo "  $(id "$user")"
@@ -614,6 +614,18 @@ if [[ "${I3_ENABLED:-false}" == "true" ]]; then
     echo "  lightdm: enabled"
   else
     warn "  lightdm: not enabled"
+  fi
+fi
+
+if [[ "${NIRI_ENABLED:-false}" == "true" ]]; then
+  echo ""
+  info "niri kiosk config:"
+  echo "  Autologin: rodnik → niri $(/usr/local/bin/niri --version 2>/dev/null || echo "(not installed)")"
+  echo "  Dashboard: ${KIOSK_DASHBOARD_URL:-(unset)} @ ${NIRI_SCALE:-1}x; photo frame after ${KIOSK_PHOTO_IDLE:-300}s idle"
+  if systemctl is-enabled greetd &>/dev/null; then
+    echo "  greetd: enabled"
+  else
+    warn "  greetd: not enabled"
   fi
 fi
 

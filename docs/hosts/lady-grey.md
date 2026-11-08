@@ -1,0 +1,54 @@
+# lady-grey
+
+Surface Pro 3, x86_64, Debian 13, touchscreen. Home Assistant wall tablet: a [Capcom](../services/capcom.md) dashboard, with the Hubbl photo frame when idle. No audio. [host.conf](../../hosts/lady-grey/host.conf) runs Snoot, Houstn metrics and Pupshow; [bootstrap](../../hosts/lady-grey/bootstrap) owns the desktop.
+
+**Prepared, not provisioned.** LAN address, Wi-Fi interface, DHCP unit, output name and scale are unverified until imaging.
+
+## Desktop
+
+Unlike Calavera and Woodstock (i3/Xorg), Lady Grey runs **niri** on Wayland. greetd autologs `rodnik` into `loft-kiosk-session`, which restarts `niri-session` whenever it exits. niri ([config.kdl](../../hosts/lady-grey/niri/config.kdl)) opens every window fullscreen and starts:
+
+- `loft-dashboard`: Firefox ESR kiosk on `KIOSK_DASHBOARD_URL` in a restart loop, once the URL answers.
+- `loft-idle`: swayidle. After `KIOSK_PHOTO_IDLE` s without input, `loft-photo-frame start` opens a second Firefox over the dashboard on Pupshow; the next touch closes it. It does nothing while Pupshow's `/health` fails. `KIOSK_SCREEN_OFF_IDLE` > 0 also powers the panel off.
+
+Settings come from host.conf via `/etc/default/loft-kiosk`; rerun setup after changing them. Sleep targets are masked and the lid is ignored. Mod+Return opens `foot`; Mod+Shift+E restarts niri. Output scale is `NIRI_SCALE` on `NIRI_OUTPUT`; check the name with `niri msg outputs`.
+
+```bash
+systemctl status greetd
+sudo journalctl -b _UID=$(id -u rodnik) --since '10 min ago'   # niri, Firefox, swayidle
+```
+
+### niri
+
+Debian does not package niri. [build-niri.sh](../../hosts/lady-grey/niri/build-niri.sh) builds `NIRI_TAG`/`NIRI_COMMIT` from host.conf in a trixie container, without PipeWire screencast, into `niri-<tag>.tar.gz`. Setup installs `/var/lib/loft/niri/niri-<tag>.tar.gz` and builds on Lady Grey only if it is missing (slow on this CPU). It reinstalls only when the commit changes. Build on space-needle:
+
+```bash
+# space-needle
+cd /srv/the-loft && sudo bash hosts/lady-grey/niri/build-niri.sh /tmp/niri
+# workstation
+scp space-needle:/tmp/niri/niri-v26.04.tar.gz lady-grey:/tmp/
+# lady-grey, before setup
+sudo install -D -m 644 /tmp/niri-v26.04.tar.gz /var/lib/loft/niri/niri-v26.04.tar.gz
+```
+
+To upgrade, change `NIRI_TAG` and `NIRI_COMMIT` (the tag's commit, not the tag object), rebuild, copy, rerun setup and reboot.
+
+## Dashboard login
+
+Log in once on the tablet as a dedicated non-admin Capcom user with **Keep me logged in**; the token persists in the kiosk profile `/home/rodnik/.local/share/loft-dashboard-firefox`. Set that user's default dashboard in its profile, or put the dashboard path in `KIOSK_DASHBOARD_URL`.
+
+## Photo frame
+
+[Pupshow](../../services/pupshow/docker-compose.yml) is Immich Kiosk on `127.0.0.1:3000`, never on the LAN. In Hubbl, create a non-admin user, share the frame album with it, and create its API key. Copy [.env.example](../../services/pupshow/.env.example) to `.env` with that key and the album ID, then `loft-ctl start pupshow`. Setup skips Pupshow until `.env` exists. Anyone with the key sees what that user sees; never use an admin key.
+
+## Wi-Fi
+
+The Surface Pro 3 uses a Marvell 88W8797 on PCIe (`mwifiex_pcie`), the same firmware family that crashes on Calavera. The watchdog runs every 2 minutes and reloads `mwifiex_pcie` when the interface loses IPv4. It no-ops until `WIFI_IFACE` is set from `ip link`. Set `WIFI_DHCP_UNIT` to whatever manages it (`networking` for a minimal install).
+
+## Install
+
+1. Debian 13 amd64 installer with firmware. Hold Volume Down + Power to boot USB with the Type Cover attached.
+2. Hostname `lady-grey`, user `adminhabl`, empty root password, SSH server + standard utilities only.
+3. Key SSH, git, clone to `/srv/the-loft` per [fresh host](../scripts/setup.md#fresh-host). Copy the space-needle niri build into place (above).
+4. Record the address, Wi-Fi interface and DHCP unit in host.conf. Create Houstn (`COMPOSE_PROFILES=metrics`), Snoot (new Beszel system) and, when ready, Pupshow `.env` files.
+5. `/srv/the-loft/loft-ctl setup`, reboot, and check: kiosk on the dashboard, touch scrolling, photo frame after idle and dismissed by touch, metrics, and recovery after rebooting with Capcom down.

@@ -1,0 +1,40 @@
+# Pupshow — Immich Kiosk photo frame for Hubbl. Runs on the kiosk host itself
+# and listens on loopback only; the niri kiosk shows it when idle.
+# Runbook: docs/hosts/lady-grey.md#photo-frame
+services:
+  pupshow:
+    image: ghcr.io/damongolding/immich-kiosk:0.45.2
+    container_name: pupshow
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    # KIOSK_IMMICH_URL, KIOSK_IMMICH_API_KEY and KIOSK_ALBUMS.
+    env_file: .env
+    environment:
+      TZ: America/Los_Angeles
+      KIOSK_DURATION: "60"
+      KIOSK_ALBUM_ORDER: random
+      KIOSK_TRANSITION: fade
+      KIOSK_IMAGE_FIT: contain
+      KIOSK_DISABLE_UI: "true"
+      KIOSK_DISABLE_NAVIGATION: "true"
+      KIOSK_HIDE_CURSOR: "true"
+      KIOSK_SHOW_TIME: "true"
+      KIOSK_SHOW_DATE: "true"
+      KIOSK_SHOW_PROGRESS_BAR: "false"
+      KIOSK_SHOW_VIDEOS: "false"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "/kiosk", "--healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

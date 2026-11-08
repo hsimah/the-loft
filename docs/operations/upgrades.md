@@ -24,6 +24,7 @@ Commit the pin, then `loft-ctl update <service>` (or `--no-pull` if already chec
 | Service | State / acceptance |
 |---|---|
 | Howlr | `/opt/howlr`; providers, Upstairs/Downstairs/All playback, kiosk login, screen wake |
+| Capcom | `/opt/capcom/config`; dashboards load, integrations connect, the Lady Grey kiosk stays logged in |
 | Pawpcorn | `/opt/pawpcorn/config`; libraries, direct play, hardware transcode |
 | Stellarr | `/opt/<product>`; client connections, imports, VPN egress |
 | Houstn | Beszel/Kuma data; upgrade hub before agents |

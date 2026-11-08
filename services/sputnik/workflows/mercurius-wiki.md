@@ -10,7 +10,7 @@ n8n workflows `mercurius-wiki` and `mercurius-wiki-write`: wiki tools for Open W
 | `create_page` | Sub-workflow, mode `create`: writes a new page with `If-None-Match: *`; fails if it exists |
 | `append_to_page` | Sub-workflow, mode `append`: adds text at the end of a `## heading` section (creating the section or page), written with `If-Match: <ETag>` so a concurrent edit makes it fail instead of being overwritten |
 
-There is no delete or rewrite tool; revisions (attributed to `sputnik`) are the undo.
+There is no delete or rewrite tool here; rewrites go through the native [wiki_edit](../open-webui/wiki_edit.py) tool after approval in chat, under the same path and content rules. Revisions (attributed to `sputnik`) are the undo.
 
 `mercurius-wiki-write` (Check → Read page → Edit → Write page → Result) rejects:
 

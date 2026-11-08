@@ -5,7 +5,7 @@ description: Rewrite, correct, reorganise or remove text on existing wiki pages 
 
 # Editing wiki pages
 
-Use this when the user asks to change, correct, reword, reorganise or remove something already on the wiki, or to split a page. To only add something, use append_to_page or create_page as usual.
+Use this when the user asks to change, correct, reword, reorganise or remove something already on the wiki, to add a section under a particular heading, or to split a page. To add to the end of a section or page, use append_to_page or create_page as usual.
 
 1. Call read_conventions and any conventions page it points to for this area. If it fails, do not edit; tell the user.
 2. Read the page with read_page. For a split or move, also read the pages beside it so new paths follow their neighbours.

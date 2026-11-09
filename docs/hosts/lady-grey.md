@@ -1,6 +1,6 @@
 # lady-grey
 
-Surface Pro 3, x86_64, **Fedora 45** (the only non-Debian host), touchscreen. LAN `192.168.86.25`. Home Assistant wall tablet: a [Capcom](../services/capcom.md) dashboard, with the Hubbl photo frame when idle. No audio. [host.conf](../../hosts/lady-grey/host.conf) runs Snoot, Houstn metrics and Pupshow; [bootstrap](../../hosts/lady-grey/bootstrap) owns the desktop.
+Surface Pro 4 (i5-6300U, 8 GB, 256 GB), x86_64, **Fedora 45** (the only non-Debian host), touchscreen. LAN `192.168.86.25`. Home Assistant wall tablet: a [Capcom](../services/capcom.md) dashboard, with the Hubbl photo frame when idle. No audio. [host.conf](../../hosts/lady-grey/host.conf) runs Snoot, Houstn metrics and Pupshow; [bootstrap](../../hosts/lady-grey/bootstrap) owns the desktop.
 
 **Provisioned from the unmerged `feat/lady-grey` branch.** Output name, scale, the dashboard and the photo frame are not verified yet.
 
@@ -42,7 +42,7 @@ Log in once on the tablet as a dedicated non-admin Capcom user with **Keep me lo
 
 ## Wi-Fi
 
-The Surface Pro 3 uses a Marvell 88W8797 on PCIe (`mwifiex_pcie`), the same firmware family that crashes on Calavera. The watchdog runs every 2 minutes and reloads `mwifiex_pcie` when the interface loses IPv4. The interface is `wlp2s0`, under NetworkManager (`nmcli device`).
+The Surface Pro 4 uses a Marvell 88W8897 on PCIe (`mwifiex_pcie`), from the Marvell family whose firmware crashes on Calavera. The watchdog runs every 2 minutes and reloads `mwifiex_pcie` when the interface loses IPv4. The interface is `wlp2s0`, under NetworkManager (`nmcli device`).
 
 ## Install
 

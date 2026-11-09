@@ -21,6 +21,22 @@ dnf install -y -q --setopt=install_weak_deps=False \
   mesa-dri-drivers dejavu-sans-fonts google-noto-color-emoji-fonts > /dev/null
 info "Installed $(niri --version), $(rpm -q noctalia)"
 
+# ── linux-surface (touchscreen) ───────────────────────────────────────────
+# The Surface Pro 4 touchscreen is Intel IPTS, which the stock kernel does not
+# drive: it needs linux-surface's kernel and iptsd (udev starts iptsd@hidrawN).
+# The watchdog keeps kernel-surface the default boot entry after Fedora kernel
+# updates. Secure Boot is off on this unit; with it on, surface-secureboot and
+# a MOK enrolment at the console are also needed. A reboot activates the kernel.
+if [[ ! -f /etc/yum.repos.d/linux-surface.repo ]]; then
+  dnf config-manager addrepo --from-repofile=https://pkg.surfacelinux.com/fedora/linux-surface.repo
+fi
+dnf install -y -q --allowerasing kernel-surface iptsd libwacom-surface \
+  kernel-surface-default-watchdog > /dev/null
+systemctl enable --now linux-surface-default-watchdog.path > /dev/null 2>&1
+if [[ "$(uname -r)" != *.surface.* ]]; then
+  warn "Running $(uname -r), not kernel-surface: reboot for the touchscreen"
+fi
+
 # ── Kiosk scripts and settings ────────────────────────────────────────────
 for script in loft-dashboard loft-photo-frame loft-idle loft-kiosk-session; do
   install -m 755 "${NIRI_SRC}/${script}.sh" "/usr/local/bin/${script}"

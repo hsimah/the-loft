@@ -28,6 +28,7 @@ niri, Noctalia, greetd, swayidle, kitty and Firefox come from Fedora's repos, in
 Differences from the Debian hosts, all handled by setup and the bootstrap:
 
 - The admin group is `wheel`; cron is `cronie`; Docker CE comes from Docker's Fedora repo.
+- The touchscreen is Intel IPTS, which needs the [linux-surface](https://github.com/linux-surface/linux-surface) kernel and `iptsd` from linux-surface's repo. `linux-surface-default-watchdog.path` keeps that kernel the default after Fedora kernel updates. Check with `uname -r` (ends `.surface.fc45`) and `systemctl list-units 'iptsd*'`. Secure Boot is off; turning it on needs `surface-secureboot` and a MOK enrolment at the console (password `surface`).
 - greetd runs on VT1 in place of `getty@tty1`; Ctrl+Alt+F2 gives a text console.
 - firewalld is on. The bootstrap opens 61208 (Glances) and 45876 (Beszel agent); SSH is open by default. Pupshow listens on loopback only.
 - SELinux is enforcing. Docker CE does not label containers (`selinux-enabled` is off), so bind mounts need no `:z`. If the kiosk does not start, check `sudo ausearch -m avc -ts boot`.

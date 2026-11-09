@@ -44,7 +44,7 @@ The Surface Pro 3 uses a Marvell 88W8797 on PCIe (`mwifiex_pcie`), the same firm
 ## Install
 
 1. Fedora 45 Everything netinstall, x86_64 ([releases](https://fedoraproject.org/misc#everything)). Hold Volume Down + Power to boot USB with the Type Cover attached; Secure Boot can stay on.
-2. Software Selection: Minimal Install, no add-ons. Host name `lady-grey`. User `adminhabl`, made administrator; root account disabled. Join Wi-Fi in Network & Host Name: the install downloads packages.
+2. Software Selection: Minimal Install with the **Common NetworkManager Submodules** add-on (without it the installed system has no Wi-Fi support). Host name `lady-grey`. User `adminhabl`, made administrator; root account disabled. Join Wi-Fi in Network & Host Name: the install downloads packages.
 3. `sudo dnf install git`, key SSH, clone to `/srv/the-loft` per [fresh host](../scripts/setup.md#fresh-host).
 4. Record the address and Wi-Fi interface in host.conf. Create Houstn (`COMPOSE_PROFILES=metrics`), Snoot (new Beszel system) and, when ready, Pupshow `.env` files.
 5. `/srv/the-loft/loft-ctl setup`, reboot, and check: kiosk on the dashboard, touch scrolling, photo frame after idle and dismissed by touch, metrics, and recovery after rebooting with Capcom down.

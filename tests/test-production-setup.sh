@@ -44,10 +44,11 @@ membership true "pack-member docker" 1
 assert_fails "$status" "failed removal stops setup"
 assert_absent "$out" "usermod" "nothing runs after a failed removal"
 
-# littledog never keeps sudo, on any host.
+# littledog never keeps the admin group (sudo on Debian, wheel on Fedora).
 SUDO_SECTION="$(sed -n '/^# littledog runs containers only/,/^fi$/p' "${ROOT}/control-plane/setup.sh")"
-no_sudo() { # groups
+no_sudo() { # groups [admin-group]
   out="$(PATH="$MOCK_BIN:$PATH" MOCK_GROUPS="$1" MOCK_REMOVE_STATUS=0 bash -c "set -euo pipefail
+ADMIN_GROUP=${2:-sudo}
 warn() { echo \"\$*\"; }
 $SUDO_SECTION" 2>&1)"
   status=$?
@@ -58,5 +59,9 @@ assert_contains "$out" "gpasswd -d littledog sudo" "setup removes littledog from
 no_sudo "littledog docker pack-member"
 assert_eq "$status" 0 "sudo removal is idempotent"
 assert_absent "$out" "gpasswd" "no removal when littledog lacks sudo"
+no_sudo "littledog wheel docker pack-member" wheel
+assert_contains "$out" "gpasswd -d littledog wheel" "setup removes littledog from wheel on Fedora"
+no_sudo "littledog sudo docker pack-member" wheel
+assert_absent "$out" "gpasswd" "Fedora leaves a non-admin sudo group alone"
 
 finish

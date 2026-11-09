@@ -1,6 +1,6 @@
 # loft-ctl setup
 
-`loft-ctl setup` ([source](../../control-plane/setup.sh)) provisions a Debian/Ubuntu host from `hosts/$(hostname)/host.conf`. It runs as root, elevating with sudo; it is repeatable but has side effects.
+`loft-ctl setup` ([source](../../control-plane/setup.sh)) provisions a Debian/Ubuntu host, or Fedora ([Lady Grey](../hosts/lady-grey.md#fedora)), from `hosts/$(hostname)/host.conf`. It runs as root, elevating with sudo; it is repeatable but has side effects.
 
 ```bash
 loft-ctl setup

@@ -11,7 +11,7 @@ Fleet configuration for The Loft: shared service definitions, per-host configura
 | [fjord](docs/hosts/fjord.md) | Raspberry Pi 3 B+ | Bluetooth Snapcast client (monitored) |
 | [calavera](docs/hosts/calavera.md) | Surface Pro 2 | Downstairs Snapcast client + touch dashboard |
 | [woodstock](docs/hosts/woodstock.md) | Surface Pro (1st gen) | Upstairs Snapcast client + touch dashboard |
-| [lady-grey](docs/hosts/lady-grey.md) | Surface Pro 3 | Home Assistant wall tablet (niri) |
+| [lady-grey](docs/hosts/lady-grey.md) | Surface Pro 3 (Fedora) | Home Assistant wall tablet (niri) |
 | [helarctos](docs/hosts/helarctos.md) | Minisforum MS-S1 MAX (Strix Halo, 128 GB) | Local inference for household services; Forgejo Actions runner |
 
 ## Services

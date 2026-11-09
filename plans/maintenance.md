@@ -9,7 +9,7 @@ Items needing live evidence or a decision. None of these are done unless stated.
 | Viking | Enable the memory cgroup: the firmware adds `cgroup_disable=memory` (not in `cmdline.txt`), so Compose memory limits are not enforced. Back up `/boot/firmware/cmdline.txt`, append `cgroup_enable=memory` to its single line, reboot, recheck `/proc/cmdline`. Enroll a second admin. Verify Cloudflare edge HTTPS redirect and IPv6 denial probes |
 | Clog | Scheduled backups; capacity measurement on the Pi; account reset/recovery in the app |
 | Woodstock | Test Wi-Fi firmware recovery |
-| Lady Grey | Image it ([install](../docs/hosts/lady-grey.md#install)), then record its address, Wi-Fi interface, DHCP unit and output in host.conf. Add it to dnsmasq, Homepage `extra_hosts` and the Fleet row, Beszel and Uptime Kuma. Verify niri on the Surface Pro 3: touch, scale, photo-frame dismissal, `mwifiex_pcie` stability. Set up the Pupshow user, album and key |
+| Lady Grey | Image it ([install](../docs/hosts/lady-grey.md#install)), then record its address, Wi-Fi interface, DHCP unit and output in host.conf. Add it to dnsmasq, Homepage `extra_hosts` and the Fleet row, Beszel and Uptime Kuma. Verify Fedora and niri on the Surface Pro 3: touch, scale, SELinux denials, photo-frame dismissal, `mwifiex_pcie` stability. Set up the Pupshow user, album and key |
 | Capcom | Deploy on space-needle, add `trusted_proxies` ([Capcom](../docs/services/capcom.md#configuration)), onboard, create the Lady Grey kiosk user |
 | Audiobookshelf | Verify Android, a second phone and cross-device progress sync |
 | Stellarr | Hardlink-safe imports need a shared-parent mount migration |

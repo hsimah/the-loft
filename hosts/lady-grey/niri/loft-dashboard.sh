@@ -14,6 +14,6 @@ until curl -s -o /dev/null --max-time 5 "${KIOSK_DASHBOARD_URL%%#*}"; do
 done
 
 while true; do
-  firefox-esr --kiosk --new-instance --profile "$profile" "$KIOSK_DASHBOARD_URL"
+  firefox --kiosk --new-instance --profile "$profile" "$KIOSK_DASHBOARD_URL"
   sleep 2
 done

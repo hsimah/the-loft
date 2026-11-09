@@ -15,7 +15,7 @@ case "${1:-}" in
     running && exit 0
     # Pupshow down or not configured: leave the dashboard showing.
     curl -fs -o /dev/null --max-time 3 "${KIOSK_PHOTO_URL}/health" || exit 0
-    firefox-esr --kiosk --new-instance --profile "$profile" "$KIOSK_PHOTO_URL" \
+    firefox --kiosk --new-instance --profile "$profile" "$KIOSK_PHOTO_URL" \
       > /dev/null 2>&1 &
     echo $! > "$pidfile"
     ;;

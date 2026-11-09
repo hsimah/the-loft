@@ -6,21 +6,24 @@ Surface Pro 3, x86_64, **Fedora 45** (the only non-Debian host), touchscreen. Ho
 
 ## Desktop
 
-Unlike Calavera and Woodstock (i3/Xorg), Lady Grey runs **niri** on Wayland. greetd autologs `rodnik` into `loft-kiosk-session`, which restarts `niri-session` whenever it exits. niri ([config.kdl](../../hosts/lady-grey/niri/config.kdl)) opens every window fullscreen and starts:
+Unlike Calavera and Woodstock (i3/Xorg), Lady Grey runs **niri** with the **Noctalia** shell on Wayland. Both configs come from blanco (`hsimah/blanco` on kennl). greetd autologs `rodnik` into `loft-kiosk-session`, which restarts `niri-session` whenever it exits. niri ([config.kdl](../../hosts/lady-grey/niri/config.kdl)) has blanco's layout and binds, and starts:
 
-- `loft-dashboard`: Firefox kiosk on `KIOSK_DASHBOARD_URL` in a restart loop, once the URL answers.
-- `loft-idle`: swayidle. After `KIOSK_PHOTO_IDLE` s without input, `loft-photo-frame start` opens a second Firefox over the dashboard on Pupshow; the next touch closes it. It does nothing while Pupshow's `/health` fails. `KIOSK_SCREEN_OFF_IDLE` > 0 also powers the panel off.
+- `loft-dashboard`: Firefox kiosk on `KIOSK_DASHBOARD_URL` in a restart loop, once the URL answers. A window rule opens Firefox maximized under Noctalia's bar and refuses its kiosk fullscreen request.
+- `loft-idle`: swayidle. After `KIOSK_PHOTO_IDLE` s without input, `loft-photo-frame start` opens a second Firefox on Pupshow and fullscreens it by PID over the dashboard and bar; the next touch closes it. It does nothing while Pupshow's `/health` fails. `KIOSK_SCREEN_OFF_IDLE` > 0 also powers the panel off.
 
-Settings come from host.conf via `/etc/default/loft-kiosk`; rerun setup after changing them. Sleep targets are masked and the lid is ignored. Mod+Return opens `foot`; Mod+Shift+E restarts niri. Output scale is `NIRI_SCALE` on `NIRI_OUTPUT`; check the name with `niri msg outputs`.
+Settings come from host.conf via `/etc/default/loft-kiosk`; rerun setup after changing them. Sleep targets are masked and the lid is ignored. Mod+T opens kitty, Mod+Space fuzzel; Mod+Shift+E restarts niri. Output scale is `NIRI_SCALE` on `NIRI_OUTPUT`; check the name with `niri msg outputs`.
+
+Noctalia ([config.toml](../../hosts/lady-grey/noctalia/config.toml)) is blanco's with its idle lock, suspend and screen-off disabled, and without audio, Bluetooth or power-profile widgets. It runs as a user service with the niri session. Setup rewrites `~rodnik/.config/noctalia/config.toml`, so make lasting changes in the repo, not the settings UI. Wallpapers go in `/home/rodnik/Pictures/Wallpapers`; Noctalia themes niri from them through `noctalia.kdl`, which setup seeds empty because niri refuses a missing include.
 
 ```bash
 systemctl status greetd
 sudo journalctl -b _UID=$(id -u rodnik) --since '10 min ago'   # niri, Firefox, swayidle
+sudo -u rodnik XDG_RUNTIME_DIR=/run/user/$(id -u rodnik) systemctl --user status noctalia
 ```
 
 ## Fedora
 
-niri, greetd, swayidle, foot and Firefox come from Fedora's repos, installed without weak dependencies, and update with `sudo dnf upgrade`; reboot after a niri update. Fedora is supported for about 13 months, so move to the next release once a year with `dnf system-upgrade`, then rerun setup.
+niri, Noctalia, greetd, swayidle, kitty and Firefox come from Fedora's repos, installed without weak dependencies, and update with `sudo dnf upgrade`; reboot after a niri update. Fedora is supported for about 13 months, so move to the next release once a year with `dnf system-upgrade`, then rerun setup.
 
 Differences from the Debian hosts, all handled by setup and the bootstrap:
 

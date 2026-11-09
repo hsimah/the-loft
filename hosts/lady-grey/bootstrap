@@ -2,22 +2,24 @@
 # lady-grey host bootstrap — sourced by setup.sh (§11b)
 # Expects: REPO_DIR, HOST_NAME, host.conf vars, info/warn/error from the caller.
 #
-# Fedora niri touch-dashboard kiosk: greetd autologs rodnik into niri, which
-# runs a Firefox kiosk on Capcom (Home Assistant) and the Pupshow photo frame
-# when idle. Runbook: docs/hosts/lady-grey.md
+# Fedora niri touch dashboard: greetd autologs rodnik into niri with the
+# Noctalia shell (both configs from blanco), a Firefox kiosk on Capcom (Home
+# Assistant) under the bar and the Pupshow photo frame when idle.
+# Runbook: docs/hosts/lady-grey.md
 
 NIRI_SRC="${REPO_DIR}/hosts/${HOST_NAME}/niri"
 info "Provisioning niri kiosk..."
 
 # ── Packages ──────────────────────────────────────────────────────────────
-# Without weak deps: niri otherwise recommends waybar, fuzzel, alacritty,
-# swaylock and the GNOME portals, none of which a kiosk uses. greetd pulls in
-# greetd-selinux automatically. foot is the admin terminal (Mod+Return).
-info "Installing niri + kiosk packages..."
+# Without weak deps: niri otherwise recommends waybar, alacritty, swaylock and
+# the GNOME portals, and Noctalia a keyring and power-profiles-daemon. greetd
+# pulls in greetd-selinux automatically. kitty and fuzzel match blanco's binds
+# (Mod+T, Mod+Space); upower feeds Noctalia's battery widget.
+info "Installing niri + Noctalia + kiosk packages..."
 dnf install -y -q --setopt=install_weak_deps=False \
-  niri greetd swayidle foot firefox mesa-dri-drivers \
-  dejavu-sans-fonts google-noto-color-emoji-fonts > /dev/null
-info "Installed $(niri --version)"
+  niri noctalia greetd swayidle kitty fuzzel firefox upower brightnessctl \
+  mesa-dri-drivers dejavu-sans-fonts google-noto-color-emoji-fonts > /dev/null
+info "Installed $(niri --version), $(rpm -q noctalia)"
 
 # ── Kiosk scripts and settings ────────────────────────────────────────────
 for script in loft-dashboard loft-photo-frame loft-idle loft-kiosk-session; do
@@ -31,10 +33,21 @@ KIOSK_PHOTO_IDLE="${KIOSK_PHOTO_IDLE:-0}"
 KIOSK_SCREEN_OFF_IDLE="${KIOSK_SCREEN_OFF_IDLE:-0}"
 KIOSK
 
-install -d -o rodnik -g rodnik /home/rodnik/.config /home/rodnik/.config/niri
+install -d -o rodnik -g rodnik /home/rodnik/.config /home/rodnik/.config/niri \
+  /home/rodnik/.config/noctalia /home/rodnik/Pictures /home/rodnik/Pictures/Wallpapers
 sed -e "s|@NIRI_OUTPUT@|${NIRI_OUTPUT}|" -e "s|@NIRI_SCALE@|${NIRI_SCALE}|" \
   "${NIRI_SRC}/config.kdl" > /home/rodnik/.config/niri/config.kdl
 chown rodnik:rodnik /home/rodnik/.config/niri/config.kdl
+# Noctalia regenerates noctalia.kdl on theme changes; niri refuses to start if
+# the include is missing, so seed it empty once.
+if [[ ! -e /home/rodnik/.config/niri/noctalia.kdl ]]; then
+  install -o rodnik -g rodnik -m 644 /dev/null /home/rodnik/.config/niri/noctalia.kdl
+fi
+install -o rodnik -g rodnik -m 644 "${REPO_DIR}/hosts/${HOST_NAME}/noctalia/config.toml" \
+  /home/rodnik/.config/noctalia/config.toml
+# Started with the niri session (graphical-session.target); only rodnik has one.
+install -m 644 "${REPO_DIR}/hosts/${HOST_NAME}/noctalia/noctalia.service" /etc/systemd/user/noctalia.service
+systemctl --global enable noctalia.service > /dev/null 2>&1
 if ! niri validate -c /home/rodnik/.config/niri/config.kdl > /dev/null 2>&1; then
   warn "niri rejected /home/rodnik/.config/niri/config.kdl; check: niri validate -c <file>"
 fi

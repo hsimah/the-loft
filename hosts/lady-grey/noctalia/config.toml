@@ -1,0 +1,107 @@
+# rodnik's Noctalia config on Lady Grey, from blanco's (hsimah/blanco on kennl).
+# The bootstrap installs it to ~rodnik/.config/noctalia/ on every setup run,
+# replacing changes made in Noctalia's settings UI; make them here instead.
+# Differences from blanco: no idle lock, suspend or screen-off (loft-idle shows
+# the photo frame instead), and no audio, Bluetooth or power-profile widgets.
+
+[theme]
+mode = "dark"
+source = "wallpaper"
+wallpaper_scheme = "m3-tonal-spot"
+
+[theme.templates]
+builtin_ids = ["niri"]
+
+[wallpaper]
+directory = "~/Pictures/Wallpapers"
+fill_mode = "crop"
+transition_duration = 1500
+
+[wallpaper.automation]
+enabled = true
+interval_seconds = 300
+order = "random"
+
+[backdrop]
+enabled = true
+blur_intensity = 0.4
+tint_intensity = 0.6
+
+[location]
+address = "Seattle, WA"
+
+[weather]
+enabled = true
+unit = "celsius"
+
+[notification]
+background_opacity = 0.85
+
+[audio]
+enable_sounds = false
+
+[idle.behavior.screen-off]
+timeout = 600
+action = "screen_off"
+enabled = false
+
+[idle.behavior.lock]
+timeout = 660
+action = "lock"
+enabled = false
+
+[idle.behavior.suspend]
+timeout = 1800
+action = "lock_and_suspend"
+enabled = false
+
+[bar.main]
+position = "top"
+background_opacity = 0.7
+margin_ends = 0
+margin_edge = 0
+concave_edge_corners = true
+radius = 0
+capsule = true
+capsule_radius = 4
+widget_spacing = 6
+
+start = ["workspaces", "clock", "active_window"]
+center = []
+end = ["group:sysmon", "battery", "network", "control-center"]
+
+[[bar.main.capsule_group]]
+id = "sysmon"
+members = ["cpu", "cpu-temp", "ram"]
+
+[[control_center.shortcuts]]
+type = "wifi"
+
+[[control_center.shortcuts]]
+type = "caffeine"
+
+[[control_center.shortcuts]]
+type = "notification"
+
+[widget.clock]
+format = "{:%H:%M %a, %b %d}"
+tooltip_format = "{:%A, %B %d, %Y}"
+
+[widget.cpu]
+type = "sysmon"
+stat = "cpu_usage"
+
+[widget.cpu-temp]
+type = "sysmon"
+stat = "cpu_temp"
+
+[widget.ram]
+type = "sysmon"
+stat = "ram_used"
+
+[widget.network]
+show_label = false
+
+[widget.workspaces]
+hide_when_empty = true
+labels_only_when_occupied = true

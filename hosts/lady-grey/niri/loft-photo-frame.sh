@@ -17,7 +17,19 @@ case "${1:-}" in
     curl -fs -o /dev/null --max-time 3 "${KIOSK_PHOTO_URL}/health" || exit 0
     firefox --kiosk --new-instance --profile "$profile" "$KIOSK_PHOTO_URL" \
       > /dev/null 2>&1 &
-    echo $! > "$pidfile"
+    pid=$!
+    echo "$pid" > "$pidfile"
+    # niri opens every Firefox window maximized under the bar (config.kdl);
+    # fullscreen this one over it once its window appears.
+    for _ in $(seq 60); do
+      id="$(niri msg --json windows | jq -r --argjson pid "$pid" \
+        'first(.[] | select(.pid == $pid) | .id) // empty')"
+      if [[ -n "$id" ]]; then
+        niri msg action fullscreen-window --id "$id"
+        break
+      fi
+      sleep 0.5
+    done
     ;;
   stop)
     running && kill "$(< "$pidfile")"

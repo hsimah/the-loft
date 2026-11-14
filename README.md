@@ -40,7 +40,6 @@ hosts/<hostname>/host.conf          # Per-host manifest (services, storage, heal
 hosts/<hostname>/overrides/...      # Per-host compose overrides
 hosts/<hostname>/bootstrap          # Optional host-specific provisioning, sourced by `loft-ctl setup`
 hosts/<hostname>/i3/...             # Optional i3 desktop config (when I3_ENABLED)
-hosts/<hostname>/niri/...           # Optional niri kiosk config and scripts (when NIRI_ENABLED)
 services/<name>/docker-compose.yml  # Shared service definition
 services/<name>/.env.example        # Secret template
 control-plane/                      # Shared scripts

@@ -650,7 +650,7 @@ if [[ "${NIRI_ENABLED:-false}" == "true" ]]; then
   echo ""
   info "niri kiosk config:"
   echo "  Autologin: rodnik → $(niri --version 2>/dev/null || echo "niri (not installed)")"
-  echo "  Dashboard: ${KIOSK_DASHBOARD_URL:-(unset)} @ ${NIRI_SCALE:-1}x; photo frame after ${KIOSK_PHOTO_IDLE:-300}s idle"
+  echo "  Dashboard: ${KIOSK_DASHBOARD_URL:-(unset)}; photo frame after ${KIOSK_PHOTO_IDLE:-300}s idle"
   if systemctl is-enabled greetd &>/dev/null; then
     echo "  greetd: enabled"
   else

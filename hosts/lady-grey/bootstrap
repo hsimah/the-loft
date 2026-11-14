@@ -60,12 +60,11 @@ info "Kiosk: ${KIOSK_DASHBOARD_URL}; photo frame after ${KIOSK_PHOTO_IDLE}s idle
 
 # ── Desktop (blanco) ──────────────────────────────────────────────────────
 # adminhabl owns the clone, like /srv/the-loft, and pulls it by hand; rodnik
-# only reads it. Setup clones it once with adminhabl's kennl key, which must
-# also be a read-only deploy key on hsimah/blanco; until then the clone fails
-# and the desktop is skipped. blanco's deploy.sh, run as rodnik, stows the
-# shared configs and the lady-grey overlay (selected by hostname) as links
-# into the clone, so a pull changes existing files at once; files added or
-# removed in blanco need a rerun of setup.
+# only reads it. Setup clones it once with adminhabl's kennl key; if that
+# fails, the desktop is skipped until a rerun. blanco's deploy.sh, run as
+# rodnik, stows the shared configs and the lady-grey overlay (selected by
+# hostname) as links into the clone, so a pull changes existing files at
+# once; files added or removed in blanco need a rerun of setup.
 BLANCO_URL="ssh://git@kennl.loft.hsimah.com:2222/hsimah/blanco.git"
 BLANCO_DIR="/srv/blanco"
 # From a directory each user can read: git refuses an unreadable cwd.
@@ -75,7 +74,7 @@ as_rodnik() { (cd /home/rodnik && sudo -u rodnik -H "$@"); }
 if [[ ! -d "${BLANCO_DIR}/.git" ]]; then
   install -d -o adminhabl -g adminhabl "$BLANCO_DIR"
   as_admin env GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=10" \
-    git clone -q "$BLANCO_URL" "$BLANCO_DIR" 2> /dev/null \
+    git clone -q "$BLANCO_URL" "$BLANCO_DIR" \
     && info "Cloned blanco to ${BLANCO_DIR}"
 fi
 
@@ -109,7 +108,7 @@ if [[ -d "${BLANCO_DIR}/.git" ]]; then
     warn "niri rejected /home/rodnik/.config/niri/config.kdl; check: niri validate -c <file>"
   fi
 else
-  warn "blanco not cloned: add adminhabl's kennl key (the one on hsimah/the-loft) as a read-only deploy key on hsimah/blanco, then rerun setup"
+  warn "blanco not cloned; check adminhabl can: git clone ${BLANCO_URL}; then rerun setup"
 fi
 # Files written as root under a home directory can carry the wrong SELinux
 # label; reset them to the policy defaults.

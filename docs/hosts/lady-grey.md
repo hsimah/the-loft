@@ -17,7 +17,10 @@ Settings come from host.conf via `/etc/default/loft-kiosk`; rerun setup after ch
 
 Wallpapers go in `/home/rodnik/Pictures/Wallpapers`; Noctalia themes niri from them through `noctalia.kdl`, which setup seeds empty because niri refuses a missing include.
 
+greetd autologs in once per boot; a plain `systemctl restart greetd` lands on the `agreety` prompt. To restart the kiosk without a reboot, clear its runfile first.
+
 ```bash
+sudo rm -f /run/greetd.run && sudo systemctl restart greetd   # restart the kiosk
 systemctl status greetd
 sudo journalctl -b _UID=$(id -u rodnik) --since '10 min ago'   # niri, Firefox, swayidle
 sudo -u rodnik XDG_RUNTIME_DIR=/run/user/$(id -u rodnik) systemctl --user status noctalia

@@ -116,7 +116,8 @@ fi
 command -v restorecon > /dev/null && restorecon -R /home/rodnik
 
 # ── greetd autologin (rodnik → niri) ──────────────────────────────────────
-# initial_session runs once per greetd start; loft-kiosk-session restarts niri
+# initial_session runs once per boot (greetd's runfile, /run/greetd.run, records
+# it; a plain greetd restart lands on agreety); loft-kiosk-session restarts niri
 # itself. Fedora runs greetd on VT1 (it replaces getty@tty1); a text console
 # remains on VT2 (Ctrl+Alt+F2).
 info "Configuring greetd autologin (rodnik → niri)..."

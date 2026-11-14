@@ -13,7 +13,7 @@ rodnik's desktop lives in blanco (`hsimah/blanco` on kennl): the shared niri/Noc
 - `loft-dashboard`: Firefox kiosk on `KIOSK_DASHBOARD_URL` in a restart loop, once the URL answers. A window rule opens Firefox maximized under Noctalia's bar and refuses its kiosk fullscreen request.
 - `loft-idle`: swayidle. After `KIOSK_PHOTO_IDLE` s without input, `loft-photo-frame start` opens a second Firefox on Pupshow and fullscreens it by PID over the dashboard and bar; the next touch closes it. It does nothing while Pupshow's `/health` fails. `KIOSK_SCREEN_OFF_IDLE` > 0 also powers the panel off.
 
-Settings come from host.conf via `/etc/default/loft-kiosk`; rerun setup after changing them. Sleep targets are masked and the lid is ignored. Mod+T opens kitty, Mod+Space fuzzel; Mod+Shift+E restarts niri.
+Settings come from host.conf via `/etc/default/loft-kiosk`; rerun setup after changing them. Sleep targets are masked and the lid is ignored. Mod+T opens kitty, Mod+Space fuzzel; Mod+Shift+E restarts niri. rodnik's shell is fish with blanco's bobthefish prompt; kitty's bundled Nerd Font symbols cover its glyphs.
 
 Wallpapers go in `/home/rodnik/Pictures/Wallpapers`; Noctalia themes niri from them through `noctalia.kdl`, which setup seeds empty because niri refuses a missing include.
 
@@ -28,7 +28,7 @@ sudo -u rodnik XDG_RUNTIME_DIR=/run/user/$(id -u rodnik) systemctl --user status
 
 ## Fedora
 
-niri, Noctalia, greetd, swayidle, kitty and Firefox come from Fedora's repos, installed without weak dependencies, and update with `sudo dnf upgrade`; reboot after a niri update. Fedora is supported for about 13 months, so move to the next release once a year with `dnf system-upgrade`, then rerun setup.
+niri, Noctalia, greetd, swayidle, kitty, fish and Firefox come from Fedora's repos, installed without weak dependencies, and update with `sudo dnf upgrade`; reboot after a niri update. Fedora is supported for about 13 months, so move to the next release once a year with `dnf system-upgrade`, then rerun setup.
 
 Differences from the Debian hosts, all handled by setup and the bootstrap:
 

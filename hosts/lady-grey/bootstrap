@@ -15,10 +15,10 @@ info "Provisioning niri kiosk..."
 # the GNOME portals, and Noctalia a keyring and power-profiles-daemon. greetd
 # pulls in greetd-selinux automatically. kitty and fuzzel match blanco's binds
 # (Mod+T, Mod+Space); upower feeds Noctalia's battery widget; stow deploys
-# blanco.
+# blanco; fish is rodnik's shell for blanco's prompt.
 info "Installing niri + Noctalia + kiosk packages..."
 dnf install -y -q --setopt=install_weak_deps=False \
-  niri noctalia greetd swayidle kitty fuzzel firefox upower brightnessctl stow \
+  niri noctalia greetd swayidle kitty fuzzel firefox upower brightnessctl stow fish \
   mesa-dri-drivers dejavu-sans-fonts google-noto-color-emoji-fonts > /dev/null
 info "Installed $(niri --version), $(rpm -q noctalia)"
 
@@ -48,6 +48,10 @@ KIOSK_PHOTO_URL="${KIOSK_PHOTO_URL}"
 KIOSK_PHOTO_IDLE="${KIOSK_PHOTO_IDLE:-0}"
 KIOSK_SCREEN_OFF_IDLE="${KIOSK_SCREEN_OFF_IDLE:-0}"
 KIOSK
+
+# blanco's lady-grey overlay styles fish with bobthefish; kitty bundles the
+# Nerd Font symbols it needs. greetd runs the session command, not this shell.
+usermod -s /usr/bin/fish rodnik
 
 install -d -o rodnik -g rodnik /home/rodnik/.config /home/rodnik/.config/niri \
   /home/rodnik/Pictures /home/rodnik/Pictures/Wallpapers

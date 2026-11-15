@@ -10,7 +10,7 @@ Items needing live evidence or a decision. None of these are done unless stated.
 | Clog | Scheduled backups; capacity measurement on the Pi; account reset/recovery in the app |
 | Woodstock | Test Wi-Fi firmware recovery |
 | Lady Grey | Reserve `192.168.86.25` in the router with a fixed Wi-Fi MAC. Add it to Beszel and Uptime Kuma. Verify on the Surface Pro 4: SELinux denials, photo-frame dismissal, `mwifiex_pcie` stability. Set up the Pupshow user, album and key. Add a Capcom workspace in blanco and retire `KIOSK_DASHBOARD_URL` (only the unused `loft-dashboard` reads it) |
-| Capcom | Deploy on space-needle, add `trusted_proxies` ([Capcom](../docs/services/capcom.md#configuration)), onboard, create the Lady Grey kiosk user |
+| Capcom | Create the Lady Grey kiosk user. The Bluetooth integration cannot reach BlueZ (`manager._bus` is None); fix or disable it |
 | Audiobookshelf | Verify Android, a second phone and cross-device progress sync |
 | Stellarr | Hardlink-safe imports need a shared-parent mount migration |
 | Beszel | Confirm hub-side resolution and per-system tokens |

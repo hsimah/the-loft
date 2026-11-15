@@ -29,6 +29,10 @@ Two Spotify provider instances, one per person (same Premium Family plan), using
 - **Deleting a provider removes it from every user's allowlist**, and the replacement gets a new ID that isn't added. It loads fine but is invisible in Browse, with no errors. After re-adding any provider, recheck Settings → Users.
 - Premium is only checked at authorization. A "needs Premium" error on re-add usually means the browser authorized the wrong account, not an MA bug.
 
+## Audiobookshelf
+
+MA's Audiobookshelf provider uses `https://audiobookshelf.loft.hsimah.com` (MA is host-networked, so `audiobookshelf:8080` doesn't resolve; the server sets `dns` to Mushr so the loft name does) and the shared ABS listening account, so playback progress syncs with the phones. Add the provider to each user's allowlist.
+
 ## Operations
 
 ```bash

@@ -6,6 +6,10 @@ services:
     profiles:
       - server
     network_mode: host
+    # Resolve *.loft.hsimah.com (Audiobookshelf provider) via Mushr; daemon.json
+    # otherwise gives every container public DNS, host-networked or not.
+    dns:
+      - 192.168.86.28
     restart: unless-stopped
     logging:
       driver: json-file

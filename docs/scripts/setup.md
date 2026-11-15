@@ -1,6 +1,6 @@
 # loft-ctl setup
 
-`loft-ctl setup` ([source](../../control-plane/setup.sh)) provisions a Debian/Ubuntu host from `hosts/$(hostname)/host.conf`. It runs as root, elevating with sudo; it is repeatable but has side effects.
+`loft-ctl setup` ([source](../../control-plane/setup.sh)) provisions a Debian/Ubuntu host, or Fedora ([Lady Grey](../hosts/lady-grey.md#fedora)), from `hosts/$(hostname)/host.conf`. It runs as root, elevating with sudo; it is repeatable but has side effects.
 
 ```bash
 loft-ctl setup
@@ -15,7 +15,7 @@ loft-ctl setup
 | `CONFIG_DIRS` / `MEDIA_DIRS` | Creates dirs; resets top-level owner to littledog:pack-member, mode 755/775 |
 | `SERVICES` + `.env` | Validates and starts each service with host overrides; skips a service whose Compose config fails. A missing `.env` fails only where Compose reads it (`env_file`) or requires a variable (`${VAR?}`); otherwise the service starts with empty values |
 | Service hook (`services/<name>/setup.sh`) | Sourced after deploy; no service has one at present |
-| `hosts/<host>/bootstrap` | Host provisioning (Surface kiosks: i3, dashboard, power daemon, hardware fixes; Fjord: Bluetooth audio; space-needle and helarctos: egress firewalls) |
+| `hosts/<host>/bootstrap` | Host provisioning (Surface kiosks: i3 or niri, dashboard, power daemon, hardware fixes; Fjord: Bluetooth audio; space-needle and helarctos: egress firewalls) |
 | Wi-Fi fields | Installs the watchdog script, defaults file and cron |
 | `BACKUP_*` | With `BACKUP_ENABLED=true`: installs restic and rclone, `loft-backup`, and the nightly and weekly systemd timers ([backups](../operations/backups.md)) |
 
@@ -27,7 +27,7 @@ Kiosk wallpaper: supply `/home/rodnik/Pictures/wallpaper.webp` by hand; `Mod+Shi
 
 ## Fresh host
 
-1. Install a minimal OS with user `adminhabl` and key SSH. Pis: Raspberry Pi OS Lite 64-bit. Surfaces: see [Calavera reimage](../hosts/calavera.md#reimage).
+1. Install a minimal OS with user `adminhabl` and key SSH. Pis: Raspberry Pi OS Lite 64-bit. Surfaces: see [Calavera reimage](../hosts/calavera.md#reimage) or [Lady Grey install](../hosts/lady-grey.md#install).
 2. Add adminhabl's key to `hsimah/the-loft` on [kennl](../services/kennl.md), add a `~/.ssh/config` block for `kennl.loft.hsimah.com` (`Port 2222`, `User git`, `IdentityFile`, `IdentitiesOnly yes`; without it ssh offers no key), then clone:
 
    ```bash

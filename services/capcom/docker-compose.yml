@@ -1,0 +1,24 @@
+# Capcom — Home Assistant. Runbook: docs/services/capcom.md
+#
+# Host network so discovery (mDNS/SSDP) and LAN integrations work; Caddy
+# reaches it on host.docker.internal:8123. Configuration and state live in
+# /opt/capcom/config. Read docs/operations/upgrades.md before changing the tag:
+# releases migrate the database and do not support downgrades.
+services:
+  capcom:
+    image: ghcr.io/home-assistant/home-assistant:2026.10.4
+    container_name: capcom
+    network_mode: host
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      TZ: America/Los_Angeles
+    volumes:
+      - /opt/capcom/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      # Bluetooth and other D-Bus integrations.
+      - /run/dbus:/run/dbus:ro

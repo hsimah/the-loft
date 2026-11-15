@@ -9,10 +9,12 @@ Start with the [fleet overview](../README.md). Exact images, ports and mounts li
 - [fjord](hosts/fjord.md) — Bluetooth Snapcast client
 - [calavera](hosts/calavera.md) — Downstairs audio and touch dashboard
 - [woodstock](hosts/woodstock.md) — Upstairs audio and touch dashboard
+- [lady-grey](hosts/lady-grey.md) — Home Assistant wall tablet (niri)
 - [helarctos](hosts/helarctos.md) — CI runner and GPU inference
 
 ## Services
 
+- [Capcom](services/capcom.md) — Home Assistant
 - [Clog](services/clog.md) — inventory app on Viking
 - [Houstn](services/houstn.md) — dashboards and Glances
 - [Howlr](services/howlr.md) — Music Assistant and Snapcast

@@ -9,6 +9,8 @@ Items needing live evidence or a decision. None of these are done unless stated.
 | Viking | Enable the memory cgroup: the firmware adds `cgroup_disable=memory` (not in `cmdline.txt`), so Compose memory limits are not enforced. Back up `/boot/firmware/cmdline.txt`, append `cgroup_enable=memory` to its single line, reboot, recheck `/proc/cmdline`. Enroll a second admin. Verify Cloudflare edge HTTPS redirect and IPv6 denial probes |
 | Clog | Scheduled backups; capacity measurement on the Pi; account reset/recovery in the app |
 | Woodstock | Test Wi-Fi firmware recovery |
+| Lady Grey | Reserve `192.168.86.25` in the router with a fixed Wi-Fi MAC. Add it to Beszel and Uptime Kuma. Verify on the Surface Pro 4: SELinux denials, photo-frame dismissal, `mwifiex_pcie` stability. Set up the Pupshow user, album and key. Add a Capcom workspace in blanco and retire `KIOSK_DASHBOARD_URL` (only the unused `loft-dashboard` reads it) |
+| Capcom | Create the Lady Grey kiosk user. The Bluetooth integration cannot reach BlueZ (`manager._bus` is None); fix or disable it |
 | Audiobookshelf | Verify Android, a second phone and cross-device progress sync |
 | Stellarr | Hardlink-safe imports need a shared-parent mount migration |
 | Beszel | Confirm hub-side resolution and per-system tokens |

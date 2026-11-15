@@ -8,6 +8,7 @@ services:
       - "calavera:192.168.86.35"
       - "woodstock:192.168.86.37"
       - "helarctos:192.168.86.21"
+      - "lady-grey:192.168.86.25"
   glances:
     volumes:
       - /mammoth:/mammoth:ro

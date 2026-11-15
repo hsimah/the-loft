@@ -79,6 +79,12 @@ howlr.{$LOFT_DOMAIN} {
 	reverse_proxy host.docker.internal:8095
 }
 
+# capcom — Home Assistant (host network). LAN only; keep off the tunnel.
+capcom.{$LOFT_DOMAIN} {
+	import cloudflare_tls
+	reverse_proxy host.docker.internal:8123
+}
+
 homepage.{$LOFT_DOMAIN} {
 	import cloudflare_tls
 	reverse_proxy homepage:3000
@@ -205,6 +211,10 @@ http://snapweb.space-needle:80 {
 
 http://howlr.space-needle:80 {
 	reverse_proxy host.docker.internal:8095
+}
+
+http://capcom.space-needle:80 {
+	reverse_proxy host.docker.internal:8123
 }
 
 http://homepage.space-needle:80 {

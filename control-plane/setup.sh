@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # setup.sh — idempotent setup for any host in The Loft fleet
-# Debian/Ubuntu; re-runs itself with sudo when not root
+# Debian/Ubuntu (apt) or Fedora (dnf); re-runs itself with sudo when not root
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,8 +22,16 @@ if [[ $EUID -ne 0 ]]; then
   exec sudo bash "${REPO_DIR}/control-plane/setup.sh" "$@"
 fi
 
-if ! command -v apt-get &>/dev/null; then
-  error "This script requires a Debian/Ubuntu system (apt-get not found)"
+# Debian/Ubuntu everywhere except Lady Grey (Fedora). Package names in the
+# shared list are the same in both; the branches below cover what is not.
+if command -v apt-get &>/dev/null; then
+  PKG_FAMILY=debian
+  ADMIN_GROUP=sudo
+elif command -v dnf &>/dev/null; then
+  PKG_FAMILY=fedora
+  ADMIN_GROUP=wheel
+else
+  error "This script requires Debian/Ubuntu (apt-get) or Fedora (dnf)"
   exit 1
 fi
 
@@ -63,13 +71,22 @@ PACKAGES=(git curl ca-certificates jq rsync skopeo kitty-terminfo tmux ncurses-t
 # Off-site backups: restic encrypts, rclone reaches Google Drive. restic must be
 # 0.16 or newer (`forget --keep-yearly unlimited`).
 [[ "${BACKUP_ENABLED:-false}" == "true" ]] && PACKAGES+=(restic rclone)
-apt-get update -qq
-apt-get install -y -qq "${PACKAGES[@]}" > /dev/null
+if [[ "$PKG_FAMILY" == fedora ]]; then
+  # Debian ships cron; a minimal Fedora has no daemon for /etc/cron.d.
+  PACKAGES+=(cronie)
+  dnf install -y -q --setopt=install_weak_deps=False "${PACKAGES[@]}" > /dev/null
+  systemctl enable --now crond.service
+else
+  apt-get update -qq
+  apt-get install -y -qq "${PACKAGES[@]}" > /dev/null
+fi
 
 # ─── 2a. Fastfetch ────────────────────────────────────────────────────────────
 info "Configuring Fastfetch..."
 if command -v fastfetch &>/dev/null; then
   info "Fastfetch already installed"
+elif [[ "$PKG_FAMILY" == fedora ]]; then
+  dnf install -y -q fastfetch > /dev/null
 elif apt-cache policy fastfetch | grep -qE 'Candidate: [0-9]'; then
   apt-get install -y -qq fastfetch > /dev/null
 else
@@ -155,9 +172,9 @@ if [[ -n "$LITTLEDOG_EXTRA_GROUPS" ]]; then
 fi
 
 # littledog runs containers only and never gets sudo, even if added by hand.
-if id -nG littledog | tr ' ' '\n' | grep -qx sudo; then
-  gpasswd -d littledog sudo
-  warn "Removed littledog from sudo"
+if id -nG littledog | tr ' ' '\n' | grep -qx "$ADMIN_GROUP"; then
+  gpasswd -d littledog "$ADMIN_GROUP"
+  warn "Removed littledog from ${ADMIN_GROUP}"
 fi
 
 # adminhabl — admin account
@@ -168,10 +185,12 @@ if ! id adminhabl &>/dev/null; then
 else
   info "User adminhabl already exists"
 fi
-usermod -aG sudo,docker,pack-member adminhabl 2>/dev/null || true
+# docker is added after Docker is installed (§10): naming a group that does not
+# exist yet would fail the whole usermod.
+usermod -aG "${ADMIN_GROUP},pack-member" adminhabl
 
-# rodnik — i3 display service account (i3 hosts only)
-if [[ "${I3_ENABLED:-false}" == "true" ]]; then
+# rodnik — kiosk display account (i3 and niri hosts only)
+if [[ "${I3_ENABLED:-false}" == "true" || "${NIRI_ENABLED:-false}" == "true" ]]; then
   if ! id rodnik &>/dev/null; then
     useradd -m -s /bin/bash rodnik
     info "Created user rodnik"
@@ -289,25 +308,35 @@ info "Checking Docker..."
 
 if ! command -v docker &>/dev/null; then
   info "Installing Docker CE..."
-  apt-get install -y -qq ca-certificates gnupg > /dev/null
+  if [[ "$PKG_FAMILY" == fedora ]]; then
+    # Docker CE from Docker's repo, as on Debian (not Fedora's moby-engine).
+    # Fedora does not start the daemon on install.
+    if [[ ! -f /etc/yum.repos.d/docker-ce.repo ]]; then
+      dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
+    fi
+    dnf install -y -q docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin > /dev/null
+    systemctl enable --now docker.service
+  else
+    apt-get install -y -qq ca-certificates gnupg > /dev/null
 
-  install -m 0755 -d /etc/apt/keyrings
-  if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
+    install -m 0755 -d /etc/apt/keyrings
+    if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
+      . /etc/os-release
+      curl -fsSL "https://download.docker.com/linux/${ID}/gpg" | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      chmod a+r /etc/apt/keyrings/docker.gpg
+    fi
+
+    # Detect distro for apt source
     . /etc/os-release
-    curl -fsSL "https://download.docker.com/linux/${ID}/gpg" | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
+    DOCKER_REPO="deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable"
+
+    if ! grep -qF "download.docker.com" /etc/apt/sources.list.d/docker.list 2>/dev/null; then
+      echo "$DOCKER_REPO" > /etc/apt/sources.list.d/docker.list
+    fi
+
+    apt-get update -qq
+    apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin > /dev/null
   fi
-
-  # Detect distro for apt source
-  . /etc/os-release
-  DOCKER_REPO="deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable"
-
-  if ! grep -qF "download.docker.com" /etc/apt/sources.list.d/docker.list 2>/dev/null; then
-    echo "$DOCKER_REPO" > /etc/apt/sources.list.d/docker.list
-  fi
-
-  apt-get update -qq
-  apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin > /dev/null
   info "Docker CE installed"
 else
   info "Docker already installed"
@@ -563,7 +592,7 @@ echo ""
 
 info "Users:"
 VERIFY_USERS=(littledog adminhabl)
-[[ "${I3_ENABLED:-false}" == "true" ]] && VERIFY_USERS+=(rodnik)
+[[ "${I3_ENABLED:-false}" == "true" || "${NIRI_ENABLED:-false}" == "true" ]] && VERIFY_USERS+=(rodnik)
 for user in "${VERIFY_USERS[@]}"; do
   if id "$user" &>/dev/null; then
     echo "  $(id "$user")"
@@ -614,6 +643,18 @@ if [[ "${I3_ENABLED:-false}" == "true" ]]; then
     echo "  lightdm: enabled"
   else
     warn "  lightdm: not enabled"
+  fi
+fi
+
+if [[ "${NIRI_ENABLED:-false}" == "true" ]]; then
+  echo ""
+  info "niri kiosk config:"
+  echo "  Autologin: rodnik → $(niri --version 2>/dev/null || echo "niri (not installed)")"
+  echo "  Dashboard: ${KIOSK_DASHBOARD_URL:-(unset)}; photo frame after ${KIOSK_PHOTO_IDLE:-300}s idle"
+  if systemctl is-enabled greetd &>/dev/null; then
+    echo "  greetd: enabled"
+  else
+    warn "  greetd: not enabled"
   fi
 fi
 

@@ -42,11 +42,13 @@ loft-ctl health mushr
 
 **After a Git pull, `reload` is not enough**: Caddy's bind mount still points at the replaced file. Validate the checkout in a throwaway container, then recreate Caddy (brief interruption, certificates kept). Also do this after `.env` changes:
 
+Both mushr hosts have an override (space-needle's adds `mercurius-proxy`; without it Paperless and the wiki return 502), so always pass it:
+
 ```bash
 cd /srv/the-loft
-sudo docker compose -f services/mushr/docker-compose.yml run --rm --no-deps \
-  mushr caddy validate --config /etc/caddy/Caddyfile
-sudo docker compose -f services/mushr/docker-compose.yml up -d --no-deps --force-recreate mushr
+mushr=(-f services/mushr/docker-compose.yml -f "hosts/$(hostname)/overrides/mushr/docker-compose.override.yml")
+sudo docker compose "${mushr[@]}" run --rm --no-deps mushr caddy validate --config /etc/caddy/Caddyfile
+sudo docker compose "${mushr[@]}" up -d --no-deps --force-recreate mushr   # add mushr-dns after a dnsmasq.conf change
 ```
 
 ## Troubleshooting

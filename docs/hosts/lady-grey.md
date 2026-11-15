@@ -2,16 +2,17 @@
 
 Surface Pro 4 (i5-6300U, 8 GB, 256 GB), x86_64, **Fedora 45** (the only non-Debian host), touchscreen. LAN `192.168.86.25`. Home Assistant wall tablet: a [Capcom](../services/capcom.md) dashboard, with the Hubbl photo frame when idle. No audio. [host.conf](../../hosts/lady-grey/host.conf) runs Snoot, Houstn metrics and Pupshow; [bootstrap](../../hosts/lady-grey/bootstrap) owns the desktop.
 
-**Provisioned from the unmerged `feat/lady-grey` branch.** Output name, scale, the dashboard and the photo frame are not verified yet.
+Verified live: linux-surface kernel and touch, niri/Noctalia, the kiosk workspaces. Not yet verified: the photo frame and a Capcom workspace.
 
 ## Desktop
 
 Unlike Calavera and Woodstock (i3/Xorg), Lady Grey runs **niri** with the **Noctalia** shell on Wayland. greetd autologs `rodnik` into [loft-kiosk-session](../../hosts/lady-grey/loft-kiosk-session.sh), which restarts `niri-session` whenever it exits.
 
-rodnik's desktop lives in blanco (`hsimah/blanco` on kennl): the shared niri/Noctalia configs plus its `lady-grey` overlay (output scale, kiosk window rules, Noctalia idle/widget overrides, the Noctalia user unit, and the `loft-dashboard`, `loft-idle` and `loft-photo-frame` scripts with their Firefox `user.js`). The bootstrap clones it once to `/srv/blanco` as adminhabl and runs blanco's `deploy.sh` as rodnik, which links rodnik's files into the clone. Update it with `git -C /srv/blanco pull`; edits take effect at once (niri reloads its config, Noctalia and the scripts on restart), while files added or removed in blanco need a setup rerun. The kiosk scripts:
+rodnik's desktop lives in blanco (`hsimah/blanco` on kennl): the shared niri/Noctalia configs plus its `lady-grey` overlay (output scale, named workspaces and their startup apps, kiosk window rules, Noctalia overrides and user unit, and the kiosk scripts with their Firefox `user.js`). The bootstrap clones it once to `/srv/blanco` as adminhabl and runs blanco's `deploy.sh` as rodnik, which links rodnik's files into the clone. Update it with `git -C /srv/blanco pull`; edits take effect at once (niri reloads its config, Noctalia and the scripts on restart), while files added or removed in blanco need a setup rerun. The kiosk scripts:
 
-- `loft-dashboard`: Firefox kiosk on `KIOSK_DASHBOARD_URL` in a restart loop, once the URL answers. A window rule opens Firefox maximized under Noctalia's bar and refuses its kiosk fullscreen request.
-- `loft-idle`: swayidle. After `KIOSK_PHOTO_IDLE` s without input, `loft-photo-frame start` opens a second Firefox on Pupshow and fullscreens it by PID over the dashboard and bar; the next touch closes it. It does nothing while Pupshow's `/health` fails. `KIOSK_SCREEN_OFF_IDLE` > 0 also powers the panel off.
+- `loft-app <workspace> <url>`: a Firefox kiosk with its own profile (`~/.local/share/loft-<workspace>-firefox`) on a named workspace, started once the URL answers. The overlay starts Homepage (`home`), Howlr (`music`), Radarr, Sonarr and Lidarr. A window rule opens Firefox maximized under Noctalia's bar and refuses its kiosk fullscreen request.
+- `loft-terminal`: Noctalia's terminal button; focuses the `terminal` workspace and opens kitty there if none is running.
+- `loft-idle`: swayidle. After `KIOSK_PHOTO_IDLE` s without input, `loft-photo-frame start` opens another Firefox on Pupshow and fullscreens it by PID over the workspaces and bar; the next touch closes it. It does nothing while Pupshow's `/health` fails. `KIOSK_SCREEN_OFF_IDLE` > 0 also powers the panel off.
 
 Settings come from host.conf via `/etc/default/loft-kiosk`; rerun setup after changing them. Sleep targets are masked and the lid is ignored. Mod+T opens kitty, Mod+Space fuzzel; Mod+Shift+E restarts niri. rodnik's shell is fish with blanco's bobthefish prompt; kitty's bundled Nerd Font symbols cover its glyphs.
 
@@ -40,7 +41,7 @@ Differences from the Debian hosts, all handled by setup and the bootstrap:
 
 ## Dashboard login
 
-Log in once on the tablet as a dedicated non-admin Capcom user with **Keep me logged in**; the token persists in the kiosk profile `/home/rodnik/.local/share/loft-dashboard-firefox`. Set that user's default dashboard in its profile, or put the dashboard path in `KIOSK_DASHBOARD_URL`.
+Capcom gets its own workspace through a `loft-app` line in blanco's overlay. Log in once on the tablet as a dedicated non-admin Capcom user with **Keep me logged in**; the token persists in that workspace's Firefox profile. Set the user's default dashboard in its Capcom profile, or put the dashboard path in the `loft-app` URL.
 
 ## Photo frame
 

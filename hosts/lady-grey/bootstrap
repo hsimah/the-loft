@@ -83,20 +83,13 @@ if [[ ! -d "${BLANCO_DIR}/.git" ]]; then
 fi
 
 if [[ -d "${BLANCO_DIR}/.git" ]]; then
-  # Real files stow would conflict with: copies from the pre-blanco bootstrap,
-  # or the default config niri writes when started without one.
-  for f in .config/niri/config.kdl .config/noctalia/config.toml \
-    .local/share/loft-dashboard-firefox/user.js .local/share/loft-photos-firefox/user.js; do
+  # Default configs niri and Noctalia write when started without one would
+  # block stow.
+  for f in .config/niri/config.kdl .config/noctalia/config.toml; do
     if [[ -f "/home/rodnik/${f}" && ! -L "/home/rodnik/${f}" ]]; then
       rm "/home/rodnik/${f}"
     fi
   done
-  # Pre-blanco system copies; drop this block once lady-grey has rerun setup.
-  rm -f /usr/local/bin/loft-dashboard /usr/local/bin/loft-idle /usr/local/bin/loft-photo-frame
-  if [[ -f /etc/systemd/user/noctalia.service ]]; then
-    systemctl --global disable noctalia.service > /dev/null 2>&1
-    rm /etc/systemd/user/noctalia.service
-  fi
 
   if as_rodnik "${BLANCO_DIR}/scripts/deploy.sh" > /dev/null; then
     info "blanco deployed for rodnik ($(as_admin git -C "$BLANCO_DIR" rev-parse --short HEAD))"

@@ -135,7 +135,7 @@ jobs:
 
       - name: Syntax-check shell scripts
         run: |
-          for f in loft-ctl bashrc.d control-plane/*.sh control-plane/hooks/* tests/*.sh tests/lib/*.sh services/*/*.sh services/*/*/*.sh hosts/*/bootstrap hosts/*/restore hosts/*/*/*.sh; do
+          for f in loft-ctl bashrc.d control-plane/*.sh control-plane/hooks/* tests/*.sh tests/lib/*.sh services/*/*.sh services/*/*/*.sh hosts/*/bootstrap hosts/*/restore hosts/*/*.sh; do
             [ -e "$f" ] || continue
             echo "Checking $f..."
             bash -n "$f"

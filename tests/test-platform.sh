@@ -73,11 +73,17 @@ assert_eq "$(q "$c" "${hosts} | length == (map(.key) | unique | length)")" true 
 assert_eq "$(q "$c" "${hosts} | from_entries | [.viking, .fjord, .woodstock, .[\"host.docker.internal\"]]")" \
   '["100.119.43.53","192.168.86.30","192.168.86.37","host-gateway"]' "homepage uses Viking's tailnet and LAN addresses"
 
-# ── tailnet policy grants only management and monitoring ─────────────────────
-assert_eq "$(jq -c '.acls == [] and .hosts.blanco == "100.92.100.36" and .grants == [
-  {src: ["blanco"], dst: ["tag:viking"], ip: ["tcp:22"]},
-  {src: ["tag:monitoring"], dst: ["tag:viking"], ip: ["tcp:45876", "tcp:61208"]}]' \
-  "${ROOT}/hosts/viking/hardening/tailscale-policy.json")" true "tailnet policy grants only SSH and monitoring"
+# ── tailnet policy: Viking management, household reaches only space-needle ───
+POLICY="${ROOT}/tailnet/policy.json"
+tp() { jq -c "$1" "$POLICY"; }
+assert_eq "$(tp '.acls == [] and .hosts.blanco == "100.92.100.36"')" true "tailnet policy is grants only"
+assert_eq "$(tp '[.grants[] | select(.dst | index("tag:viking"))]')" \
+  '[{"src":["blanco"],"dst":["tag:viking"],"ip":["tcp:22"]},{"src":["tag:monitoring"],"dst":["tag:viking"],"ip":["tcp:45876","tcp:61208"]}]' \
+  "only Blanco SSH and monitoring reach Viking"
+assert_eq "$(tp '[.grants[] | select(.dst | index("tag:viking") | not)
+  | .dst == ["192.168.86.28/32"] and (.ip - ["tcp:443", "udp:443", "tcp:53", "udp:53", "tcp:2222"] == [])] | all')" true \
+  "other grants reach only space-needle web, DNS and Forgejo SSH"
+assert_eq "$(tp '[.grants[] | .src + .dst | index("tag:signer")] | all(. == null)')" true "lock signers have no grants"
 
 # ── Caddy's file capability exception is narrow ──────────────────────────────
 # Commas in unquoted YAML flow lists split mount options into separate mounts:

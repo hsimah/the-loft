@@ -13,7 +13,7 @@ For rebuilding Viking on the same or replacement Debian hardware with hostname `
 ## 1. Host access and boundary
 
 1. Minimal OS, NetworkManager, key-only `adminhabl`. Join only the isolated network.
-2. Re-enroll in Tailscale (never reuse cloned node keys); restore grants for Blanco SSH and space-needle monitoring. Update Beszel/Homepage/firewall addresses if they change.
+2. Re-enroll in Tailscale as `tag:viking` (never reuse cloned node keys) and [sign the new node](../automation/tailscale.md#signing-new-nodes) from Blanco or fjord. The [policy](../../tailnet/policy.json) already holds its grants. Update Beszel/Homepage/firewall addresses if they change.
 3. Clone `/srv/the-loft` at the reviewed commit and install the [hardening baseline](../../hosts/viking/hardening/README.md), adapting interface/addresses first:
 
 ```bash

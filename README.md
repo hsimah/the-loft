@@ -43,6 +43,7 @@ hosts/<hostname>/i3/...             # Optional i3 desktop config (when I3_ENABLE
 services/<name>/docker-compose.yml  # Shared service definition
 services/<name>/.env.example        # Secret template
 control-plane/                      # Shared scripts
+tailnet/policy.json                 # Tailscale admin console policy (applied by hand)
 docs/automation/                    # Proposed household AI services (planning notes)
 bashrc.d inputrc.d nanorc.d tmux.d  # Dotfiles installed for adminhabl
 loft-ctl                            # Host provisioning (setup) and day-to-day control

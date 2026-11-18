@@ -20,12 +20,12 @@ Policy: [policy.json](../../tailnet/policy.json), the admin console copy. It use
 | Grants | `autogroup:member` (every user's untagged devices) → `192.168.86.28/32` on `tcp:443`, `tcp:53`, `udp:53` (Caddy serves HTTP/1.1 and HTTP/2 only; add `udp:443` if HTTP/3 is turned on). No Forgejo SSH (`tcp:2222`; use HTTPS git off-LAN), no SSH to hosts, no helarctos, nothing on `tag:viking`. Autogroups keep logins out of the repo, and Georgia is covered when she joins |
 | Login | Passkey or hardware MFA on each person's identity-provider account. Whoever holds the login can enrol devices |
 | Tailnet Lock | On. Blanco and fjord hold the trusted signing keys; fjord is on the tailnet only for that (`tag:signer`, no grants). Disablement secrets are in the password manager, with a printed copy in the safe. A new node stays locked out until it is signed |
-| Devices | Phones keep Tailscale always on (Android always-on VPN, iOS VPN On Demand) so ntfy and the web apps reach home without toggling. Laptops connect when away. Device keys keep the default expiry; tagged servers have none |
+| Devices | Phones keep Tailscale on away from home so ntfy and the web apps reach home without toggling: iOS VPN On Demand on every network except the home Wi-Fi; Android always-on VPN. Laptops connect when away. Device keys keep the default expiry; tagged servers have none |
 | Viking | Unchanged. Its [input firewall](../../hosts/viking/hardening/firewall-input.nft) admits only Blanco SSH and space-needle monitoring on `tailscale0` |
 
 [test-platform.sh](../../tests/test-platform.sh) asserts that only the two existing grants reach `tag:viking`, that every other grant targets only `192.168.86.28/32` on the ports above, and that `tag:signer` appears in no grant.
 
-At home, phones with Tailscale on still reach `192.168.86.28` through the tailnet (a direct LAN path). If space-needle's `tailscaled` is down, they lose the loft names until Tailscale is switched off on the phone.
+At home, an iPhone drops Tailscale on the home Wi-Fi and uses Mushr DNS from DHCP directly. Phones with Tailscale on at home (Android, or iOS if SSID exclusion is unavailable) still reach `192.168.86.28` through the tailnet (a direct LAN path); if space-needle's `tailscaled` is down, they lose the loft names until Tailscale is switched off.
 
 ## Signing new nodes
 
@@ -47,7 +47,7 @@ Devices: iPhone and Blanco (already enrolled).
 3. **Route**: on space-needle, `sudo tailscale set --advertise-routes=192.168.86.28/32`. Use `set`, not `up`: `up` without the existing flags drops `--advertise-tags`. Approve the route in the admin console (Machines → space-needle → Edit route settings).
 4. **DNS**: admin console → DNS → Add nameserver → Custom, `192.168.86.28`, restricted to `loft.hsimah.com`.
 5. **fjord**: install Tailscale, then `sudo tailscale up --advertise-tags=tag:signer`. Disable key expiry in the admin console.
-6. **iPhone**: install, sign in, turn on VPN On Demand.
+6. **iPhone**: install, sign in, turn on VPN On Demand, excluding the home Wi-Fi SSID. If the app has no SSID exclusion, use plain VPN On Demand.
 7. **Tailnet Lock**, after every node above is enrolled, so that init signs them all:
    - On Blanco and on fjord, run `sudo tailscale lock status` and note each node's `tlpub:` key.
    - On Blanco, run `sudo tailscale lock init --gen-disablements 3 --confirm tlpub:<blanco> tlpub:<fjord>`.
@@ -58,7 +58,7 @@ Devices: iPhone and Blanco (already enrolled).
 ## Rollout: Georgia
 
 1. Invite her as a tailnet user; she sets up a passkey or MFA on her login.
-2. Install and sign in on her phone and laptop; set always-on on the phone.
+2. Install and sign in on her phone and laptop; set the phone up as in the Devices row.
 3. [Sign](#signing-new-nodes) each device from Blanco or fjord.
 4. Run the same check from her phone.
 

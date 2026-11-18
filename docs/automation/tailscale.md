@@ -25,7 +25,7 @@ Policy: [policy.json](../../tailnet/policy.json), the admin console copy. It use
 
 [test-platform.sh](../../tests/test-platform.sh) asserts that only the two existing grants reach `tag:viking`, that every other grant targets only `192.168.86.28/32` on the ports above, and that `tag:signer` appears in no grant.
 
-At home, an iPhone drops Tailscale on the home Wi-Fi and uses Mushr DNS from DHCP directly. Phones with Tailscale on at home (Android, or iOS if SSID exclusion is unavailable) still reach `192.168.86.28` through the tailnet (a direct LAN path); if space-needle's `tailscaled` is down, they lose the loft names until Tailscale is switched off.
+At home, an iPhone drops Tailscale on the home Wi-Fi and uses Mushr DNS from DHCP directly. Android phones, with Tailscale on at home, still reach `192.168.86.28` through the tailnet (a direct LAN path); if space-needle's `tailscaled` is down, they lose the loft names until Tailscale is switched off.
 
 ## Signing new nodes
 
@@ -47,7 +47,7 @@ Devices: iPhone and Blanco (already enrolled).
 3. **Route**: on space-needle, `sudo tailscale set --advertise-routes=192.168.86.28/32`. Use `set`, not `up`: `up` without the existing flags drops `--advertise-tags`. Approve the route in the admin console (Machines → space-needle → Edit route settings).
 4. **DNS**: admin console → DNS → Add nameserver → Custom, `192.168.86.28`, restricted to `loft.hsimah.com`.
 5. **fjord**: install Tailscale, then `sudo tailscale up --advertise-tags=tag:signer`. Disable key expiry in the admin console.
-6. **iPhone**: install, sign in, turn on VPN On Demand, excluding the home Wi-Fi SSID. If the app has no SSID exclusion, use plain VPN On Demand.
+6. **iPhone**: install, sign in, turn on VPN On Demand, excluding the home Wi-Fi SSID.
 7. **Tailnet Lock**, after every node above is enrolled, so that init signs them all:
    - On Blanco and on fjord, run `sudo tailscale lock status` and note each node's `tlpub:` key.
    - On Blanco, run `sudo tailscale lock init --gen-disablements 3 --confirm tlpub:<blanco> tlpub:<fjord>`.

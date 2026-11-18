@@ -17,7 +17,7 @@ Policy: [policy.json](../../tailnet/policy.json), the admin console copy. It use
 |---|---|
 | Route | space-needle advertises `192.168.86.28/32`, its own LAN address, and nothing else. Traffic to it is delivered locally, so no IP forwarding or SNAT is involved. helarctos, Viking, the router and the rest of the LAN stay off the tailnet |
 | DNS | Split DNS in the admin console: `loft.hsimah.com` → `192.168.86.28`. Mushr's dnsmasq binds that address (`listen-address` with `bind-interfaces`, [dnsmasq.conf](../../services/mushr/dnsmasq.conf)), so it answers tailnet queries unchanged |
-| Grants | `autogroup:member` (every user's untagged devices) → `192.168.86.28/32` on `tcp:443`, `udp:443` (HTTP/3), `tcp:53`, `udp:53`. `autogroup:admin` also gets `tcp:2222` (Forgejo SSH). No SSH to hosts, no helarctos, nothing on `tag:viking`. Autogroups keep logins out of the repo, and Georgia is covered when she joins |
+| Grants | `autogroup:member` (every user's untagged devices) → `192.168.86.28/32` on `tcp:443`, `udp:443` (HTTP/3), `tcp:53`, `udp:53`. No Forgejo SSH (`tcp:2222`; use HTTPS git off-LAN), no SSH to hosts, no helarctos, nothing on `tag:viking`. Autogroups keep logins out of the repo, and Georgia is covered when she joins |
 | Login | Passkey or hardware MFA on each person's identity-provider account. Whoever holds the login can enrol devices |
 | Tailnet Lock | On. Blanco and fjord hold the trusted signing keys; fjord is on the tailnet only for that (`tag:signer`, no grants). Disablement secrets are in the password manager, with a printed copy in the safe. A new node stays locked out until it is signed |
 | Devices | Phones keep Tailscale always on (Android always-on VPN, iOS VPN On Demand) so ntfy and the web apps reach home without toggling. Laptops connect when away. Device keys keep the default expiry; tagged servers have none |
@@ -41,7 +41,7 @@ sudo tailscale lock sign nodekey:<key>
 Devices: iPhone and Blanco (already enrolled).
 
 1. **Login**: confirm a passkey or hardware MFA on the login the tailnet uses.
-2. **Policy**: diff the admin console policy against [policy.json](../../tailnet/policy.json), paste it in and save. If the console rejects `autogroup:admin` as a grant source, use `autogroup:member` for `tcp:2222` and update the file to match.
+2. **Policy**: diff the admin console policy against [policy.json](../../tailnet/policy.json), paste it in and save.
 3. **Route**: on space-needle, `sudo tailscale set --advertise-routes=192.168.86.28/32`. Use `set`, not `up`: `up` without the existing flags drops `--advertise-tags`. Approve the route in the admin console (Machines → space-needle → Edit route settings).
 4. **DNS**: admin console → DNS → Add nameserver → Custom, `192.168.86.28`, restricted to `loft.hsimah.com`.
 5. **fjord**: install Tailscale, then `sudo tailscale up --advertise-tags=tag:signer`. Disable key expiry in the admin console.

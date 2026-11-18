@@ -81,8 +81,8 @@ assert_eq "$(tp '[.grants[] | select(.dst | index("tag:viking"))]')" \
   '[{"src":["blanco"],"dst":["tag:viking"],"ip":["tcp:22"]},{"src":["tag:monitoring"],"dst":["tag:viking"],"ip":["tcp:45876","tcp:61208"]}]' \
   "only Blanco SSH and monitoring reach Viking"
 assert_eq "$(tp '[.grants[] | select(.dst | index("tag:viking") | not)
-  | .dst == ["192.168.86.28/32"] and (.ip - ["tcp:443", "udp:443", "tcp:53", "udp:53", "tcp:2222"] == [])] | all')" true \
-  "other grants reach only space-needle web, DNS and Forgejo SSH"
+  | .dst == ["192.168.86.28/32"] and (.ip - ["tcp:443", "udp:443", "tcp:53", "udp:53"] == [])] | all')" true \
+  "other grants reach only space-needle web and DNS"
 assert_eq "$(tp '[.grants[] | .src + .dst | index("tag:signer")] | all(. == null)')" true "lock signers have no grants"
 
 # ── Caddy's file capability exception is narrow ──────────────────────────────

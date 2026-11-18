@@ -64,7 +64,7 @@ Devices: iPhone and Blanco (already enrolled).
 
 ## Then
 
-- helarctos: enrol with its own tag, [sign it](#signing-new-nodes), grant space-needle (`tag:monitoring`) → helarctos `tcp:8080`, and move llama-swap's consumers to its tailnet address ([maintenance](../../plans/maintenance.md), Model traffic). Consumers on helarctos itself, such as the Kennl runner, must still reach it.
+- helarctos: enrol with its own tag, [sign it](#signing-new-nodes), grant space-needle (`tag:monitoring`) → helarctos `tcp:8080`, and move llama-swap's consumers to its tailnet address ([maintenance](../../plans/maintenance.md), Model traffic). Consumers on helarctos itself, such as the Kennl runner, must still reach it. Do not use `--accept-routes` on LAN servers: on Linux it sends their traffic for `192.168.86.28` (Mushr DNS, Caddy) through the tailnet, where tagged servers have no grant, so it is silently dropped.
 - ntfy on iOS: instant delivery from a self-hosted server goes through ntfy.sh's upstream relay (message ID only, unverified). Check when ntfy is built.
 
 ## Open questions

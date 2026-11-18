@@ -36,6 +36,8 @@ sudo tailscale lock status    # the new node is listed as locked out, with its n
 sudo tailscale lock sign nodekey:<key>
 ```
 
+Replacing a signer (for example, fjord's SD card fails): re-enrol it, sign it from the surviving signer, then on that signer run `sudo tailscale lock add tlpub:<new>` and `sudo tailscale lock remove tlpub:<old>`. If both signers are lost, use a disablement secret.
+
 ## Rollout: Hamish
 
 Devices: iPhone and Blanco (already enrolled).

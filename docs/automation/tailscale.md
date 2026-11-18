@@ -70,4 +70,4 @@ Devices: iPhone and Blanco (already enrolled).
 ## Open questions
 
 - Does the free Personal plan's user limit cover two users?
-- Does either phone run a work VPN? Phones run one VPN at a time, so always-on Tailscale would conflict.
+- Does Georgia's phone run a work VPN? Phones run one VPN at a time, so always-on Tailscale would conflict. (Hamish's does not.)

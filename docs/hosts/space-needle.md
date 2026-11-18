@@ -6,7 +6,7 @@ Minisforum MS-01, x86_64, Ubuntu 24.04, wired LAN `192.168.86.28`. Primary serve
 
 `/mammoth` is XFS on `/dev/sda1` (confirm the device on new hardware; setup mounts but never formats). Media lives there; app state lives under `/opt`, and Mercurius's on its encrypted `/mercurius` volume. `/mammoth/hubbl` holds the Immich library and, until [OneDrive is retired](../operations/onedrive-migration.md), a staging copy of the imported photos.
 
-[Mushr](../services/mushr.md) provides LAN DNS on `192.168.86.28` plus proxy/tunnel ingress. Bridge apps join `loft-proxy`; Plex, Music Assistant, Glances, Snoot and dnsmasq use host networking. Only Transmission and slskd share the VPN container's namespace.
+[Mushr](../services/mushr.md) provides LAN DNS on `192.168.86.28` plus proxy/tunnel ingress. On the tailnet, space-needle advertises that address as a /32 route for off-LAN household access ([Tailscale](../automation/tailscale.md)); change its flags with `tailscale set`, since `tailscale up` without every existing flag drops the tag and route. Bridge apps join `loft-proxy`; Plex, Music Assistant, Glances, Snoot and dnsmasq use host networking. Only Transmission and slskd share the VPN container's namespace.
 
 [daemon.json](../../daemon.json) sets public upstream DNS for containers. Containers needing loft names set `dns: [192.168.86.28]` explicitly.
 

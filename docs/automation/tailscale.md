@@ -1,19 +1,20 @@
 # Tailscale: off-LAN access
 
-Phones and laptops reach space-needle's household apps over the tailnet, using the same `*.loft.hsimah.com` names and certificates as on the LAN. Nothing goes on the Cloudflare tunnel. Decision D9. **Proposed**; the current state below is from `tailscale status` on space-needle (2026-10-28).
+Phones and laptops reach space-needle's household apps over the tailnet, using the same `*.loft.hsimah.com` names and certificates as on the LAN. Nothing goes on the Cloudflare tunnel. Decision D9. **Live for Hamish** (iPhone, Blanco), verified 2026-11-18; Georgia pending.
 
 ## Current state
 
-- The tailnet is used only for Viking management.
-- space-needle: `100.69.51.18`, `tag:monitoring`, key expiry off, no routes advertised.
-- Viking: `tag:viking`. Blanco: SSH to Viking.
-- No phones; Georgia is not on the tailnet.
+- space-needle: `100.69.51.18`, `tag:monitoring`, key expiry off, advertises `192.168.86.28/32` (approved).
+- Viking: `tag:viking`. fjord: `tag:signer`, key expiry off, `--accept-dns=false`.
+- Users: Hamish (GitHub login, 2FA). Devices: Blanco, iPhone.
+- Tailnet Lock enabled; trusted keys on Blanco and fjord.
+- Split DNS `loft.hsimah.com` → `192.168.86.28` in the admin console.
 
 ## Design
 
 Policy: [policy.json](../../tailnet/policy.json), the admin console copy. It uses grants only, so everything not granted is denied.
 
-| Piece | Proposed |
+| Piece | Setting |
 |---|---|
 | Route | space-needle advertises `192.168.86.28/32`, its own LAN address, and nothing else. Traffic to it is delivered locally, so no IP forwarding or SNAT is involved. helarctos, Viking, the router and the rest of the LAN stay off the tailnet |
 | DNS | Split DNS in the admin console: `loft.hsimah.com` → `192.168.86.28`. Mushr's dnsmasq binds that address (`listen-address` with `bind-interfaces`, [dnsmasq.conf](../../services/mushr/dnsmasq.conf)), so it answers tailnet queries unchanged |
@@ -38,33 +39,16 @@ sudo tailscale lock sign nodekey:<key>
 
 Replacing a signer (for example, fjord's SD card fails): re-enrol it, sign it from the surviving signer, then on that signer run `sudo tailscale lock add tlpub:<new>` and `sudo tailscale lock remove tlpub:<old>`. If both signers are lost, use a disablement secret.
 
-## Rollout: Hamish
-
-Devices: iPhone and Blanco (already enrolled).
-
-1. **Login**: confirm a passkey or hardware MFA on the login the tailnet uses.
-2. **Policy**: diff the admin console policy against [policy.json](../../tailnet/policy.json), paste it in and save.
-3. **Route**: on space-needle, `sudo tailscale set --advertise-routes=192.168.86.28/32`. Use `set`, not `up`: `up` without the existing flags drops `--advertise-tags`. Approve the route in the admin console (Machines → space-needle → Edit route settings).
-4. **DNS**: admin console → DNS → Add nameserver → Custom, `192.168.86.28`, restricted to `loft.hsimah.com`.
-5. **fjord**: install Tailscale, then `sudo tailscale up --advertise-tags=tag:signer`. Disable key expiry in the admin console.
-6. **iPhone**: install, sign in, turn on VPN On Demand, excluding the home Wi-Fi SSID.
-7. **Tailnet Lock**, after every node above is enrolled, so that init signs them all:
-   - On Blanco and on fjord, run `sudo tailscale lock status` and note each node's `tlpub:` key.
-   - On Blanco, run `sudo tailscale lock init --gen-disablements 3 --confirm tlpub:<blanco> tlpub:<fjord>`.
-   - Store the printed disablement secrets in the password manager; print a copy for the safe.
-   - Check that `sudo tailscale lock status` lists both trusted keys and no locked-out nodes.
-8. **Check** from the iPhone on mobile data: `https://sputnik.loft.hsimah.com` loads with a valid certificate; `http://192.168.86.21:8080` (helarctos) and Viking do not answer. From Blanco, SSH to Viking still works.
-
-## Rollout: Georgia
+## Adding Georgia
 
 1. Invite her as a tailnet user; she sets up a passkey or MFA on her login.
 2. Install and sign in on her phone and laptop; set the phone up as in the Devices row.
 3. [Sign](#signing-new-nodes) each device from Blanco or fjord.
-4. Run the same check from her phone.
+4. Check from her phone on mobile data: `https://sputnik.loft.hsimah.com` loads with a valid certificate; `http://192.168.86.21:8080` (helarctos) and `http://100.119.43.53:61208` (Viking) do not answer.
 
 ## Then
 
-- helarctos: enrol with its own tag, [sign it](#signing-new-nodes), grant space-needle (`tag:monitoring`) → helarctos `tcp:8080`, and move llama-swap's consumers to its tailnet address ([maintenance](../../plans/maintenance.md), Model traffic). Consumers on helarctos itself, such as the Kennl runner, must still reach it. Do not use `--accept-routes` on LAN servers: on Linux it sends their traffic for `192.168.86.28` (Mushr DNS, Caddy) through the tailnet, where tagged servers have no grant, so it is silently dropped.
+- helarctos: enrol with its own tag, [sign it](#signing-new-nodes), grant space-needle (`tag:monitoring`) → helarctos `tcp:8080`, and move llama-swap's consumers to its tailnet address ([maintenance](../../plans/maintenance.md), Model traffic). Consumers on helarctos itself, such as the Kennl runner, must still reach it. Enrol LAN servers with `--accept-dns=false`, as fjord is, and never `--accept-routes`: on Linux it sends their traffic for `192.168.86.28` (Mushr DNS, Caddy) through the tailnet, where tagged servers have no grant, so it is silently dropped.
 - ntfy on iOS: instant delivery from a self-hosted server goes through ntfy.sh's upstream relay (message ID only, unverified). Check when ntfy is built.
 
 ## Open questions

@@ -2,7 +2,7 @@
 
 Raspberry Pi 3 B+, arm64, `192.168.86.30`, no media volume. A Howlr client playing to a Bluetooth speaker. [host.conf](../../hosts/fjord/host.conf) runs Howlr (client), Snoot and Houstn metrics.
 
-On the tailnet as `tag:signer` only to hold a Tailnet Lock signing key; it has no grants ([Tailscale](../automation/tailscale.md)). Installed by hand, not by setup. Proposed; not yet enrolled.
+On the tailnet as `tag:signer` only to hold a Tailnet Lock signing key; it has no grants ([Tailscale](../automation/tailscale.md)). Installed by hand, not by setup.
 
 ## Audio
 

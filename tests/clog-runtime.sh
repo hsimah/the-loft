@@ -11,7 +11,7 @@ source "${ROOT}/tests/lib/assert.sh"
 require podman curl jq
 
 PHP_IMAGE=docker.io/library/php:8.4.27-fpm-alpine
-NGINX_IMAGE=docker.io/library/nginx:1.30.6-alpine
+NGINX_IMAGE=docker.io/library/nginx:1.30.7-alpine
 PASSWORD=disposable-test-password-2026
 
 [[ $# -eq 1 && -f "$1" ]] || { echo "Usage: $0 /path/to/clog-standalone.tar.gz" >&2; exit 2; }

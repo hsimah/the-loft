@@ -2,6 +2,8 @@
 
 Raspberry Pi 3 B+, arm64, `192.168.86.30`, no media volume. A Howlr client playing to a Bluetooth speaker. [host.conf](../../hosts/fjord/host.conf) runs Howlr (client), Snoot and Houstn metrics.
 
+On the tailnet as `tag:signer` only to hold a Tailnet Lock signing key; it has no grants ([Tailscale](../automation/tailscale.md)). Installed by hand, not by setup.
+
 ## Audio
 
 Snapclient plays through the host's bluealsa daemon to the speaker. The [override](../../hosts/fjord/overrides/howlr/docker-compose.override.yml) builds [Dockerfile.snapclient](../../services/howlr/Dockerfile.snapclient) (Debian snapclient plus the bluealsa ALSA plugin) and mounts the system D-Bus socket. The image's Debian release must match the host's (`/etc/os-release`), because the plugin and the daemon communicate over D-Bus. The [bootstrap](../../hosts/fjord/bootstrap) installs BlueZ and bluealsa (A2DP source only) and, once `BT_SPEAKER_MAC` is set, adds [loft-bt-speaker](../../control-plane/loft-bt-speaker.sh). That cron job reconnects the speaker every minute while it is disconnected, which covers the speaker being switched off and on again.

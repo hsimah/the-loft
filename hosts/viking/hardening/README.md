@@ -8,7 +8,8 @@ Non-secret copies of the config installed on Viking. Setup does **not** apply th
 | `loft-firewall.service` | `/etc/systemd/system/loft-firewall.service` |
 | `00-loft-hardening.conf` | `/etc/ssh/sshd_config.d/00-loft-hardening.conf` |
 | `52loft-unattended-upgrades` | `/etc/apt/apt.conf.d/52loft-unattended-upgrades` |
-| `tailscale-policy.json` | Tailscale admin console policy (review the whole existing policy first) |
+
+The tailnet policy, including Viking's grants, is fleet-level: [tailnet/policy.json](../../../tailnet/policy.json).
 
 The service loads only the `loft_host` and `loft_docker` tables in one transaction. They run after Docker/Tailscale chains, so Docker's managed rules must stay enabled. Never `flush ruleset` or enable the distro nftables service.
 

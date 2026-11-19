@@ -1,54 +1,57 @@
 # Tailscale: off-LAN access
 
-Phones and laptops reach space-needle's household apps over the tailnet, using the same `*.loft.hsimah.com` names and certificates as on the LAN. Nothing goes on the Cloudflare tunnel. Decision D9. **Proposed**; the current state below is from `tailscale status` on space-needle (2026-10-28).
+Phones and laptops reach space-needle's household apps over the tailnet, using the same `*.loft.hsimah.com` names and certificates as on the LAN. Nothing goes on the Cloudflare tunnel. Decision D9. **Live for Hamish** (iPhone, Blanco), verified 2026-11-18; Georgia pending.
 
 ## Current state
 
-- The tailnet is used only for Viking management. Policy copy: [tailscale-policy.json](../../hosts/viking/hardening/tailscale-policy.json), grants only, so everything else is denied.
-- space-needle: `100.69.51.18`, `tag:monitoring`, key expiry off, no routes advertised.
-- Viking: `tag:viking`. Blanco: SSH to Viking.
-- No phones; Georgia is not on the tailnet.
+- space-needle: `100.69.51.18`, `tag:monitoring`, key expiry off, advertises `192.168.86.28/32` (approved).
+- Viking: `tag:viking`. fjord: `tag:signer`, key expiry off, `--accept-dns=false`.
+- Users: Hamish (GitHub login, 2FA). Devices: Blanco, iPhone.
+- Tailnet Lock enabled; trusted keys on Blanco and fjord.
+- Split DNS `loft.hsimah.com` → `192.168.86.28` in the admin console.
 
 ## Design
 
-| Piece | Proposed |
+Policy: [policy.json](../../tailnet/policy.json), the admin console copy. It uses grants only, so everything not granted is denied.
+
+| Piece | Setting |
 |---|---|
 | Route | space-needle advertises `192.168.86.28/32`, its own LAN address, and nothing else. Traffic to it is delivered locally, so no IP forwarding or SNAT is involved. helarctos, Viking, the router and the rest of the LAN stay off the tailnet |
 | DNS | Split DNS in the admin console: `loft.hsimah.com` → `192.168.86.28`. Mushr's dnsmasq binds that address (`listen-address` with `bind-interfaces`, [dnsmasq.conf](../../services/mushr/dnsmasq.conf)), so it answers tailnet queries unchanged |
-| Users | Georgia invited as a second tailnet user. `group:household` holds both logins |
-| Grants | `group:household` → `192.168.86.28/32` on `tcp:443`, `udp:443` (HTTP/3), `tcp:53`, `udp:53`. Hamish also gets `tcp:2222` (Forgejo SSH). No SSH to hosts, no helarctos, nothing on `tag:viking` |
-| Devices | Phones keep Tailscale always on (Android always-on VPN, iOS VPN On Demand) so ntfy and the web apps reach home without toggling. Laptops connect when away. Device keys keep the default expiry; tagged servers have none |
+| Grants | `autogroup:member` (every user's untagged devices) → `192.168.86.28/32` on `tcp:443`, `tcp:53`, `udp:53` (Caddy serves HTTP/1.1 and HTTP/2 only; add `udp:443` if HTTP/3 is turned on). No Forgejo SSH (`tcp:2222`; use HTTPS git off-LAN), no SSH to hosts, no helarctos, nothing on `tag:viking`. Autogroups keep logins out of the repo, and Georgia is covered when she joins |
+| Login | Passkey or hardware MFA on each person's identity-provider account. Whoever holds the login can enrol devices |
+| Tailnet Lock | On. Blanco and fjord hold the trusted signing keys; fjord is on the tailnet only for that (`tag:signer`, no grants). Disablement secrets are in the password manager, with a printed copy in the safe. A new node stays locked out until it is signed |
+| Devices | Phones keep Tailscale on away from home so ntfy and the web apps reach home without toggling: iOS VPN On Demand on every network except the home Wi-Fi; Android always-on VPN. Laptops connect when away. Device keys keep the default expiry; tagged servers have none |
 | Viking | Unchanged. Its [input firewall](../../hosts/viking/hardening/firewall-input.nft) admits only Blanco SSH and space-needle monitoring on `tailscale0` |
 
-Grants to add beside the existing two:
+[test-platform.sh](../../tests/test-platform.sh) asserts that only the two existing grants reach `tag:viking`, that every other grant targets only `192.168.86.28/32` on the ports above, and that `tag:signer` appears in no grant.
 
-```json
-"groups": {"group:household": ["<hamish-login>", "<georgia-login>"]},
-"grants": [
-  {"src": ["group:household"], "dst": ["192.168.86.28/32"], "ip": ["tcp:443", "udp:443", "tcp:53", "udp:53"]},
-  {"src": ["<hamish-login>"], "dst": ["192.168.86.28/32"], "ip": ["tcp:2222"]}
-]
+At home, an iPhone drops Tailscale on the home Wi-Fi and uses Mushr DNS from DHCP directly. Android phones, with Tailscale on at home, still reach `192.168.86.28` through the tailnet (a direct LAN path); if space-needle's `tailscaled` is down, they lose the loft names until Tailscale is switched off.
+
+## Signing new nodes
+
+With Tailnet Lock on, every later enrolment (helarctos, Georgia's devices, a Viking re-enrol, a replacement phone) must be signed from Blanco or fjord:
+
+```bash
+sudo tailscale lock status    # the new node is listed as locked out, with its nodekey
+sudo tailscale lock sign nodekey:<key>
 ```
 
-With household grants the policy is no longer Viking's: move it out of `hosts/viking/hardening/` to a fleet-level path when applying. [test-platform.sh](../../tests/test-platform.sh) asserts the exact current policy; change it to assert that the Viking grants are exactly the two above, that no grant from a user or group reaches `tag:viking`, and that household grants target only `192.168.86.28/32`.
+Replacing a signer (for example, fjord's SD card fails): re-enrol it, sign it from the surviving signer, then on that signer run `sudo tailscale lock add tlpub:<new>` and `sudo tailscale lock remove tlpub:<old>`. If both signers are lost, use a disablement secret.
 
-At home, phones with Tailscale on still reach `192.168.86.28` through the tailnet (a direct LAN path). If space-needle's `tailscaled` is down, they lose the loft names until Tailscale is switched off on the phone.
+## Adding Georgia
 
-## Rollout
-
-1. **Policy**: diff the admin console policy against the repo copy, add the group and grants, save, and commit the same file.
-2. **Route**: on space-needle, `sudo tailscale set --advertise-routes=192.168.86.28/32`. Use `set`, not `up`: `up` without the existing flags drops `--advertise-tags`. Approve the route in the admin console (Machines → space-needle → Edit route settings).
-3. **DNS**: admin console → DNS → Add nameserver → Custom, `192.168.86.28`, restricted to `loft.hsimah.com`.
-4. **Devices**: invite Georgia; install and sign in on both phones and laptops; set always-on on the phones.
-5. **Check** from a phone on mobile data: `https://sputnik.loft.hsimah.com` loads with a valid certificate; `helarctos:8080` and Viking do not answer.
+1. Invite her as a tailnet user; she sets up a passkey or MFA on her login.
+2. Install and sign in on her phone and laptop; set the phone up as in the Devices row.
+3. [Sign](#signing-new-nodes) each device from Blanco or fjord.
+4. Check from her phone on mobile data: `https://sputnik.loft.hsimah.com` loads with a valid certificate; `http://192.168.86.21:8080` (helarctos) and `http://100.119.43.53:61208` (Viking) do not answer.
 
 ## Then
 
-- helarctos: enrol with its own tag, grant space-needle (`tag:monitoring`) → helarctos `tcp:8080`, and move llama-swap's consumers to its tailnet address ([maintenance](../../plans/maintenance.md), Model traffic). Consumers on helarctos itself, such as the Kennl runner, must still reach it.
+- helarctos: enrol with its own tag, [sign it](#signing-new-nodes), grant space-needle (`tag:monitoring`) → helarctos `tcp:8080`, and move llama-swap's consumers to its tailnet address ([maintenance](../../plans/maintenance.md), Model traffic). Consumers on helarctos itself, such as the Kennl runner, must still reach it. Enrol LAN servers with `--accept-dns=false`, as fjord is, and never `--accept-routes`: on Linux it sends their traffic for `192.168.86.28` (Mushr DNS, Caddy) through the tailnet, where tagged servers have no grant, so it is silently dropped.
 - ntfy on iOS: instant delivery from a self-hosted server goes through ntfy.sh's upstream relay (message ID only, unverified). Check when ntfy is built.
 
 ## Open questions
 
-- Each person's Tailscale login (identity provider).
 - Does the free Personal plan's user limit cover two users?
-- Does either phone run a work VPN? Phones run one VPN at a time, so always-on Tailscale would conflict.
+- Does Georgia's phone run a work VPN? Phones run one VPN at a time, so always-on Tailscale would conflict. (Hamish's does not.)

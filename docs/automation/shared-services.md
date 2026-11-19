@@ -12,7 +12,7 @@ Pieces used by more than one use case. Build each once, in the first phase that 
 | Forgejo ([Kennl](../services/kennl.md)) | space-needle | Coding | Live |
 | Coding runner ([coding agents](coding-agents.md)) | space-needle, user `rodnik` | Coding | Live |
 | Off-site backups ([backups](backups.md)) | space-needle → Google Drive | Vault, wiki, calendar, recipes, n8n, Forgejo | Mercurius (vault) and Forgejo built but shelved; the rest proposed; first slice of [#108](https://github.com/hsimah/the-loft/issues/108) |
-| Tailscale (D9, [plan](tailscale.md)) | Phones, laptops, space-needle | Off-LAN access to every household app | Viking management only; space-needle enrolled, no phones |
+| Tailscale (D9, [plan](tailscale.md)) | Phones, laptops, space-needle | Off-LAN access to every household app | Live for Hamish (iPhone, Blanco); Georgia pending |
 | Mushr ([Caddy, DNS](../services/mushr.md)) | space-needle | Every UI | Live |
 | OIDC single sign-on, e.g. Pocket ID (D20) | space-needle | Optional: one passkey login for Paperless, Mealie, Forgejo; also the only way to give [Hubbl](../services/hubbl.md) a second factor | Idea |
 
